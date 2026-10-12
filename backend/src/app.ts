@@ -38,29 +38,34 @@ app.use(
   })
 );
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. curl, postman, mobile)
-      if (!origin) return callback(null, true);
-      const normalizedOrigin = origin.replace(/\/+$/, '');
-      const isAllowed =
-        config.cors.allowedOrigins.some((allowed) => allowed.replace(/\/+$/, '') === normalizedOrigin) ||
-        normalizedOrigin.endsWith('.vercel.app') ||
-        normalizedOrigin.endsWith('.onrender.com') ||
-        normalizedOrigin.includes('localhost') ||
-        normalizedOrigin.includes('127.0.0.1');
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. curl, postman, mobile apps)
+    if (!origin) return callback(null, true);
+    const normalizedOrigin = origin.replace(/\/+$/, '');
+    const isAllowed =
+      normalizedOrigin.endsWith('.vercel.app') ||
+      normalizedOrigin.endsWith('.onrender.com') ||
+      normalizedOrigin.includes('localhost') ||
+      normalizedOrigin.includes('127.0.0.1') ||
+      config.cors.allowedOrigins.some((allowed) => allowed.replace(/\/+$/, '') === normalizedOrigin);
 
-      if (isAllowed) {
-        return callback(null, true);
-      }
-      callback(new Error(`CORS: Origin ${origin} not allowed.`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    // Reject cleanly without triggering 500 unhandled errors
+    callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 204,
+};
+
+// 1. Global CORS applied before routes
+app.use(cors(corsOptions));
+// 2. Explicit OPTIONS preflight handling across all paths
+app.options('*', cors(corsOptions));
 
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
