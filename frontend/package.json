@@ -1,0 +1,15 @@
+{
+  "name": "partnexa-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PartNexa Multi-App Frontend Aggregator for Vercel Deployment",
+  "scripts": {
+    "build:customer": "cd customer && npm install && npm run build",
+    "build:admin": "cd admin && npm install && npm run build",
+    "build:delivery": "cd delivery && npm install && npm run build",
+    "build:shop": "cd shop && npm install && npm run build",
+    "combine-dist": "node build.js",
+    "build": "npm run vercel-build",
+    "vercel-build": "npm run build:customer && npm run build:admin && npm run build:delivery && npm run build:shop && npm run combine-dist"
+  }
+}
