@@ -112,7 +112,8 @@ export const ProductsPage = () => {
       };
 
       const { data } = await catalogService.listProducts(params);
-      setProducts(data.data || []);
+      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setProducts(list);
       setMeta(data.meta || null);
     } catch (err) {
       console.error('Failed to load products:', err);
@@ -130,13 +131,25 @@ export const ProductsPage = () => {
   useEffect(() => {
     catalogService
       .getCategories()
-      .then(({ data }) => setCategories(data.data || []))
-      .catch(() => {});
+      .then(({ data }) => {
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setCategories(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load categories:', err);
+        setCategories([]);
+      });
 
     catalogService
       .getBrands()
-      .then(({ data }) => setBrands(data.data || []))
-      .catch(() => {});
+      .then(({ data }) => {
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setBrands(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load brands:', err);
+        setBrands([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -232,7 +245,7 @@ export const ProductsPage = () => {
                   />
                   <span>All Categories</span>
                 </label>
-                {categories.map((cat) => (
+                {(categories || []).map((cat) => (
                   <label key={cat.id} className="filter-option">
                     <input
                       type="radio"
@@ -265,7 +278,7 @@ export const ProductsPage = () => {
                   />
                   <span>All Brands</span>
                 </label>
-                {brands.map((b) => (
+                {(brands || []).map((b) => (
                   <label key={b.id} className="filter-option">
                     <input
                       type="radio"
@@ -498,7 +511,7 @@ export const ProductsPage = () => {
             </div>
           ) : (
             <div className={viewMode === 'list' ? 'list-products' : 'grid-products'}>
-              {products.map((product) => (
+              {(products || []).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

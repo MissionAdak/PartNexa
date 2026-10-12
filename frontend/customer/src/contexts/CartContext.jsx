@@ -65,7 +65,9 @@ export const CartProvider = ({ children }) => {
       try {
         setLoading(true);
         const res = await cartService.getCart();
-        setCart(res.data.data);
+        if (res?.data?.data) {
+          setCart(res.data.data);
+        }
       } catch (err) {
         console.error('Failed to load cart from server:', err);
       } finally {

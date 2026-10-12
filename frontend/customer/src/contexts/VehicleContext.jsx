@@ -17,13 +17,14 @@ export const VehicleProvider = ({ children }) => {
       try {
         setLoading(true);
         const { data } = await vehiclesService.getGarage();
-        const list = data.data || [];
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
         setVehicles(list);
         const primary = list.find((v) => v.isPrimary) || list[0] || null;
         setPrimaryVehicleState(primary);
         setActiveVehicleState(primary);
       } catch (err) {
         console.error('Failed to load garage vehicles:', err);
+        setVehicles([]);
       } finally {
         setLoading(false);
       }

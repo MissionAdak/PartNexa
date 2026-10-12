@@ -89,10 +89,12 @@ export const VehicleSelectorModal = ({
       vehiclesService
         .getMakes(vehicleType)
         .then(({ data }) => {
-          setMakes(data.data || []);
+          const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+          setMakes(list);
         })
         .catch((err) => {
           console.error('Failed to load vehicle makes:', err);
+          setMakes([]);
           toast.error('Unable to fetch vehicle makes.');
         })
         .finally(() => setLoadingMakes(false));
@@ -109,9 +111,11 @@ export const VehicleSelectorModal = ({
     setStep(3);
     try {
       const { data } = await vehiclesService.getModels(make.id);
-      setModels(data.data || []);
+      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setModels(list);
     } catch (err) {
       console.error('Failed to load models:', err);
+      setModels([]);
       toast.error('Unable to load models for ' + make.name);
     } finally {
       setLoadingModels(false);
@@ -126,9 +130,11 @@ export const VehicleSelectorModal = ({
     setStep(4);
     try {
       const { data } = await vehiclesService.getVariants(model.id);
-      setVariants(data.data || []);
+      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setVariants(list);
     } catch (err) {
       console.error('Failed to load variants:', err);
+      setVariants([]);
       toast.error('Unable to load variants for ' + model.name);
     } finally {
       setLoadingVariants(false);
@@ -276,16 +282,18 @@ export const VehicleSelectorModal = ({
 
   // Filter makes by search
   const filteredMakes = useMemo(() => {
-    if (!brandSearch.trim()) return makes;
+    const list = Array.isArray(makes) ? makes : [];
+    if (!brandSearch.trim()) return list;
     const q = brandSearch.toLowerCase().trim();
-    return makes.filter((m) => m.name.toLowerCase().includes(q));
+    return list.filter((m) => m.name.toLowerCase().includes(q));
   }, [makes, brandSearch]);
 
   // Filter models by search
   const filteredModels = useMemo(() => {
-    if (!modelSearch.trim()) return models;
+    const list = Array.isArray(models) ? models : [];
+    if (!modelSearch.trim()) return list;
     const q = modelSearch.toLowerCase().trim();
-    return models.filter((m) => m.name.toLowerCase().includes(q));
+    return list.filter((m) => m.name.toLowerCase().includes(q));
   }, [models, modelSearch]);
 
   if (!isOpen) return null;
@@ -405,7 +413,7 @@ export const VehicleSelectorModal = ({
                     <span>⚡ Recently Selected Vehicles:</span>
                   </div>
                   <div className="vsm-recents-chips">
-                    {recentVehicles.map((rv) => (
+                    {(recentVehicles || []).map((rv) => (
                       <button
                         key={rv.id}
                         type="button"
@@ -449,7 +457,7 @@ export const VehicleSelectorModal = ({
                 <div className="vsm-recents-mini-bar">
                   <span className="mini-bar-label">⚡ Recent:</span>
                   <div className="mini-chips-scroll">
-                    {recentVehicles.map((rv) => (
+                    {(recentVehicles || []).map((rv) => (
                       <button
                         key={rv.id}
                         type="button"
@@ -512,7 +520,7 @@ export const VehicleSelectorModal = ({
                 </div>
               ) : (
                 <div className="vsm-brand-grid">
-                  {filteredMakes.map((make) => (
+                  {(filteredMakes || []).map((make) => (
                     <div
                       key={make.id}
                       className={`vsm-brand-card ${selectedMake?.id === make.id ? 'active' : ''}`}
@@ -602,7 +610,7 @@ export const VehicleSelectorModal = ({
                 </div>
               ) : (
                 <div className="vsm-model-grid">
-                  {filteredModels.map((model) => (
+                  {(filteredModels || []).map((model) => (
                     <div
                       key={model.id}
                       className={`vsm-model-card ${selectedModel?.id === model.id ? 'active' : ''}`}
@@ -664,7 +672,7 @@ export const VehicleSelectorModal = ({
                 </div>
               ) : (
                 <div className="vsm-variant-grid">
-                  {variants.map((v) => {
+                  {(variants || []).map((v) => {
                     const fuelColor =
                       v.fuelType === 'PETROL'
                         ? 'fuel-petrol'

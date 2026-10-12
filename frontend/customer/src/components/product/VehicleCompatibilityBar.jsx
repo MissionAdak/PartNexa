@@ -23,7 +23,7 @@ export const VehicleCompatibilityBar = ({
     }
 
     // 1. Check in user garage vehicles first
-    const garageMatch = vehicles.find(
+    const garageMatch = (Array.isArray(vehicles) ? vehicles : []).find(
       (v) => v.variantId === selectedVariantId || v.variant?.id === selectedVariantId
     );
     if (garageMatch && garageMatch.variant) {

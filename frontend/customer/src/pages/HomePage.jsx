@@ -18,8 +18,14 @@ const VehicleSearch = () => {
 
   useEffect(() => {
     vehiclesService.getMakes(vehicleType)
-      .then(({ data }) => setMakes(data.data))
-      .catch(() => {});
+      .then(({ data }) => {
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setMakes(list);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch vehicle makes:', err);
+        setMakes([]);
+      });
     setSelectedMake(''); setSelectedModel(''); setSelectedVariant('');
     setModels([]); setVariants([]);
   }, [vehicleType]);
@@ -31,8 +37,12 @@ const VehicleSearch = () => {
     if (!makeId) { setModels([]); return; }
     try {
       const { data } = await vehiclesService.getModels(makeId);
-      setModels(data.data);
-    } catch {}
+      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setModels(list);
+    } catch (err) {
+      console.error('Failed to fetch vehicle models:', err);
+      setModels([]);
+    }
   };
 
   const handleModelChange = async (modelId) => {
@@ -41,8 +51,12 @@ const VehicleSearch = () => {
     if (!modelId) { setVariants([]); return; }
     try {
       const { data } = await vehiclesService.getVariants(modelId);
-      setVariants(data.data);
-    } catch {}
+      const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setVariants(list);
+    } catch (err) {
+      console.error('Failed to fetch vehicle variants:', err);
+      setVariants([]);
+    }
   };
 
   const handleSearch = (e) => {
@@ -87,7 +101,7 @@ const VehicleSearch = () => {
           onChange={(e) => handleMakeChange(e.target.value)}
         >
           <option value="">Select Make</option>
-          {makes.map((m) => (
+          {(Array.isArray(makes) ? makes : []).map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
@@ -100,7 +114,7 @@ const VehicleSearch = () => {
           disabled={!selectedMake}
         >
           <option value="">Select Model</option>
-          {models.map((m) => (
+          {(Array.isArray(models) ? models : []).map((m) => (
             <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </select>
@@ -113,7 +127,7 @@ const VehicleSearch = () => {
           disabled={!selectedModel}
         >
           <option value="">Select Year / Variant</option>
-          {variants.map((v) => (
+          {(Array.isArray(variants) ? variants : []).map((v) => (
             <option key={v.id} value={v.id}>
               {v.year} — {v.name} ({v.fuelType})
             </option>
@@ -203,12 +217,24 @@ const HomePage = () => {
     document.title = 'PartNexa — Automotive Spare Parts & Services';
 
     catalogService.getCategories()
-      .then(({ data }) => setCategories(data.data?.slice(0, 10) || []))
-      .catch(() => {});
+      .then(({ data }) => {
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setCategories(list.slice(0, 10));
+      })
+      .catch((err) => {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      });
 
     catalogService.listProducts({ limit: 8, sortBy: 'createdAt', sortOrder: 'desc' })
-      .then(({ data }) => setFeaturedProducts(data.data || []))
-      .catch(() => {})
+      .then(({ data }) => {
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setFeaturedProducts(list);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch featured products:', err);
+        setFeaturedProducts([]);
+      })
       .finally(() => setLoadingProducts(false));
   }, []);
 
@@ -272,7 +298,7 @@ const HomePage = () => {
       <TrustBanner />
 
       {/* Categories */}
-      {categories.length > 0 && (
+      {Array.isArray(categories) && categories.length > 0 && (
         <section className="section categories-section">
           <div className="container">
             <div className="section-header">
@@ -280,7 +306,7 @@ const HomePage = () => {
               <p className="section-subtitle">Find parts by what you need</p>
             </div>
             <div className="categories-grid stagger">
-              {categories.map((cat) => (
+              {(Array.isArray(categories) ? categories : []).map((cat) => (
                 <CategoryCard key={cat.id} category={cat} />
               ))}
             </div>
@@ -304,7 +330,7 @@ const HomePage = () => {
           <div className="grid-products">
             {loadingProducts
               ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-              : featuredProducts.map((product) => (
+              : (Array.isArray(featuredProducts) ? featuredProducts : []).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))
             }

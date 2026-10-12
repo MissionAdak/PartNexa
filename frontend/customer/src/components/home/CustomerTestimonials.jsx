@@ -153,7 +153,7 @@ export const CustomerTestimonials = ({ items = INITIAL_TESTIMONIALS }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const totalItems = items.length;
+  const totalItems = (items || []).length;
   const maxIndex = Math.max(0, totalItems - visibleCards);
 
   // Navigation handlers
@@ -280,7 +280,7 @@ export const CustomerTestimonials = ({ items = INITIAL_TESTIMONIALS }) => {
               transform: `translateX(-${slideOffset}%)`,
             }}
           >
-            {items.map((item) => (
+            {(items || []).map((item) => (
               <div key={item.id} className="testimonials-slide">
                 <article className="testimonial-card">
                   {/* Top gradient accent line */}
