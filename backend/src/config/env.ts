@@ -20,7 +20,7 @@ export const config = {
   },
 
   cors: {
-    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,https://partnexa1.onrender.com,https://partnexa-1d79.vercel.app,https://partnexa-frontend.vercel.app')
+    allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,https://partnexa1.onrender.com,https://partnexa-1d79.vercel.app,https://partnexa-frontend.vercel.app,https://partnexa-api-wed5.onrender.com')
       .split(',')
       .map((origin) => origin.trim().replace(/\/+$/, '')),
   },

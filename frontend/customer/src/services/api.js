@@ -8,7 +8,7 @@ export const getBaseURL = () => {
   }
   // Production fallback for remote deployments if VITE_API_URL was omitted at build time
   if (typeof window !== 'undefined' && window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-    return 'https://partnexa-api.onrender.com/api';
+    return 'https://partnexa-api-wed5.onrender.com/api';
   }
   return '/api';
 };

@@ -3,7 +3,7 @@ import axios from 'axios';
 const getBaseURL = () => {
   // In production (not localhost), always point to the deployed backend
   if (typeof window !== 'undefined' && window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-    return 'https://partnexa-api.onrender.com/api';
+    return 'https://partnexa-api-wed5.onrender.com/api';
   }
   return '/api';
 };
