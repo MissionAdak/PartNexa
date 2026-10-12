@@ -245,7 +245,7 @@ export const createOrderDraft = async (
     addressId: string;
     difmType?: DIFMType | string;
     shopId?: string;
-    paymentMethod: PaymentMethod;
+    paymentMethod: PaymentMethod | string;
     couponCode?: string;
     preferredDate?: string;
     notes?: string;
@@ -347,8 +347,8 @@ export const createOrderDraft = async (
   const orderNumber = generateOrderNumber();
   const isOnlinePayment =
     data.paymentMethod === PaymentMethod.RAZORPAY ||
-    data.paymentMethod === 'ONLINE_PREPAID' ||
-    data.paymentMethod === 'ONLINE';
+    (data.paymentMethod as string) === 'ONLINE_PREPAID' ||
+    (data.paymentMethod as string) === 'ONLINE';
   const resolvedPaymentMethod = isOnlinePayment ? PaymentMethod.RAZORPAY : PaymentMethod.CASH_ON_DELIVERY;
 
   const newOrder = await prisma.$transaction(async (tx: any) => {
