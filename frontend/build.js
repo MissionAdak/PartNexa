@@ -50,4 +50,11 @@ if (fs.existsSync(shopDist)) {
   process.exit(1);
 }
 
+// 6. Copy vercel.json to dist
+const vercelConfig = path.join(root, 'vercel.json');
+if (fs.existsSync(vercelConfig)) {
+  fs.copyFileSync(vercelConfig, path.join(distDir, 'vercel.json'));
+  console.log('✓ Copied vercel.json to dist');
+}
+
 console.log('✓ Successfully combined all frontend apps into frontend/dist!');
