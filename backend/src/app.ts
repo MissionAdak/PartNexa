@@ -44,7 +44,14 @@ app.use(
       // Allow requests with no origin (e.g. curl, postman, mobile)
       if (!origin) return callback(null, true);
       const normalizedOrigin = origin.replace(/\/+$/, '');
-      if (config.cors.allowedOrigins.some((allowed) => allowed.replace(/\/+$/, '') === normalizedOrigin)) {
+      const isAllowed =
+        config.cors.allowedOrigins.some((allowed) => allowed.replace(/\/+$/, '') === normalizedOrigin) ||
+        normalizedOrigin.endsWith('.vercel.app') ||
+        normalizedOrigin.endsWith('.onrender.com') ||
+        normalizedOrigin.includes('localhost') ||
+        normalizedOrigin.includes('127.0.0.1');
+
+      if (isAllowed) {
         return callback(null, true);
       }
       callback(new Error(`CORS: Origin ${origin} not allowed.`));
