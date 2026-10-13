@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../services/shopService';
+import { Truck, Package, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const DeliveriesPage = () => {
@@ -52,7 +53,9 @@ export const DeliveriesPage = () => {
         </div>
       ) : deliveries.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚚</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Truck size={40} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>No Active Deliveries</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             All incoming shipments have been received and verified.
@@ -86,11 +89,10 @@ export const DeliveriesPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.35rem',
                       flexShrink: 0,
                     }}
                   >
-                    {isDelivered ? '📦' : '🚚'}
+                    {isDelivered ? <Package size={22} strokeWidth={1.75} /> : <Truck size={22} strokeWidth={1.75} />}
                   </div>
 
                   <div>
@@ -120,7 +122,7 @@ export const DeliveriesPage = () => {
                 <div>
                   {isDelivered ? (
                     <div style={{ fontSize: '0.825rem', color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      ✓ Received & In Workshop
+                      <Check size={16} strokeWidth={2} /> Received & In Workshop
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -132,8 +134,13 @@ export const DeliveriesPage = () => {
                         onClick={() => handleReceive(del.id)}
                         disabled={receivingId === del.id}
                         className="btn btn-primary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                       >
-                        {receivingId === del.id ? 'Verifying...' : 'Confirm Receipt ✓'}
+                        {receivingId === del.id ? 'Verifying...' : (
+                          <>
+                            Confirm Receipt <Check size={14} strokeWidth={2} />
+                          </>
+                        )}
                       </button>
                     </div>
                   )}

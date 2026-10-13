@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../../services/shopService';
+import { Truck, Package, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const DeliveriesPage = () => {
@@ -51,8 +52,8 @@ export const DeliveriesPage = () => {
           Loading delivery manifests...
         </div>
       ) : deliveries.length === 0 ? (
-        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚚</div>
+        <div className="card" style={{ padding: '3rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Truck size={36} strokeWidth={1.75} color="var(--color-text-muted)" style={{ marginBottom: '0.5rem' }} />
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>No Active Deliveries</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             All incoming shipments have been received and verified.
@@ -90,7 +91,7 @@ export const DeliveriesPage = () => {
                       flexShrink: 0,
                     }}
                   >
-                    {isDelivered ? '📦' : '🚚'}
+                    {isDelivered ? <Package size={22} strokeWidth={1.75} /> : <Truck size={22} strokeWidth={1.75} />}
                   </div>
 
                   <div>
@@ -119,8 +120,8 @@ export const DeliveriesPage = () => {
 
                 <div>
                   {isDelivered ? (
-                    <div style={{ fontSize: '0.825rem', color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      ✓ Received & In Workshop
+                    <div style={{ fontSize: '0.825rem', color: '#10B981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Check size={14} strokeWidth={2.2} /> Received & In Workshop
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -132,8 +133,9 @@ export const DeliveriesPage = () => {
                         onClick={() => handleReceive(del.id)}
                         disabled={receivingId === del.id}
                         className="btn btn-primary btn-sm"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
-                        {receivingId === del.id ? 'Verifying...' : 'Confirm Receipt ✓'}
+                        {receivingId === del.id ? 'Verifying...' : <>Confirm Receipt <Check size={13} strokeWidth={2.2} /></>}
                       </button>
                     </div>
                   )}

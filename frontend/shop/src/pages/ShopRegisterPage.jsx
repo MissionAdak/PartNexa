@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useShopAuth } from '../contexts/ShopAuthContext';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../components/common/PartNexaLogo';
+import { Moon, Sun, Check, Plus, Car, Bike, Zap } from 'lucide-react';
 
 const AVAILABLE_SERVICES = [
   'Brake Fitment & Polish',
@@ -117,9 +119,10 @@ export const ShopRegisterPage = () => {
       <button
         onClick={toggleTheme}
         className="btn btn-secondary btn-sm"
-        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
       >
-        {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        {theme === 'light' ? <Moon size={14} strokeWidth={1.75} /> : <Sun size={14} strokeWidth={1.75} />}
+        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
       </button>
 
       <div
@@ -133,27 +136,17 @@ export const ShopRegisterPage = () => {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-teal))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '1.5rem',
-              margin: '0 auto 1rem',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
-            }}
-          >
-            🏢
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              portal="workshop"
+              size="lg"
+              linkTo="/"
+            />
           </div>
           <h1 style={{ fontSize: '1.85rem', marginBottom: '0.35rem' }}>Partner Workshop Onboarding</h1>
           <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-            Join the PartSphere network to receive DIFM orders, vehicle visits, and automated commission payouts.
+            Join the PartNexa network to receive DIFM orders, vehicle visits, and automated commission payouts.
           </p>
         </div>
 
@@ -352,25 +345,30 @@ export const ShopRegisterPage = () => {
               <label className="form-label">Supported Vehicle Categories (select at least one):</label>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 {[
-                  { id: 'CAR', label: '🚗 4-Wheelers (Cars/SUVs)' },
-                  { id: 'BIKE', label: '🏍️ 2-Wheelers (Motorcycles)' },
-                  { id: 'SCOOTER', label: '🛵 Scooters & EVs' },
-                ].map((cat) => (
+                  { id: 'CAR', label: '4-Wheelers (Cars/SUVs)', Icon: Car },
+                  { id: 'BIKE', label: '2-Wheelers (Motorcycles)', Icon: Bike },
+                  { id: 'SCOOTER', label: 'Scooters & EVs', Icon: Zap },
+                ].map(({ id, label, Icon }) => (
                   <button
-                    key={cat.id}
+                    key={id}
                     type="button"
-                    onClick={() => toggleCategory(cat.id)}
+                    onClick={() => toggleCategory(id)}
                     className="btn"
                     style={{
-                      background: vehicleCategories.includes(cat.id) ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
-                      color: vehicleCategories.includes(cat.id) ? '#FFFFFF' : 'var(--color-text-primary)',
+                      background: vehicleCategories.includes(id) ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
+                      color: vehicleCategories.includes(id) ? '#FFFFFF' : 'var(--color-text-primary)',
                       border: '1px solid var(--color-border)',
                       padding: '0.5rem 1rem',
                       borderRadius: 'var(--radius-full)',
                       fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
                     }}
                   >
-                    {cat.label} {vehicleCategories.includes(cat.id) && '✓'}
+                    <Icon size={16} strokeWidth={1.75} />
+                    {label}
+                    {vehicleCategories.includes(id) && <Check size={14} strokeWidth={2} />}
                   </button>
                 ))}
               </div>
@@ -398,9 +396,12 @@ export const ShopRegisterPage = () => {
                         color: isSelected ? 'var(--color-teal-dark)' : 'var(--color-text-secondary)',
                         cursor: 'pointer',
                         transition: 'all var(--transition-fast)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
                       }}
                     >
-                      {isSelected ? '✓ ' : '+ '}
+                      {isSelected ? <Check size={13} strokeWidth={2} /> : <Plus size={13} strokeWidth={2} />}
                       {svc}
                     </button>
                   );

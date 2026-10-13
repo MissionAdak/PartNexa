@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Check, X } from 'lucide-react';
 
 export default function PlatformConfigPage() {
   const [difmConfig, setDifmConfig] = useState(null);
@@ -292,7 +293,7 @@ export default function PlatformConfigPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <div>
             <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-              PartSphere Club Subscription Plans
+              PartNexa Club Subscription Plans
             </h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               Configure club tier pricing, member entitlements, and recurring billing models.
@@ -459,8 +460,8 @@ export default function PlatformConfigPage() {
                           Release Payout
                         </button>
                       ) : (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          ✓ Paid ({item.payoutRef?.slice(0, 12) || 'TRF'})
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Check size={12} strokeWidth={2.5} style={{ color: 'var(--color-success)' }} /> Paid ({item.payoutRef?.slice(0, 12) || 'TRF'})
                         </span>
                       )}
                     </td>
@@ -480,7 +481,9 @@ export default function PlatformConfigPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Edit Pricing: {editingPlan.name}
               </h3>
-              <button onClick={() => setEditingPlan(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setEditingPlan(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleSavePlan}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { usersService, subscriptionsService } from '../../services';
 import toast from 'react-hot-toast';
+import { User, Crown, Lock, Car } from 'lucide-react';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -91,17 +92,19 @@ const ProfilePage = () => {
 
           <nav className="profile-nav">
             {[
-              { id: 'profile', label: '👤 My Profile' },
-              { id: 'subscriptions', label: '⭐ Subscriptions' },
-              { id: 'security', label: '🔒 Security' },
+              { id: 'profile', label: 'My Profile', icon: <User size={15} strokeWidth={1.75} /> },
+              { id: 'subscriptions', label: 'Subscriptions', icon: <Crown size={15} strokeWidth={1.75} /> },
+              { id: 'security', label: 'Security', icon: <Lock size={15} strokeWidth={1.75} /> },
             ].map((tab) => (
               <button
                 key={tab.id}
                 className={`profile-nav-item ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
                 id={`profile-tab-${tab.id}`}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
-                {tab.label}
+                {tab.icon}
+                <span>{tab.label}</span>
               </button>
             ))}
           </nav>
@@ -191,11 +194,11 @@ const ProfilePage = () => {
                   <div className="profile-sub-top">
                     <div>
                       <span className={`status-pill ${activeSubscription.status.toLowerCase()}`}>
-                        {activeSubscription.status === 'ACTIVE' ? '🟢 Active Member' : activeSubscription.status}
+                        {activeSubscription.status === 'ACTIVE' ? 'Active Member' : activeSubscription.status}
                       </span>
                       <h3 className="profile-sub-plan">{activeSubscription.plan?.name}</h3>
-                      <p className="profile-sub-veh">
-                        🚗 {activeSubscription.vehicle?.variant
+                      <p className="profile-sub-veh" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Car size={13} strokeWidth={1.75} /> {activeSubscription.vehicle?.variant
                           ? `${activeSubscription.vehicle.variant?.model?.make?.name} ${activeSubscription.vehicle.variant?.model?.name}`
                           : 'Covered Vehicle'}
                         {activeSubscription.vehicleReg && ` (${activeSubscription.vehicleReg})`}
@@ -319,8 +322,9 @@ const ProfilePage = () => {
                   className="btn btn-primary"
                   disabled={loading}
                   id="change-password-btn"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {loading ? <><span className="spinner spinner-sm" />Changing...</> : '🔒 Change Password'}
+                  {loading ? <><span className="spinner spinner-sm" />Changing...</> : <><Lock size={14} strokeWidth={1.75} /> Change Password</>}
                 </button>
               </form>
             </div>

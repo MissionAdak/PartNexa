@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../services/shopService';
 import toast from 'react-hot-toast';
+import { Scale, Check, Clock } from 'lucide-react';
 
 export const CommissionLedgerPage = () => {
   const [ledgerData, setLedgerData] = useState(null);
@@ -93,14 +94,14 @@ export const CommissionLedgerPage = () => {
               flexShrink: 0,
             }}
           >
-            ⚖️
+            <Scale size={24} strokeWidth={1.75} />
           </div>
           <div>
             <h3 style={{ fontSize: '1.05rem', color: 'var(--color-text-primary)', marginBottom: '0.35rem' }}>
               Strict Dual-Condition Commission Release Protocol
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: '0.75rem' }}>
-              In accordance with PartSphere platform governance, earnings for DIFM installation and customer vehicle services
+              In accordance with PartNexa platform governance, earnings for DIFM installation and customer vehicle services
               must <strong>NEVER</strong> be released to workshop payout balances until <strong>BOTH</strong> conditions are satisfied:
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
@@ -160,7 +161,7 @@ export const CommissionLedgerPage = () => {
           <div className="stat-card-val" style={{ color: 'var(--color-primary)' }}>
             ₹{(summary?.platformCommission || 0).toLocaleString('en-IN')}
           </div>
-          <div className="stat-card-sub">PartSphere platform cut</div>
+          <div className="stat-card-sub">PartNexa platform cut</div>
         </div>
 
         <div className="stat-card">
@@ -176,7 +177,9 @@ export const CommissionLedgerPage = () => {
           <div className="stat-card-val" style={{ color: '#10B981' }}>
             ₹{(summary?.releasedForPayout || 0).toLocaleString('en-IN')}
           </div>
-          <div className="stat-card-sub">Both conditions verified ✓</div>
+          <div className="stat-card-sub" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Check size={13} strokeWidth={2} /> Both conditions verified
+          </div>
         </div>
 
         <div className="stat-card" style={{ borderLeft: '4px solid #F59E0B' }}>
@@ -283,11 +286,19 @@ export const CommissionLedgerPage = () => {
                             : 'Service still in progress'
                         }
                       >
-                        {isReleased
-                          ? '✓ RELEASED'
-                          : isPendingPayment
-                          ? '⏳ PENDING PAYMENT'
-                          : '⏳ PENDING SERVICE'}
+                        {isReleased ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Check size={12} strokeWidth={2} /> RELEASED
+                          </span>
+                        ) : isPendingPayment ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Clock size={12} strokeWidth={1.75} /> PENDING PAYMENT
+                          </span>
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Clock size={12} strokeWidth={1.75} /> PENDING SERVICE
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td>
@@ -332,7 +343,7 @@ export const CommissionLedgerPage = () => {
                   margin: '0 auto 0.75rem',
                 }}
               >
-                ✓
+                <Check size={28} strokeWidth={2} />
               </div>
               <h2 style={{ fontSize: '1.4rem', marginBottom: '0.25rem' }}>Payout Settled Successfully!</h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>

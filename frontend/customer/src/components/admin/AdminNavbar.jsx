@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
-import NotificationBell from '../notifications/NotificationBell';
+import { Sun, Moon, LogOut } from 'lucide-react';
 
 export default function AdminNavbar() {
   const { user, logout, theme, toggleTheme } = useAdminAuth();
@@ -8,16 +8,18 @@ export default function AdminNavbar() {
   return (
     <header
       style={{
-        position: 'relative',
-        width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
         height: 'var(--navbar-height)',
-        backgroundColor: 'var(--bg-glass, rgba(15, 23, 42, 0.9))',
+        backgroundColor: 'var(--bg-glass)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 2rem',
+        padding: '0 2rem 0 calc(var(--sidebar-width) + 2rem)',
         zIndex: 100,
       }}
     >
@@ -39,9 +41,6 @@ export default function AdminNavbar() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        {/* Real Notification Bell */}
-        <NotificationBell role="admin" />
-
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
@@ -60,7 +59,15 @@ export default function AdminNavbar() {
           }}
           title="Toggle Light / Dark Mode"
         >
-          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+          {theme === 'dark' ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Sun size={14} strokeWidth={1.75} /> Light
+            </span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Moon size={14} strokeWidth={1.75} /> Dark
+            </span>
+          )}
         </button>
 
         {/* User Pill */}
@@ -113,9 +120,12 @@ export default function AdminNavbar() {
             fontWeight: 600,
             border: '1px solid rgba(239, 68, 68, 0.2)',
             transition: 'all 0.2s',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
           }}
         >
-          Sign Out
+          <LogOut size={14} strokeWidth={1.75} /> Sign Out
         </button>
       </div>
     </header>

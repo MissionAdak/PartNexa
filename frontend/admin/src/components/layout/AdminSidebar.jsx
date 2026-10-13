@@ -1,16 +1,28 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import PartNexaLogo from '../common/PartNexaLogo';
+import {
+  LayoutDashboard,
+  Users,
+  Wrench,
+  Bike,
+  Package,
+  Settings,
+  Repeat,
+  MapPin,
+  Headphones,
+} from 'lucide-react';
 
 const navItems = [
-  { path: '/', label: 'Overview Dashboard', icon: '📊' },
-  { path: '/customers', label: 'Customers', icon: '👥' },
-  { path: '/shops', label: 'Mechanical Workshops', icon: '🔧' },
-  { path: '/delivery-partners', label: 'Delivery Fleet & KYC', icon: '🛵' },
-  { path: '/products-inventory', label: 'Catalog & Inventory', icon: '📦' },
-  { path: '/platform-config', label: 'Platform & DIFM Config', icon: '⚙️' },
-  { path: '/used-parts', label: 'Used Parts Oversight', icon: '🔄' },
-  { path: '/deliveries', label: 'Live Dispatches', icon: '📍' },
-  { path: '/care-hub', label: 'Customer Care Hub', icon: '🎧' },
+  { path: '/', label: 'Overview Dashboard', icon: LayoutDashboard },
+  { path: '/customers', label: 'Customers', icon: Users },
+  { path: '/shops', label: 'Mechanical Workshops', icon: Wrench },
+  { path: '/delivery-partners', label: 'Delivery Fleet & KYC', icon: Bike },
+  { path: '/products-inventory', label: 'Catalog & Inventory', icon: Package },
+  { path: '/platform-config', label: 'Platform & DIFM Config', icon: Settings },
+  { path: '/used-parts', label: 'Used Parts Oversight', icon: Repeat },
+  { path: '/deliveries', label: 'Live Dispatches', icon: MapPin },
+  { path: '/care-hub', label: 'Customer Care Hub', icon: Headphones },
 ];
 
 export default function AdminSidebar() {
@@ -40,38 +52,12 @@ export default function AdminSidebar() {
           gap: '0.75rem',
         }}
       >
-        <div
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.2rem',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-          }}
-        >
-          🛡️
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-            PARTSPHERE
-          </div>
-          <div
-            style={{
-              fontSize: '0.68rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'var(--color-primary)',
-              letterSpacing: '0.08em',
-            }}
-          >
-            Admin Console
-          </div>
-        </div>
+        <PartNexaLogo
+          variant="horizontal"
+          portal="admin"
+          size="md"
+          linkTo="/"
+        />
       </div>
 
       {/* Nav Items */}
@@ -108,7 +94,7 @@ export default function AdminSidebar() {
               borderLeft: isActive ? '3px solid var(--color-primary)' : '3px solid transparent',
             })}
           >
-            <span style={{ fontSize: '1.15rem' }}>{item.icon}</span>
+            <item.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -123,7 +109,7 @@ export default function AdminSidebar() {
         }}
       >
         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-          PartSphere Engine v1.0.0
+          PartNexa Engine v1.0.0
         </div>
         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
           Environment: Production-Ready

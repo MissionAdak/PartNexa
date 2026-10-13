@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import api from '../../services/api';
+import { MapPin, Navigation, Loader2, Edit3, Zap, Search, Wrench, Check, Star, Map } from 'lucide-react';
 import './NearbyShopsMap.css';
 
 // Google Maps API Key provided for PartNexa
@@ -430,16 +431,16 @@ export const NearbyShopsMap = ({
 
       const infoHtml = `
         <div style="font-family: inherit; padding: 6px; max-width: 240px; color: #0F172A;">
-          <div style="font-weight: 800; font-size: 14px; margin-bottom: 2px;">🔧 ${shop.name}</div>
-          <div style="font-size: 12px; color: #64748B; margin-bottom: 4px;">★ ${shop.rating} (${shop.totalRatings || 24} reviews)</div>
-          <div style="font-size: 12px; color: #64748B; margin-bottom: 6px;">📍 ${shop.distanceKm} km · ~${shop.durationMinutes} mins</div>
+          <div style="font-weight: 800; font-size: 14px; margin-bottom: 2px;">${shop.name}</div>
+          <div style="font-size: 12px; color: #64748B; margin-bottom: 4px;">Rating: ${shop.rating} (${shop.totalRatings || 24} reviews)</div>
+          <div style="font-size: 12px; color: #64748B; margin-bottom: 6px;">${shop.distanceKm} km · ~${shop.durationMinutes} mins</div>
           <div style="font-weight: 700; color: #0F766E; margin-bottom: 8px;">₹${shop.installationFee} Fitment Fee</div>
           <div style="display:flex; flex-direction:column; gap:6px;">
             <button id="gmap-select-btn-${shop.id}" style="width: 100%; background: #0F766E; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px;">
-              ${isSelected ? '✓ Selected Shop' : 'Select This Shop'}
+              ${isSelected ? 'Selected Shop' : 'Select This Shop'}
             </button>
             <a href="https://www.google.com/maps/dir/?api=1&destination=${shop.computedLat},${shop.computedLng}" target="_blank" rel="noopener noreferrer" style="text-align: center; font-size: 11px; color: #2563EB; text-decoration: underline; font-weight: 600;">
-              Directions in Google Maps ↗
+              Directions in Google Maps &rarr;
             </a>
           </div>
         </div>
@@ -506,7 +507,7 @@ export const NearbyShopsMap = ({
 
     userMarker.bindPopup(`
       <div class="map-popup-card">
-        <h4 class="map-popup-title">📍 Your Location</h4>
+        <h4 class="map-popup-title">Your Location</h4>
         <div class="map-popup-meta">${customerCoords.city || 'Detected Position'}</div>
       </div>
     `);
@@ -521,8 +522,8 @@ export const NearbyShopsMap = ({
       const shopIcon = L.divIcon({
         className: 'shop-marker-wrapper',
         html: `
-          <div class="shop-map-pin ${isSelected ? 'selected' : ''}">
-            <span>🔧</span>
+          <div class="shop-map-pin ${isSelected ? 'selected' : ''}" style="display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           </div>
         `,
         iconSize: isSelected ? [44, 44] : [38, 38],
@@ -537,11 +538,11 @@ export const NearbyShopsMap = ({
       marker.bindPopup(`
         <div class="map-popup-card">
           <h4 class="map-popup-title">${shop.name}</h4>
-          <div class="map-popup-meta">★ ${shop.rating} (${shop.totalRatings || 24} reviews)</div>
-          <div class="map-popup-meta">📍 ${shop.distanceKm} km away · ~${shop.durationMinutes} mins</div>
+          <div class="map-popup-meta">Rating: ${shop.rating} (${shop.totalRatings || 24} reviews)</div>
+          <div class="map-popup-meta">${shop.distanceKm} km away · ~${shop.durationMinutes} mins</div>
           <div class="map-popup-price">₹${shop.installationFee} Installation</div>
           <button class="btn-popup-select" id="popup-select-${shop.id}">
-            ${isSelected ? '✓ Selected' : 'Select This Shop'}
+            ${isSelected ? 'Selected' : 'Select This Shop'}
           </button>
         </div>
       `);
@@ -586,7 +587,9 @@ export const NearbyShopsMap = ({
       {/* 1. Location Detection Bar */}
       <div className="location-detection-bar">
         <div className="location-status-group">
-          <div className="location-icon-badge">📍</div>
+          <div className="location-icon-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MapPin size={18} strokeWidth={1.75} />
+          </div>
           <div className="location-status-text">
             <span className="location-title">
               {customerCoords.isDetected
@@ -608,8 +611,9 @@ export const NearbyShopsMap = ({
             onClick={detectBrowserLocation}
             disabled={isLocating}
             id="use-my-location-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            {isLocating ? '⏳ Detecting...' : '📍 Use My Location'}
+            {isLocating ? <><Loader2 size={13} strokeWidth={2} className="animate-spin" /> Detecting...</> : <><Navigation size={13} strokeWidth={1.75} /> Use My Location</>}
           </button>
 
           <button
@@ -617,8 +621,9 @@ export const NearbyShopsMap = ({
             className="btn-location"
             onClick={() => setShowManualInput((prev) => !prev)}
             id="enter-location-manually-btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            ✏️ {showManualInput ? 'Close' : 'Change City'}
+            <Edit3 size={13} strokeWidth={1.75} /> {showManualInput ? 'Close' : 'Change City'}
           </button>
         </div>
       </div>
@@ -661,8 +666,8 @@ export const NearbyShopsMap = ({
             </button>
           ))}
           {autoExpanded && (
-            <span className="auto-expanded-badge" title="Expanded automatically to find nearby workshops">
-              ⚡ Auto-expanded to {radiusKm} km
+            <span className="auto-expanded-badge" title="Expanded automatically to find nearby workshops" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Zap size={12} strokeWidth={1.75} /> Auto-expanded to {radiusKm} km
             </span>
           )}
         </div>
@@ -718,7 +723,9 @@ export const NearbyShopsMap = ({
             </div>
           ) : filteredShops.length === 0 ? (
             <div className="shops-empty-state">
-              <div className="empty-icon">🔍</div>
+              <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                <Search size={32} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+              </div>
               <h4>No workshops found within {radiusKm} km</h4>
               <p>Try expanding the search distance to view workshops in neighboring zones.</p>
               <button
@@ -746,18 +753,24 @@ export const NearbyShopsMap = ({
                   <div className="shop-card-header">
                     <div className="shop-name-group">
                       <div className="shop-card-title">
-                        <span>🔧</span> {shop.name}
+                        <Wrench size={14} strokeWidth={1.75} style={{ marginRight: '4px', verticalAlign: 'middle', display: 'inline' }} /> {shop.name}
                         {shop.isVerified && (
-                          <span className="shop-verified-tag">✓ Verified Partner</span>
+                          <span className="shop-verified-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={11} strokeWidth={2.0} /> Verified Partner
+                          </span>
                         )}
                       </div>
                       <div className="shop-card-address">{shop.address}</div>
                     </div>
 
                     <div className="shop-metrics-col">
-                      <div className="shop-distance-pill">📍 {shop.distanceKm} km</div>
+                      <div className="shop-distance-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <MapPin size={11} strokeWidth={1.75} /> {shop.distanceKm} km
+                      </div>
                       <div className="shop-duration-tag">~{shop.durationMinutes} mins away</div>
-                      <div className="shop-rating-pill">★ {shop.rating}</div>
+                      <div className="shop-rating-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <Star size={11} strokeWidth={1.75} style={{ color: '#eab308', fill: '#eab308' }} /> {shop.rating}
+                      </div>
                     </div>
                   </div>
 
@@ -768,8 +781,8 @@ export const NearbyShopsMap = ({
                         {srv}
                       </span>
                     ))}
-                    <span className="shop-service-tag text-teal font-semibold">
-                      ✓ Hoist & Bay Reserved
+                    <span className="shop-service-tag text-teal font-semibold" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Check size={11} strokeWidth={2.0} /> Hoist & Bay Reserved
                     </span>
                   </div>
 
@@ -781,8 +794,9 @@ export const NearbyShopsMap = ({
                       rel="noopener noreferrer"
                       className="shop-gmap-link"
                       onClick={(e) => e.stopPropagation()}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
-                      🗺️ Open in Google Maps ↗
+                      <Map size={12} strokeWidth={1.75} /> Open in Google Maps &rarr;
                     </a>
                   </div>
 
@@ -801,8 +815,9 @@ export const NearbyShopsMap = ({
                         handleSelectAndCenter(shop);
                       }}
                       id={`select-btn-${shop.id}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
-                      {isSelected ? '✓ Selected' : 'Select This Shop'}
+                      {isSelected ? <><Check size={12} strokeWidth={2.0} /> Selected</> : 'Select This Shop'}
                     </button>
                   </div>
                 </div>
@@ -814,7 +829,9 @@ export const NearbyShopsMap = ({
         {/* Right Column: Interactive Map (Google Maps / Leaflet) */}
         <div className="interactive-map-column" style={{ position: 'relative' }}>
           <div className="map-engine-badge" id="map-engine-badge">
-            <span>{mapEngine === 'google' ? '🗺️ Google Maps' : '🗺️ Interactive Map'}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Map size={13} strokeWidth={1.75} /> {mapEngine === 'google' ? 'Google Maps' : 'Interactive Map'}
+            </span>
             <span style={{ color: '#10B981', fontSize: '10px' }}>● Live</span>
           </div>
 
@@ -830,13 +847,15 @@ export const NearbyShopsMap = ({
       {currentSelectedShop && (
         <div className="selected-shop-confirmation-panel" id="selected-shop-confirm-banner">
           <div className="selected-shop-left">
-            <div className="selected-badge-icon">✓</div>
+            <div className="selected-badge-icon">
+              <Check size={14} strokeWidth={2.0} />
+            </div>
             <div className="selected-shop-details">
               <span className="selected-shop-header-label">Selected Mechanical Shop</span>
               <span className="selected-shop-name">{currentSelectedShop.name}</span>
-              <span className="selected-shop-sub">
-                📍 {currentSelectedShop.address} · 📏 {currentSelectedShop.distanceKm} km away (~
-                {currentSelectedShop.durationMinutes} mins) · ⭐ {currentSelectedShop.rating}
+              <span className="selected-shop-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                <MapPin size={12} strokeWidth={1.75} /> {currentSelectedShop.address} · {currentSelectedShop.distanceKm} km away (~
+                {currentSelectedShop.durationMinutes} mins) · <Star size={12} strokeWidth={1.75} style={{ color: '#eab308', fill: '#eab308' }} /> {currentSelectedShop.rating}
               </span>
             </div>
           </div>

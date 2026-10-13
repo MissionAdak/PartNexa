@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useShopAuth } from '../../contexts/ShopAuthContext';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../../components/common/PartNexaLogo';
+import { Moon, Sun } from 'lucide-react';
 
 export const ShopLoginPage = () => {
   const [email, setEmail] = useState('apex.shop@partsphere.in');
@@ -52,9 +54,10 @@ export const ShopLoginPage = () => {
       <button
         onClick={toggleTheme}
         className="btn btn-secondary btn-sm"
-        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
       >
-        {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        {theme === 'light' ? <Moon size={14} strokeWidth={1.75} /> : <Sun size={14} strokeWidth={1.75} />}
+        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
       </button>
 
       <div
@@ -69,23 +72,13 @@ export const ShopLoginPage = () => {
       >
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-teal))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '1.5rem',
-              margin: '0 auto 1rem',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
-            }}
-          >
-            ⚙️
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              portal="workshop"
+              size="lg"
+              linkTo="/shop"
+            />
           </div>
           <h1 style={{ fontSize: '1.75rem', marginBottom: '0.35rem' }}>Partner Workshop Login</h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>

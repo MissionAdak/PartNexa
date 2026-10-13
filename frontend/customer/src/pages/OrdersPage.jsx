@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ordersService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 import { Button, Badge, EmptyState, Skeleton } from '../components/ui';
+import { Package, Home, Wrench } from 'lucide-react';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
@@ -108,7 +109,7 @@ const OrdersPage = () => {
           </div>
         ) : filteredOrders.length === 0 ? (
           <EmptyState
-            icon="📦"
+            icon={<Package size={48} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />}
             title="No Orders Found"
             description="You have no past or active orders in this tab. Explore our verified automotive catalog to place your first order."
             actionText="Start Shopping"
@@ -127,16 +128,16 @@ const OrdersPage = () => {
                       Placed: <strong>{new Date(order.createdAt).toLocaleDateString()}</strong>
                     </div>
                     {order.difmType === 'HOME_INSTALLATION' || order.installationType === 'HOME' ? (
-                      <span className="badge badge-teal" style={{ fontSize: '0.75rem' }}>
-                        🏡 Doorstep Installation
+                      <span className="badge badge-teal" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Home size={12} strokeWidth={1.75} /> Doorstep Installation
                       </span>
                     ) : order.difmType === 'SHOP_INSTALLATION' ? (
-                      <span className="badge badge-primary" style={{ fontSize: '0.75rem' }}>
-                        🔧 Workshop Installation
+                      <span className="badge badge-primary" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Wrench size={12} strokeWidth={1.75} /> Workshop Installation
                       </span>
                     ) : (
-                      <span className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
-                        📦 DIY / Delivery Only
+                      <span className="badge badge-secondary" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Package size={12} strokeWidth={1.75} /> DIY / Delivery Only
                       </span>
                     )}
                   </div>
@@ -157,7 +158,9 @@ const OrdersPage = () => {
                               decoding="async"
                             />
                           ) : (
-                            <div className="order-item-thumb">⚙️</div>
+                            <div className="order-item-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Package size={20} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                            </div>
                           )}
                           <div>
                             <div className="order-item-name">{it.product?.name || 'Automotive Part'}</div>

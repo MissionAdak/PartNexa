@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import notificationsService from '../../services/notificationsService';
+import { Package, Truck, Wrench, CreditCard, Crown, RotateCcw, ShieldCheck, Bell } from 'lucide-react';
 import './NotificationBell.css';
 
 /**
@@ -29,14 +30,14 @@ function getNotificationIcon(notif) {
   const type = notif.data?.type || '';
   const title = (notif.title || '').toLowerCase();
 
-  if (type.includes('ORDER') || title.includes('order')) return '📦';
-  if (type.includes('DELIVERY') || title.includes('delivery') || title.includes('rider')) return '🚚';
-  if (type.includes('SHOP') || type.includes('WORKSHOP') || type.includes('SERVICE') || title.includes('service') || title.includes('workshop')) return '🔧';
-  if (type.includes('PAYMENT') || title.includes('payment') || title.includes('commission')) return '💳';
-  if (type.includes('SUBSCRIPTION') || title.includes('subscription') || title.includes('membership')) return '👑';
-  if (type.includes('USED_PART') || title.includes('used part') || title.includes('valuation')) return '♻️';
-  if (type.includes('KYC') || title.includes('kyc')) return '🛡️';
-  return '🔔';
+  if (type.includes('ORDER') || title.includes('order')) return <Package size={16} strokeWidth={1.75} />;
+  if (type.includes('DELIVERY') || title.includes('delivery') || title.includes('rider')) return <Truck size={16} strokeWidth={1.75} />;
+  if (type.includes('SHOP') || type.includes('WORKSHOP') || type.includes('SERVICE') || title.includes('service') || title.includes('workshop')) return <Wrench size={16} strokeWidth={1.75} />;
+  if (type.includes('PAYMENT') || title.includes('payment') || title.includes('commission')) return <CreditCard size={16} strokeWidth={1.75} />;
+  if (type.includes('SUBSCRIPTION') || title.includes('subscription') || title.includes('membership')) return <Crown size={16} strokeWidth={1.75} />;
+  if (type.includes('USED_PART') || title.includes('used part') || title.includes('valuation')) return <RotateCcw size={16} strokeWidth={1.75} />;
+  if (type.includes('KYC') || title.includes('kyc')) return <ShieldCheck size={16} strokeWidth={1.75} />;
+  return <Bell size={16} strokeWidth={1.75} />;
 }
 
 export const NotificationBell = ({ role = 'customer' }) => {
@@ -229,7 +230,7 @@ export const NotificationBell = ({ role = 'customer' }) => {
               </div>
             ) : previewList.length === 0 ? (
               <div className="notification-empty-preview">
-                <span className="empty-icon">🔔</span>
+                <Bell size={32} strokeWidth={1.75} className="empty-icon" style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
                 <p className="empty-text">No notifications yet</p>
                 <span className="empty-sub">We'll alert you about orders, deliveries & updates.</span>
               </div>

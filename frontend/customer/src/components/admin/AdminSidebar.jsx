@@ -1,19 +1,34 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import PartNexaLogo from '../common/PartNexaLogo';
+import {
+  LayoutDashboard,
+  Factory,
+  ClipboardList,
+  RotateCcw,
+  Users,
+  Wrench,
+  Bike,
+  Package,
+  Settings,
+  Repeat,
+  MapPin,
+  Headphones,
+} from 'lucide-react';
 
 const navItems = [
-  { path: '/admin', label: 'Overview Dashboard', icon: '📊', end: true },
-  { path: '/admin/procurement', label: 'Bulk Procurement', icon: '🏭' },
-  { path: '/admin/orders', label: 'Orders & DIFM', icon: '📑' },
-  { path: '/admin/returns', label: 'Returns & Refunds', icon: '↩️' },
-  { path: '/admin/customers', label: 'Customers', icon: '👥' },
-  { path: '/admin/shops', label: 'Mechanical Workshops', icon: '🔧' },
-  { path: '/admin/delivery-partners', label: 'Delivery Fleet & KYC', icon: '🛵' },
-  { path: '/admin/products-inventory', label: 'Catalog & Inventory', icon: '📦' },
-  { path: '/admin/platform-config', label: 'Platform & DIFM Config', icon: '⚙️' },
-  { path: '/admin/used-parts', label: 'Used Parts Oversight', icon: '🔄' },
-  { path: '/admin/deliveries', label: 'Live Dispatches', icon: '📍' },
-  { path: '/admin/care-hub', label: 'Customer Care Hub', icon: '🎧' },
+  { path: '/admin', label: 'Overview Dashboard', icon: LayoutDashboard, end: true },
+  { path: '/admin/procurement', label: 'Bulk Procurement', icon: Factory },
+  { path: '/admin/orders', label: 'Orders & DIFM', icon: ClipboardList },
+  { path: '/admin/returns', label: 'Returns & Refunds', icon: RotateCcw },
+  { path: '/admin/customers', label: 'Customers', icon: Users },
+  { path: '/admin/shops', label: 'Mechanical Workshops', icon: Wrench },
+  { path: '/admin/delivery-partners', label: 'Delivery Fleet & KYC', icon: Bike },
+  { path: '/admin/products-inventory', label: 'Catalog & Inventory', icon: Package },
+  { path: '/admin/platform-config', label: 'Platform & DIFM Config', icon: Settings },
+  { path: '/admin/used-parts', label: 'Used Parts Oversight', icon: Repeat },
+  { path: '/admin/deliveries', label: 'Live Dispatches', icon: MapPin },
+  { path: '/admin/care-hub', label: 'Customer Care Hub', icon: Headphones },
 ];
 
 export default function AdminSidebar() {
@@ -40,42 +55,14 @@ export default function AdminSidebar() {
           display: 'flex',
           alignItems: 'center',
           borderBottom: '1px solid var(--border-color)',
-          gap: '0.75rem',
         }}
       >
-        <div
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.2rem',
-            flexShrink: 0,
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)',
-          }}
-        >
-          🛡️
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-            PARTSPHERE
-          </div>
-          <div
-            style={{
-              fontSize: '0.68rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'var(--color-primary)',
-              letterSpacing: '0.08em',
-            }}
-          >
-            Admin Console
-          </div>
-        </div>
+        <PartNexaLogo
+          variant="horizontal"
+          portal="admin"
+          size="md"
+          linkTo="/admin"
+        />
       </div>
 
       {/* Nav Items */}
@@ -97,7 +84,7 @@ export default function AdminSidebar() {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/'}
+            end={item.end || item.path === '/'}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
@@ -112,7 +99,7 @@ export default function AdminSidebar() {
               borderLeft: isActive ? '3px solid var(--color-primary)' : '3px solid transparent',
             })}
           >
-            <span style={{ fontSize: '1.15rem' }}>{item.icon}</span>
+            <item.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -127,7 +114,7 @@ export default function AdminSidebar() {
         }}
       >
         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-          PartSphere Engine v1.0.0
+          PartNexa Engine v1.0.0
         </div>
         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
           Environment: Production-Ready

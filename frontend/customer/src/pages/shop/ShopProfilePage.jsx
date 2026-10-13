@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useShopAuth } from '../../contexts/ShopAuthContext';
 import shopService from '../../services/shopService';
 import toast from 'react-hot-toast';
+import { Check, Plus, Car, Bike, Zap } from 'lucide-react';
 
 const AVAILABLE_SERVICES = [
   'Brake Fitment & Polish',
@@ -118,7 +119,9 @@ export const ShopProfilePage = () => {
         <div style={{ marginBottom: '1.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ fontSize: '1.1rem' }}>Workshop Identification</h3>
-            <span className="badge badge-success">✓ {profile?.verificationStatus || 'VERIFIED'}</span>
+            <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Check size={13} strokeWidth={2} /> {profile?.verificationStatus || 'VERIFIED'}
+            </span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -232,24 +235,29 @@ export const ShopProfilePage = () => {
             <label className="form-label">Vehicle Categories Serviced</label>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               {[
-                { id: 'CAR', label: '🚗 4-Wheelers (Cars)' },
-                { id: 'BIKE', label: '🏍️ 2-Wheelers (Bikes)' },
-                { id: 'SCOOTER', label: '🛵 Scooters & EVs' },
-              ].map((c) => (
+                { id: 'CAR', label: '4-Wheelers (Cars)', Icon: Car },
+                { id: 'BIKE', label: '2-Wheelers (Bikes)', Icon: Bike },
+                { id: 'SCOOTER', label: 'Scooters & EVs', Icon: Zap },
+              ].map(({ id, label, Icon }) => (
                 <button
-                  key={c.id}
+                  key={id}
                   type="button"
-                  onClick={() => toggleCategory(c.id)}
+                  onClick={() => toggleCategory(id)}
                   className="btn"
                   style={{
-                    background: vehicleCategories.includes(c.id) ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
-                    color: vehicleCategories.includes(c.id) ? '#FFFFFF' : 'var(--color-text-primary)',
+                    background: vehicleCategories.includes(id) ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
+                    color: vehicleCategories.includes(id) ? '#FFFFFF' : 'var(--color-text-primary)',
                     border: '1px solid var(--color-border)',
                     padding: '0.45rem 0.85rem',
                     borderRadius: 'var(--radius-full)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
                   }}
                 >
-                  {c.label} {vehicleCategories.includes(c.id) && '✓'}
+                  <Icon size={16} strokeWidth={1.75} />
+                  {label}
+                  {vehicleCategories.includes(id) && <Check size={14} strokeWidth={2} />}
                 </button>
               ))}
             </div>
@@ -274,9 +282,12 @@ export const ShopProfilePage = () => {
                       background: isSelected ? 'var(--color-teal-glow)' : 'var(--color-bg-card)',
                       color: isSelected ? 'var(--color-teal-dark)' : 'var(--color-text-secondary)',
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
                     }}
                   >
-                    {isSelected ? '✓ ' : '+ '} {s}
+                    {isSelected ? <Check size={13} strokeWidth={2} /> : <Plus size={13} strokeWidth={2} />} {s}
                   </button>
                 );
               })}

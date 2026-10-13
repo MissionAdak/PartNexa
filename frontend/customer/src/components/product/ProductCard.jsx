@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldCheck, CheckCircle2, X, Search, Check, Star } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import './ProductCard.css';
 
@@ -114,18 +115,18 @@ export const ProductCard = ({ product }) => {
           {/* Compatibility Status Badge */}
           <div className="product-card-compatibility-row">
             {isCompatible === true && (
-              <span className="fitment-badge fitment-compatible" id={`fitment-ok-${id}`}>
-                <span className="fitment-dot">●</span> Guaranteed Fit
+              <span className="fitment-badge fitment-compatible" id={`fitment-ok-${id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle2 size={12} strokeWidth={2.0} /> Guaranteed Fit
               </span>
             )}
             {isCompatible === false && (
-              <span className="fitment-badge fitment-incompatible" id={`fitment-no-${id}`}>
-                <span className="fitment-dot">✕</span> Does Not Fit
+              <span className="fitment-badge fitment-incompatible" id={`fitment-no-${id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <X size={12} strokeWidth={2.0} /> Does Not Fit
               </span>
             )}
             {isCompatible === null && (
-              <span className="fitment-badge fitment-unselected">
-                <span>🔍</span> Check Fitment
+              <span className="fitment-badge fitment-unselected" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Search size={12} strokeWidth={1.75} /> Check Fitment
               </span>
             )}
           </div>
@@ -133,17 +134,18 @@ export const ProductCard = ({ product }) => {
           {/* Warranty & Availability Chips */}
           <div className="product-card-tags-row">
             {warranty && (
-              <span className="product-tag-chip warranty-chip" title="Warranty">
-                🛡️ {warranty}
+              <span className="product-tag-chip warranty-chip" title="Warranty" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <ShieldCheck size={13} strokeWidth={2} />
+                <span>{warranty}</span>
               </span>
             )}
             {isAvailable && stockQuantity > 0 ? (
-              <span className="product-tag-chip in-stock-chip">
-                ✓ In Stock ({stockQuantity})
+              <span className="product-tag-chip in-stock-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={12} strokeWidth={2.0} /> In Stock ({stockQuantity})
               </span>
             ) : (
-              <span className="product-tag-chip oos-chip">
-                ✕ Out of Stock
+              <span className="product-tag-chip oos-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <X size={12} strokeWidth={2.0} /> Out of Stock
               </span>
             )}
           </div>
@@ -163,7 +165,7 @@ export const ProductCard = ({ product }) => {
       {/* Action Footer */}
       <div className="product-card-action-footer">
         <div className="product-card-reviews">
-          <span className="stars" style={{ color: 'var(--color-gold)' }}>★</span>
+          <Star size={12} strokeWidth={1.75} style={{ color: '#eab308', fill: '#eab308' }} />
           <span className="rating-value">{rating?.toFixed(1) || '4.5'}</span>
           <span className="review-count">({reviewCount || 0})</span>
         </div>

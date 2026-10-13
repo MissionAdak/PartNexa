@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { Package, X, Car } from 'lucide-react';
 import procurementService from '../../../services/procurementService';
 
 export default function AddCatalogItemModal({ isOpen, onClose, suppliers, onItemAdded }) {
@@ -117,7 +118,7 @@ export default function AddCatalogItemModal({ isOpen, onClose, suppliers, onItem
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>📦</span>
+              <Package size={22} strokeWidth={1.75} color="var(--admin-blue)" />
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                 Add Part to Supplier Catalog
               </h2>
@@ -139,10 +140,9 @@ export default function AddCatalogItemModal({ isOpen, onClose, suppliers, onItem
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1rem',
             }}
           >
-            ✕
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -283,8 +283,8 @@ export default function AddCatalogItemModal({ isOpen, onClose, suppliers, onItem
               marginBottom: '1rem',
             }}
           >
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              🚗 Vehicle Fitment (Separate from Brand)
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Car size={14} strokeWidth={1.75} /> Vehicle Fitment (Separate from Brand)
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
               <div>

@@ -3,6 +3,22 @@ import { Link } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
+import {
+  Bike,
+  Package,
+  Banknote,
+  Search,
+  CheckCircle2,
+  Compass,
+  MapPin,
+  Navigation,
+  Inbox,
+  ArrowRight,
+  Clock,
+  AlertCircle,
+  AlertTriangle,
+  Lock,
+} from 'lucide-react';
 
 export const DeliveryDashboardPage = () => {
   const { partner, toggleDuty } = useDeliveryAuth();
@@ -57,7 +73,9 @@ export const DeliveryDashboardPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛵</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Bike size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading Delivery Partner Dashboard...</div>
       </div>
     );
@@ -131,8 +149,14 @@ export const DeliveryDashboardPage = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '2rem' }}>
-              {dashboardData?.kycStatus === 'PENDING' ? '⏳' : dashboardData?.kycStatus === 'REJECTED' ? '❌' : '⚠️'}
+            <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+              {dashboardData?.kycStatus === 'PENDING' ? (
+                <Clock size={24} strokeWidth={1.75} style={{ color: '#eab308' }} />
+              ) : dashboardData?.kycStatus === 'REJECTED' ? (
+                <AlertCircle size={24} strokeWidth={1.75} style={{ color: '#ef4444' }} />
+              ) : (
+                <AlertTriangle size={24} strokeWidth={1.75} style={{ color: '#3b82f6' }} />
+              )}
             </span>
             <div>
               <div
@@ -195,7 +219,7 @@ export const DeliveryDashboardPage = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               Available Jobs
             </span>
-            <span style={{ fontSize: '1.25rem' }}>📦</span>
+            <Package size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
           </div>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--color-primary)' }}>
             {metrics.availableJobsCount || 0}
@@ -211,7 +235,7 @@ export const DeliveryDashboardPage = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               Active Trips
             </span>
-            <span style={{ fontSize: '1.25rem' }}>🛵</span>
+            <Bike size={20} strokeWidth={1.75} style={{ color: 'var(--color-amber)' }} />
           </div>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--color-amber)' }}>
             {metrics.activeTripsCount || 0}
@@ -227,7 +251,7 @@ export const DeliveryDashboardPage = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               COD Cash in Hand
             </span>
-            <span style={{ fontSize: '1.25rem' }}>💵</span>
+            <Banknote size={20} strokeWidth={1.75} style={{ color: '#EA580C' }} />
           </div>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#EA580C' }}>
             ₹{(metrics.pendingCashInHand || 0).toLocaleString('en-IN')}
@@ -243,7 +267,7 @@ export const DeliveryDashboardPage = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               Used-Part Pickups
             </span>
-            <span style={{ fontSize: '1.25rem' }}>🔍</span>
+            <Search size={20} strokeWidth={1.75} style={{ color: '#9333EA' }} />
           </div>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#9333EA' }}>
             {metrics.usedPartPickupsCount || 0}
@@ -259,7 +283,7 @@ export const DeliveryDashboardPage = () => {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
               Total Delivered
             </span>
-            <span style={{ fontSize: '1.25rem' }}>🏁</span>
+            <CheckCircle2 size={20} strokeWidth={1.75} style={{ color: 'var(--color-emerald)' }} />
           </div>
           <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--color-emerald)' }}>
             {metrics.completedTripsCount || 0}
@@ -273,8 +297,8 @@ export const DeliveryDashboardPage = () => {
       {/* SECTION 1: Active Deliveries In Progress */}
       <div style={{ marginBottom: '2.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-            🛵 Active Trips In Progress ({activeTrips.length})
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Bike size={20} strokeWidth={1.75} style={{ color: 'var(--color-amber)' }} /> Active Trips In Progress ({activeTrips.length})
           </h2>
           <Link to="/jobs/my" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             View All Trips →
@@ -283,7 +307,9 @@ export const DeliveryDashboardPage = () => {
 
         {activeTrips.length === 0 ? (
           <div className="delivery-card" style={{ textAlign: 'center', padding: '2.5rem' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✨</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              <Package size={36} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+            </div>
             <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.25rem' }}>No Active Trips Right Now</div>
             <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
               Check the available jobs below and claim an order to start delivering!
@@ -320,8 +346,8 @@ export const DeliveryDashboardPage = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                   {/* Pickup */}
                   <div style={{ padding: '0.85rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                      📍 Pickup Location
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <MapPin size={13} strokeWidth={1.75} /> Pickup Location
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{trip.pickupLocation?.name}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{trip.pickupLocation?.address}</div>
@@ -332,8 +358,8 @@ export const DeliveryDashboardPage = () => {
 
                   {/* Drop */}
                   <div style={{ padding: '0.85rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                      🎯 Drop Destination
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Navigation size={13} strokeWidth={1.75} /> Drop Destination
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{trip.dropLocation?.name}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{trip.dropLocation?.address}</div>
@@ -348,8 +374,8 @@ export const DeliveryDashboardPage = () => {
                   <div style={{ fontSize: '0.825rem' }}>
                     <strong>Items:</strong> {trip.items?.map((it) => `${it.title} (x${it.quantity || 1})`).join(', ') || 'Package Items'}
                   </div>
-                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-                    🧭 {trip.navigationInfo?.currentDistance || '2.4 km'} • {trip.navigationInfo?.etaMinutes || 8} min ETA
+                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Compass size={14} strokeWidth={1.75} /> {trip.navigationInfo?.currentDistance || '2.4 km'} • {trip.navigationInfo?.etaMinutes || 8} min ETA
                   </div>
                 </div>
 
@@ -359,8 +385,9 @@ export const DeliveryDashboardPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'PICKED_UP')}
                       className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
-                      📦 Confirm Package Picked Up
+                      <Package size={14} strokeWidth={1.75} /> Confirm Package Picked Up
                     </button>
                   )}
 
@@ -368,8 +395,9 @@ export const DeliveryDashboardPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'IN_TRANSIT')}
                       className="btn btn-amber btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
-                      🛵 Start Transit to Drop Location
+                      <Bike size={14} strokeWidth={1.75} /> Start Transit to Drop Location
                     </button>
                   )}
 
@@ -377,8 +405,9 @@ export const DeliveryDashboardPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'DELIVERED')}
                       className="btn btn-emerald btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
-                      🏁 Confirm Delivered to Customer
+                      <CheckCircle2 size={14} strokeWidth={1.75} /> Confirm Delivered to Customer
                     </button>
                   )}
 
@@ -387,9 +416,9 @@ export const DeliveryDashboardPage = () => {
                     <button
                       onClick={() => handleCollectCod(trip.id, trip.codAmountToCollect)}
                       className="btn btn-primary btn-sm"
-                      style={{ background: '#EA580C' }}
+                      style={{ background: '#EA580C', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
-                      💵 Collect COD Cash (₹{trip.codAmountToCollect})
+                      <Banknote size={14} strokeWidth={1.75} /> Collect COD Cash (₹{trip.codAmountToCollect})
                     </button>
                   )}
 
@@ -398,9 +427,9 @@ export const DeliveryDashboardPage = () => {
                     <Link
                       to={`/jobs/${trip.id}/inspect`}
                       className="btn btn-primary btn-sm"
-                      style={{ background: '#9333EA' }}
+                      style={{ background: '#9333EA', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
-                      🔍 Conduct Doorstep Inspection Checklist →
+                      <Search size={14} strokeWidth={1.75} /> Conduct Doorstep Inspection Checklist →
                     </Link>
                   )}
                 </div>
@@ -413,8 +442,8 @@ export const DeliveryDashboardPage = () => {
       {/* SECTION 2: Available Open Jobs */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-            📦 Available Jobs Feed ({availableJobs.length})
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Package size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> Available Jobs Feed ({availableJobs.length})
           </h2>
           <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
             Real-time open broadcast
@@ -433,7 +462,9 @@ export const DeliveryDashboardPage = () => {
               borderRadius: '12px',
             }}
           >
-            <div style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>🔒</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              <Lock size={36} strokeWidth={1.75} style={{ color: '#eab308' }} />
+            </div>
             <div style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '0.35rem', color: '#eab308' }}>
               Job Claiming Locked (KYC Approval Required)
             </div>
@@ -446,7 +477,9 @@ export const DeliveryDashboardPage = () => {
           </div>
         ) : availableJobs.length === 0 ? (
           <div className="delivery-card" style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📭</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+              <Inbox size={32} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+            </div>
             <div style={{ fontWeight: 600 }}>No unassigned jobs currently in this radius.</div>
           </div>
         ) : (

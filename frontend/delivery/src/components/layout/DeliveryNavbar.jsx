@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
+import PartNexaLogo from '../common/PartNexaLogo';
+import { Banknote, Sun, Moon } from 'lucide-react';
 
 export const DeliveryNavbar = () => {
   const { user, partner, theme, toggleTheme, toggleDuty, logout } = useDeliveryAuth();
@@ -32,32 +34,12 @@ export const DeliveryNavbar = () => {
     >
       {/* Brand & Portal Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-amber))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '1.2rem',
-            }}
-          >
-            ⚡
-          </div>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-              Part<span style={{ color: 'var(--color-primary)' }}>Sphere</span>
-            </div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-amber)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Delivery Partner Portal
-            </div>
-          </div>
-        </Link>
+        <PartNexaLogo
+          variant="horizontal"
+          portal="delivery"
+          size="md"
+          linkTo="/dashboard"
+        />
       </div>
 
       {/* Center / Action: Duty Switch */}
@@ -87,7 +69,9 @@ export const DeliveryNavbar = () => {
               fontWeight: 600,
             }}
           >
-            <span>💵 Cash in Hand:</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Banknote size={15} strokeWidth={1.75} /> Cash in Hand:
+            </span>
             <span style={{ color: '#EA580C', fontWeight: 800 }}>
               ₹{(partner.cashInHand || 0).toLocaleString('en-IN')}
             </span>
@@ -117,7 +101,7 @@ export const DeliveryNavbar = () => {
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           aria-label="Toggle Theme"
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? <Sun size={17} strokeWidth={1.75} /> : <Moon size={17} strokeWidth={1.75} />}
         </button>
 
         {user && (

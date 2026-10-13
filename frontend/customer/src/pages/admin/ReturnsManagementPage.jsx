@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import returnsService from '../../services/returnsService';
 import toast from 'react-hot-toast';
+import { RefreshCw, Package, Check, X, AlertTriangle, CheckCircle2, CreditCard, RotateCcw } from 'lucide-react';
 
 export default function ReturnsManagementPage() {
   const [returns, setReturns] = useState([]);
@@ -134,8 +135,8 @@ export default function ReturnsManagementPage() {
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Title & Description */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>
-          ↩️ Spare-Part Returns & Refunds Oversight
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <RotateCcw size={26} strokeWidth={1.75} /> Spare-Part Returns & Refunds Oversight
         </h1>
         <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
           Manage customer returns, inspect reverse logistics deliveries, and process authoritative refunds.
@@ -257,8 +258,8 @@ export default function ReturnsManagementPage() {
       {/* Returns List */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🔄</div>
-          Loading return requests...
+          <RefreshCw size={36} strokeWidth={1.75} style={{ color: 'var(--color-primary)', marginBottom: '8px' }} />
+          <div>Loading return requests...</div>
         </div>
       ) : returns.length === 0 ? (
         <div
@@ -270,7 +271,9 @@ export default function ReturnsManagementPage() {
             border: '1px solid var(--border-color)',
           }}
         >
-          <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📦</div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Package size={44} strokeWidth={1.75} style={{ color: 'var(--text-muted)', marginBottom: '10px' }} />
+          </div>
           <h3 style={{ margin: '0 0 6px', color: 'var(--text-primary)' }}>No Return Requests Found</h3>
           <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             There are no returns matching the selected status filter.
@@ -443,15 +446,15 @@ export default function ReturnsManagementPage() {
 
                           {/* If REFUNDED */}
                           {ret.status === 'REFUNDED' && (
-                            <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700 }}>
-                              ✓ Refund Complete
+                            <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={14} strokeWidth={2} /> Refund Complete
                             </span>
                           )}
 
                           {/* If REJECTED */}
                           {ret.status === 'REJECTED' && (
-                            <span style={{ fontSize: '0.8rem', color: '#DC2626', fontWeight: 600 }}>
-                              ✗ Rejected
+                            <span style={{ fontSize: '0.8rem', color: '#DC2626', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <X size={14} strokeWidth={2} /> Rejected
                             </span>
                           )}
                         </div>
@@ -478,8 +481,9 @@ export default function ReturnsManagementPage() {
                 className="modal-close-btn"
                 onClick={() => setReviewModalData(null)}
                 disabled={submittingAction}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -557,8 +561,9 @@ export default function ReturnsManagementPage() {
                 className="modal-close-btn"
                 onClick={() => setInspectModalData(null)}
                 disabled={submittingAction}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -610,9 +615,13 @@ export default function ReturnsManagementPage() {
                 }}
               >
                 {inspectionCondition === 'DAMAGED' || inspectionOutcome === 'FAILED' ? (
-                  <>⚠️ Damaged stock rule active: This part will NOT be added back to sellable inventory. It will be quarantined in damaged inventory.</>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertTriangle size={15} strokeWidth={1.75} /> Damaged stock rule active: This part will NOT be added back to sellable inventory. It will be quarantined in damaged inventory.
+                  </span>
                 ) : (
-                  <>✅ Stock restoration rule active: This part will be authoritatively restocked into PostgreSQL inventory with StockMovement type RETURN.</>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle2 size={15} strokeWidth={1.75} /> Stock restoration rule active: This part will be authoritatively restocked into PostgreSQL inventory with StockMovement type RETURN.
+                  </span>
                 )}
               </div>
 
@@ -671,14 +680,15 @@ export default function ReturnsManagementPage() {
                 className="modal-close-btn"
                 onClick={() => setRefundConfirmData(null)}
                 disabled={submittingAction}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>💳</div>
+              <div style={{ textAlign: 'center', padding: '16px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <CreditCard size={40} strokeWidth={1.75} style={{ color: '#0D9488', marginBottom: '8px' }} />
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0D9488' }}>
                   ₹{Number(refundConfirmData.refundAmount || 0).toLocaleString('en-IN')}
                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
+import { Package, Inbox, MapPin, Navigation, Banknote, CreditCard, RotateCcw } from 'lucide-react';
 
 export const AvailableJobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -42,7 +43,9 @@ export const AvailableJobsPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📦</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Package size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading open broadcast jobs...</div>
       </div>
     );
@@ -66,7 +69,7 @@ export const AvailableJobsPage = () => {
           {[
             { key: 'ALL', label: 'All Jobs' },
             { key: 'CUSTOMER_DELIVERY', label: 'Package Deliveries' },
-            { key: 'RETURN_PICKUP', label: '↩️ Return Pickups' },
+            { key: 'RETURN_PICKUP', label: 'Return Pickups' },
             { key: 'USED_PART_PICKUP', label: 'Used-Part Pickups' },
           ].map((item) => (
             <button
@@ -82,7 +85,9 @@ export const AvailableJobsPage = () => {
 
       {filteredJobs.length === 0 ? (
         <div className="delivery-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Inbox size={44} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>No Available Jobs Right Now</div>
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
             All available orders have been claimed by the fleet. Stay online to receive instant dispatch notifications.
@@ -128,11 +133,15 @@ export const AvailableJobsPage = () => {
                           : {}),
                       }}
                     >
-                      {job.type === 'RETURN_PICKUP'
-                        ? '↩️ RETURN PICKUP'
-                        : job.type === 'USED_PART_PICKUP'
-                        ? 'USED PART'
-                        : 'ORDER'}
+                      {job.type === 'RETURN_PICKUP' ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                          <RotateCcw size={11} strokeWidth={2} /> RETURN PICKUP
+                        </span>
+                      ) : job.type === 'USED_PART_PICKUP' ? (
+                        'USED PART'
+                      ) : (
+                        'ORDER'
+                      )}
                     </span>
                   </div>
                   <span className="delivery-badge badge-delivered" style={{ fontSize: '0.85rem', fontWeight: 800 }}>
@@ -143,16 +152,16 @@ export const AvailableJobsPage = () => {
                 {/* Pickup & Drop Points */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
                   <div style={{ padding: '0.65rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase' }}>
-                      📍 Pickup
+                    <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <MapPin size={13} strokeWidth={1.75} /> Pickup
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{job.pickupLocation?.name}</div>
                     <div style={{ fontSize: '0.775rem', color: 'var(--color-text-muted)' }}>{job.pickupLocation?.address}</div>
                   </div>
 
                   <div style={{ padding: '0.65rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase' }}>
-                      🎯 Drop
+                    <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Navigation size={13} strokeWidth={1.75} /> Drop
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{job.dropLocation?.name}</div>
                     <div style={{ fontSize: '0.775rem', color: 'var(--color-text-muted)' }}>{job.dropLocation?.address}</div>
@@ -160,8 +169,17 @@ export const AvailableJobsPage = () => {
                 </div>
 
                 {/* Route telemetry preview */}
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-                  Distance: ~{job.distanceKm || 5.0} km • {job.paymentMethod === 'CASH_ON_DELIVERY' ? '💵 Collect COD' : '💳 Prepaid'}
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>Distance: ~{job.distanceKm || 5.0} km •</span>
+                  {job.paymentMethod === 'CASH_ON_DELIVERY' ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: '#EA580C', fontWeight: 600 }}>
+                      <Banknote size={13} strokeWidth={1.75} /> Collect COD
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--color-text-secondary)' }}>
+                      <CreditCard size={13} strokeWidth={1.75} /> Prepaid
+                    </span>
+                  )}
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 export default function OrdersManagementPage() {
   const [orders, setOrders] = useState([]);
@@ -334,9 +335,9 @@ export default function OrdersManagementPage() {
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 

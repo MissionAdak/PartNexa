@@ -2,6 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
+import {
+  Bike,
+  Check,
+  Compass,
+  MapPin,
+  Navigation,
+  CreditCard,
+  Banknote,
+  CheckCircle2,
+  Search,
+  Package,
+  CornerUpLeft,
+} from 'lucide-react';
 
 export const JobDetailPage = () => {
   const { id } = useParams();
@@ -76,7 +89,9 @@ export const JobDetailPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛵</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Bike size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading delivery navigation telemetry...</div>
       </div>
     );
@@ -149,8 +164,8 @@ export const JobDetailPage = () => {
             const isActive = currentStepIdx === idx;
             return (
               <div key={step} className={`step-node ${isCompleted ? 'completed' : isActive ? 'active' : ''}`}>
-                <div className="step-circle">
-                  {isCompleted ? '✓' : idx + 1}
+                <div className="step-circle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isCompleted ? <Check size={14} strokeWidth={2.5} /> : idx + 1}
                 </div>
                 <div className="step-label">
                   {step.replace('_', ' ')}
@@ -164,8 +179,8 @@ export const JobDetailPage = () => {
       {/* Live Navigation & Map Simulator Card */}
       <div className="delivery-card" style={{ marginBottom: '1.75rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>
-            🧭 Live GPS Telemetry & Route Guidance
+          <div style={{ fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Compass size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> Live GPS Telemetry & Route Guidance
           </div>
           <span className="delivery-badge badge-online">GPS ACTIVE • 38 KM/H</span>
         </div>
@@ -202,7 +217,9 @@ export const JobDetailPage = () => {
               gap: '0.85rem',
             }}
           >
-            <div style={{ fontSize: '1.6rem' }}>↰</div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <CornerUpLeft size={22} strokeWidth={1.75} />
+            </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
                 Turn left onto Marathahalli - Sarjapur Outer Ring Road in 350 meters
@@ -220,7 +237,7 @@ export const JobDetailPage = () => {
         {/* Pickup Card */}
         <div className="delivery-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>📍</span>
+            <MapPin size={18} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>
               PICKUP LOCATION
             </span>
@@ -240,7 +257,7 @@ export const JobDetailPage = () => {
         {/* Drop Card */}
         <div className="delivery-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>🎯</span>
+            <Navigation size={18} strokeWidth={1.75} style={{ color: 'var(--color-emerald)' }} />
             <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-emerald)' }}>
               DROP LOCATION
             </span>
@@ -262,8 +279,8 @@ export const JobDetailPage = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.75rem' }}>
         {/* Payment & COD Card */}
         <div className="delivery-card">
-          <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '0.75rem' }}>
-            💳 Payment & COD Collection
+          <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CreditCard size={18} strokeWidth={1.75} style={{ color: '#EA580C' }} /> Payment & COD Collection
           </div>
           <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
             Method: <strong>{job.paymentMethod || 'PREPAID / RAZORPAY'}</strong>
@@ -287,13 +304,13 @@ export const JobDetailPage = () => {
                   onClick={handleCollectCod}
                   disabled={updating}
                   className="btn btn-primary btn-block"
-                  style={{ background: '#EA580C' }}
+                  style={{ background: '#EA580C', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
-                  💵 Confirm Cash Received (₹{job.codAmountToCollect})
+                  <Banknote size={16} strokeWidth={1.75} /> Confirm Cash Received (₹{job.codAmountToCollect})
                 </button>
               ) : (
-                <div style={{ textAlign: 'center', fontWeight: 700, color: 'var(--color-emerald)', fontSize: '0.85rem' }}>
-                  ✓ ₹{job.codAmountCollected} Collected (Pending Hub Deposit)
+                <div style={{ textAlign: 'center', fontWeight: 700, color: 'var(--color-emerald)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                  <CheckCircle2 size={16} strokeWidth={1.75} /> ₹{job.codAmountCollected} Collected (Pending Hub Deposit)
                 </div>
               )}
             </div>
@@ -303,8 +320,8 @@ export const JobDetailPage = () => {
         {/* Used Part Inspection Trigger Card */}
         {job.type === 'USED_PART_PICKUP' && (
           <div className="delivery-card" style={{ borderLeft: '5px solid #9333EA' }}>
-            <div style={{ fontWeight: 800, fontSize: '1rem', color: '#9333EA', marginBottom: '0.5rem' }}>
-              🔍 Used-Part Doorstep Verification
+            <div style={{ fontWeight: 800, fontSize: '1rem', color: '#9333EA', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Search size={18} strokeWidth={1.75} /> Used-Part Doorstep Verification
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
               Verify component condition with the seller at pickup. Complete checklist, condition grading (A+ to D), and trigger automated valuation payout.
@@ -344,8 +361,9 @@ export const JobDetailPage = () => {
             onClick={() => handleUpdateStatus('PICKED_UP')}
             disabled={updating}
             className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            📦 Confirm Package Picked Up
+            <Package size={16} strokeWidth={1.75} /> Confirm Package Picked Up
           </button>
         )}
 
@@ -354,8 +372,9 @@ export const JobDetailPage = () => {
             onClick={() => handleUpdateStatus('IN_TRANSIT')}
             disabled={updating}
             className="btn btn-amber"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            🛵 Start Transit to Drop Address
+            <Bike size={16} strokeWidth={1.75} /> Start Transit to Drop Address
           </button>
         )}
 
@@ -364,8 +383,9 @@ export const JobDetailPage = () => {
             onClick={() => handleUpdateStatus('DELIVERED')}
             disabled={updating}
             className="btn btn-emerald"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            🏁 Confirm Delivered to Customer
+            <CheckCircle2 size={16} strokeWidth={1.75} /> Confirm Delivered to Customer
           </button>
         )}
       </div>

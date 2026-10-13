@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../services/shopService';
 import toast from 'react-hot-toast';
+import { Wrench } from 'lucide-react';
 
 export const UsedPartIntakePage = () => {
   const [intakes, setIntakes] = useState([]);
@@ -82,7 +83,9 @@ export const UsedPartIntakePage = () => {
         </div>
       ) : intakes.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔧</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Wrench size={40} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>No Parts in Intake Queue</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             When customers drop off used parts for physical verification, they will appear here.

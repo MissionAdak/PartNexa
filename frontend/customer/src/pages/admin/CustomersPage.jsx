@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Search, X, Star } from 'lucide-react';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
@@ -61,7 +62,7 @@ export default function CustomersPage() {
       {/* Toolbar */}
       <div className="toolbar">
         <form onSubmit={handleSearchSubmit} className="search-box">
-          <span>🔍</span>
+          <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Search by name, email, or phone..."
@@ -188,7 +189,9 @@ export default function CustomersPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {selectedCustomer.fullName}'s Garage
               </h3>
-              <button onClick={() => setSelectedCustomer(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setSelectedCustomer(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <div className="modal-body">
               {selectedCustomer.vehicles && selectedCustomer.vehicles.length > 0 ? (
@@ -254,9 +257,12 @@ export default function CustomersPage() {
                                 letterSpacing: '0.04em',
                                 padding: '3px 8px',
                                 borderRadius: '6px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
                               }}
                             >
-                              ⭐ PRIMARY
+                              <Star size={11} strokeWidth={2} fill="currentColor" /> PRIMARY
                             </span>
                           )}
                         </div>

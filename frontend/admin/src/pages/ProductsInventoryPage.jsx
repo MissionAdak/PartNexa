@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
+import { Search, X } from 'lucide-react';
 
 export default function ProductsInventoryPage() {
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'inventory'
@@ -151,7 +152,7 @@ export default function ProductsInventoryPage() {
       <div className="toolbar">
         {activeTab === 'catalog' ? (
           <form onSubmit={(e) => { e.preventDefault(); fetchData(); }} className="search-box">
-            <span>🔍</span>
+            <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
             <input
               type="text"
               placeholder="Search product title, part number, brand..."
@@ -333,7 +334,9 @@ export default function ProductsInventoryPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add New Product to Catalog</h3>
-              <button onClick={() => setShowAddModal(false)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleCreateProduct}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -423,7 +426,9 @@ export default function ProductsInventoryPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Adjust Inventory Stock
               </h3>
-              <button onClick={() => setStockEditItem(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setStockEditItem(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleSaveStock}>
               <div className="modal-body">

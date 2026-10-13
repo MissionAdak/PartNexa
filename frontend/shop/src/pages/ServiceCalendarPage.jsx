@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../services/shopService';
 import toast from 'react-hot-toast';
+import { Lightbulb, Calendar, User, Car, Home, Building2, Check, Lock } from 'lucide-react';
 
 export const ServiceCalendarPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -41,9 +42,9 @@ export const ServiceCalendarPage = () => {
       if (newStatus === 'COMPLETED') {
         const comm = res.data?.commissionStatus;
         if (comm?.releaseStatus === 'RELEASED') {
-          toast.success('🎉 Commission RELEASED! Service complete & customer payment cleared.');
+          toast.success('Commission RELEASED! Service complete & customer payment cleared.');
         } else if (comm?.releaseStatus === 'LOCKED_PENDING_PAYMENT') {
-          toast('⚠️ Service marked completed. Commission will be RELEASED once payment clears.', { icon: '⏳' });
+          toast('Service marked completed. Commission will be RELEASED once payment clears.');
         }
       }
       setCompletingJob(null);
@@ -153,7 +154,7 @@ export const ServiceCalendarPage = () => {
           gap: '0.5rem',
         }}
       >
-        <span>💡</span>
+        <Lightbulb size={18} strokeWidth={1.75} style={{ flexShrink: 0, color: 'var(--color-primary)' }} />
         <span>
           <strong>Automated Commission Release Rule:</strong> Service fee commission is released to your ledger balance
           immediately once you mark the service <strong>COMPLETED</strong> and customer payment has cleared.
@@ -167,7 +168,9 @@ export const ServiceCalendarPage = () => {
         </div>
       ) : jobs.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📅</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Calendar size={40} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>No Jobs Found</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             No appointments match the selected status or date filter.
@@ -235,11 +238,11 @@ export const ServiceCalendarPage = () => {
 
                   {/* Customer & Vehicle */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.85rem' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                      👤 {job.customerName} ({job.customerPhone})
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <User size={15} strokeWidth={1.75} /> {job.customerName} ({job.customerPhone})
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                      🚘 {job.vehicleInfo} • Reg: <strong>{job.vehicleNumber}</strong>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Car size={15} strokeWidth={1.75} /> {job.vehicleInfo} • Reg: <strong>{job.vehicleNumber}</strong>
                     </div>
                   </div>
 
@@ -260,9 +263,17 @@ export const ServiceCalendarPage = () => {
                     <div>
                       <strong>Slot:</strong> {scheduledDateStr} ({job.scheduledSlot || 'Slot TBD'})
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <strong>Location:</strong>{' '}
-                      {job.locationType === 'DOORSTEP' ? '🏠 Customer Home Doorstep' : '🏢 Workshop Service Bay'}
+                      {job.locationType === 'DOORSTEP' ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Home size={13} strokeWidth={1.75} /> Customer Home Doorstep
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Building2 size={13} strokeWidth={1.75} /> Workshop Service Bay
+                        </span>
+                      )}
                     </div>
                     <div style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem' }}>
                       {job.serviceAddress}
@@ -321,15 +332,15 @@ export const ServiceCalendarPage = () => {
                         onClick={() => openCompletionModal(job)}
                         disabled={actionLoading === job.id}
                         className="btn btn-success btn-sm"
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
                       >
-                        ✓ Complete Service
+                        <Check size={16} strokeWidth={2} /> Complete Service
                       </button>
                     )}
 
                     {job.status === 'COMPLETED' && (
-                      <div style={{ width: '100%', textAlign: 'center', fontSize: '0.8rem', color: '#10B981', fontWeight: 600 }}>
-                        ✓ Completed ({job.completedAt ? new Date(job.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified'})
+                      <div style={{ width: '100%', textAlign: 'center', fontSize: '0.8rem', color: '#10B981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                        <Check size={14} strokeWidth={2} /> Completed ({job.completedAt ? new Date(job.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified'})
                       </div>
                     )}
                   </div>
@@ -372,7 +383,7 @@ export const ServiceCalendarPage = () => {
             >
               <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Commission Release Trigger:</div>
               <div style={{ color: 'var(--color-text-secondary)' }}>
-                Upon marking completed, PartSphere checks whether customer payment has cleared. If cleared, ₹
+                Upon marking completed, PartNexa checks whether customer payment has cleared. If cleared, ₹
                 {Math.round((completingJob.totalServiceAmount || 0) * (0.88)).toLocaleString('en-IN')} net earnings will be
                 immediately unlocked and credited to your released ledger balance.
               </div>

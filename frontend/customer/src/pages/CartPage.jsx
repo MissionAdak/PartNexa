@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { Button, EmptyState } from '../components/ui';
 import CartSummary from '../components/cart/CartSummary';
+import { ShoppingCart, Disc, Zap, Droplets, BatteryCharging, RefreshCw, Package, Store, AlertTriangle, Trash2, Wrench, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './CartPage.css';
 
@@ -47,7 +48,7 @@ const CartPage = () => {
     if (trimmed === 'PARTS10' || trimmed === 'WELCOME10') {
       setCouponCode(trimmed);
       setCouponApplied(true);
-      toast.success('🎉 Coupon applied! 10% promo discount added.');
+      toast.success('Coupon applied! 10% promo discount added.');
     } else {
       toast.error('Invalid coupon code. Try PARTS10');
     }
@@ -56,7 +57,7 @@ const CartPage = () => {
   const handleRemoveCoupon = () => {
     setCouponApplied(false);
     setCouponCode('');
-    toast('Coupon removed', { icon: 'ℹ️' });
+    toast('Coupon removed');
   };
 
   const handleRecheckInventory = async () => {
@@ -64,7 +65,7 @@ const CartPage = () => {
     const result = await revalidateCart();
     setIsRevalidating(false);
     if (result.warnings && result.warnings.length > 0) {
-      toast('Cart updated to latest available stock and prices.', { icon: '🔔' });
+      toast('Cart updated to latest available stock and prices.');
     } else {
       toast.success('All items are in stock with verified pricing!');
     }
@@ -100,7 +101,7 @@ const CartPage = () => {
         <div className="container">
           <div className="cart-empty-wrapper">
             <EmptyState
-              icon="🛒"
+              icon={<ShoppingCart size={32} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />}
               title="Your Cart is Empty"
               description="You haven't added any automotive parts yet. Discover precision parts and lubricants verified for your vehicle."
               actionText="Browse Spare Parts Catalog"
@@ -110,17 +111,17 @@ const CartPage = () => {
             <div className="cart-empty-quick-links">
               <span className="quick-links-title">Popular Categories:</span>
               <div className="quick-links-pills">
-                <Link to="/products?category=cat-braking" className="quick-link-pill">
-                  🛑 Brake Pads
+                <Link to="/products?category=cat-braking" className="quick-link-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Disc size={15} strokeWidth={1.75} /> Brake Pads
                 </Link>
-                <Link to="/products?category=cat-engine" className="quick-link-pill">
-                  ⚡ Spark Plugs
+                <Link to="/products?category=cat-engine" className="quick-link-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={15} strokeWidth={1.75} /> Spark Plugs
                 </Link>
-                <Link to="/products?category=cat-oils" className="quick-link-pill">
-                  🛢️ Engine Oils
+                <Link to="/products?category=cat-oils" className="quick-link-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Droplets size={15} strokeWidth={1.75} /> Engine Oils
                 </Link>
-                <Link to="/products?category=cat-batteries" className="quick-link-pill">
-                  🔋 Car & Bike Batteries
+                <Link to="/products?category=cat-batteries" className="quick-link-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <BatteryCharging size={15} strokeWidth={1.75} /> Car & Bike Batteries
                 </Link>
               </div>
             </div>
@@ -152,7 +153,15 @@ const CartPage = () => {
               title="Verify stock and current prices"
               id="recheck-inventory-btn"
             >
-              {isRevalidating ? '🔄 Checking...' : '🔄 Verify Stock'}
+              {isRevalidating ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <RefreshCw size={14} className="spin" /> Checking...
+                </span>
+              ) : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <RefreshCw size={14} strokeWidth={1.75} /> Verify Stock
+                </span>
+              )}
             </Button>
             <button
               type="button"
@@ -187,7 +196,9 @@ const CartPage = () => {
                       {image ? (
                         <img src={image} alt={product.name} className="cart-item-image" loading="lazy" decoding="async" />
                       ) : (
-                        <span className="cart-item-placeholder">⚙️</span>
+                        <span className="cart-item-placeholder">
+                          <Package size={24} strokeWidth={1.75} style={{ opacity: 0.4 }} />
+                        </span>
                       )}
                     </div>
 
@@ -219,7 +230,9 @@ const CartPage = () => {
                       </Link>
 
                       <div className="cart-item-shop">
-                        <span>🏬 Fulfilled by:</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Store size={13} strokeWidth={1.75} /> Fulfilled by:
+                        </span>
                         <strong>{item.shop?.name || 'PartNexa Verified Hub'}</strong>
                         {item.shop?.city && <span className="shop-city">({item.shop.city})</span>}
                       </div>
@@ -237,8 +250,8 @@ const CartPage = () => {
 
                       {/* Stock availability limit notice */}
                       {isAtMaxStock && (
-                        <div className="cart-stock-warning">
-                          ⚠️ Maximum available stock reached ({maxStock} in stock)
+                        <div className="cart-stock-warning" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <AlertTriangle size={13} strokeWidth={1.75} /> Maximum available stock reached ({maxStock} in stock)
                         </div>
                       )}
                     </div>
@@ -287,7 +300,7 @@ const CartPage = () => {
                         aria-label="Remove part"
                         id={`remove-item-${item.id}`}
                       >
-                        🗑️
+                        <Trash2 size={16} strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
@@ -298,7 +311,9 @@ const CartPage = () => {
             {/* Do-It-For-Me (DIFM) Doorstep Installation Banner */}
             <div className="cart-difm-banner">
               <div className="cart-difm-content">
-                <div className="cart-difm-icon">🔧</div>
+                <div className="cart-difm-icon">
+                  <Wrench size={22} strokeWidth={1.75} />
+                </div>
                 <div>
                   <div className="cart-difm-title">Do-It-For-Me (DIFM) Doorstep Installation</div>
                   <div className="cart-difm-desc">
@@ -313,7 +328,13 @@ const CartPage = () => {
                 onClick={() => setIncludeInstallation(!includeInstallation)}
                 id="toggle-installation-btn"
               >
-                {includeInstallation ? '✓ Included (+₹199)' : '+ Add Installation (₹199)'}
+                {includeInstallation ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Check size={14} strokeWidth={2.2} /> Included (+₹199)
+                  </span>
+                ) : (
+                  '+ Add Installation (₹199)'
+                )}
               </Button>
             </div>
           </div>

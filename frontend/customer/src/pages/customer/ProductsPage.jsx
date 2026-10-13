@@ -4,6 +4,7 @@ import { catalogService } from '../../services';
 import { useVehicles } from '../../contexts/VehicleContext';
 import ProductCard, { ProductCardSkeleton } from '../../components/product/ProductCard';
 import VehicleCompatibilityBar from '../../components/product/VehicleCompatibilityBar';
+import { Search, Check } from 'lucide-react';
 import './ProductsPage.css';
 
 const CONDITIONS = [
@@ -17,7 +18,7 @@ const SORT_OPTIONS = [
   { value: 'createdAt-desc', label: 'Newest First' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'rating-desc', label: 'Highest Rated ★' },
+  { value: 'rating-desc', label: 'Highest Rated' },
   { value: 'name-asc', label: 'Name A–Z' },
 ];
 
@@ -205,8 +206,8 @@ export const ProductsPage = () => {
                 onChange={(e) => setSearchInput(e.target.value)}
                 id="sidebar-search-input"
               />
-              <button type="submit" className="btn btn-primary btn-sm search-submit-btn" id="sidebar-search-btn">
-                🔍
+              <button type="submit" className="btn btn-primary btn-sm search-submit-btn" id="sidebar-search-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Search size={16} strokeWidth={1.75} />
               </button>
             </form>
           </div>
@@ -481,8 +482,8 @@ export const ProductsPage = () => {
                 </span>
               )}
               {compatibleOnly && (
-                <span className="active-filter-tag compatible-only-tag">
-                  ✓ Verified Fitment Only
+                <span className="active-filter-tag compatible-only-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={12} strokeWidth={2.0} /> Verified Fitment Only
                   <button onClick={() => updateParam('compatibleOnly', '')} aria-label="Remove compatible only filter">
                     ×
                   </button>
@@ -500,7 +501,9 @@ export const ProductsPage = () => {
             </div>
           ) : products.length === 0 ? (
             <div className="products-empty card">
-              <div className="empty-icon">🔍</div>
+              <div className="empty-icon" style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <Search size={40} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+              </div>
               <h3>No matching parts found</h3>
               <p>
                 No spare parts match your current search and vehicle compatibility filters.

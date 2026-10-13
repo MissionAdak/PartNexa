@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Car, Bike, Star, Edit2, Trash2, Check, X } from 'lucide-react';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { vehiclesService } from '../../services';
 import { Button, Modal, Input } from '../../components/ui';
@@ -19,12 +20,15 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
       id={`garage-vehicle-${vehicle.id}`}
     >
       {vehicle.isPrimary && (
-        <div className="primary-badge badge badge-primary">
-          ⭐ Primary Vehicle
+        <div className="primary-badge badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+          <Star size={12} strokeWidth={2.5} fill="currentColor" />
+          <span>Primary Vehicle</span>
         </div>
       )}
       <div className="vehicle-card-body">
-        <div className="vehicle-icon">{is2Wheeler ? '🏍️' : '🚗'}</div>
+        <div className="vehicle-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {is2Wheeler ? <Bike size={24} strokeWidth={1.75} /> : <Car size={24} strokeWidth={1.75} />}
+        </div>
         <div className="vehicle-info">
           <div className="vehicle-name">
             {vehicle.nickname || `${make?.name} ${model?.name}`}
@@ -50,7 +54,7 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
           className="btn btn-primary btn-sm"
           id={`find-parts-${vehicle.id}`}
         >
-          🔍 Find Parts
+          Find Parts
         </Link>
         {!vehicle.isPrimary && (
           <button
@@ -67,8 +71,10 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
           id={`edit-vehicle-${vehicle.id}`}
           title="Edit vehicle details"
           aria-label={`Edit ${vehicle.nickname || model?.name}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
         >
-          ✏️ Edit
+          <Edit2 size={13} strokeWidth={2} />
+          <span>Edit</span>
         </button>
         <button
           className="btn btn-ghost btn-sm danger-btn"
@@ -76,8 +82,9 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
           id={`remove-vehicle-${vehicle.id}`}
           title="Delete vehicle"
           aria-label={`Remove ${vehicle.nickname || model?.name}`}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          🗑️
+          <Trash2 size={14} strokeWidth={2} />
         </button>
       </div>
     </div>
@@ -170,8 +177,9 @@ const AddVehicleModal = ({ onClose, onAdd }) => {
             onClick={onClose}
             aria-label="Close modal"
             id="modal-close-btn"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            ✕
+            <X size={18} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -184,7 +192,9 @@ const AddVehicleModal = ({ onClose, onAdd }) => {
                 step > i + 1 ? 'done' : step === i + 1 ? 'active' : ''
               }`}
             >
-              <div className="step-dot">{step > i + 1 ? '✓' : i + 1}</div>
+              <div className="step-dot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {step > i + 1 ? <Check size={12} strokeWidth={2.0} /> : i + 1}
+              </div>
               <span>{s}</span>
             </div>
           ))}
@@ -200,8 +210,9 @@ const AddVehicleModal = ({ onClose, onAdd }) => {
                   className={`type-option ${vehicleType === '4_WHEELER' ? 'selected' : ''}`}
                   onClick={() => setVehicleType('4_WHEELER')}
                   id="garage-type-car"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  <span className="type-emoji">🚗</span>
+                  <Car size={22} strokeWidth={1.75} />
                   <span>4 Wheeler (Car)</span>
                 </button>
                 <button
@@ -209,8 +220,9 @@ const AddVehicleModal = ({ onClose, onAdd }) => {
                   className={`type-option ${vehicleType === '2_WHEELER' ? 'selected' : ''}`}
                   onClick={() => setVehicleType('2_WHEELER')}
                   id="garage-type-bike"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  <span className="type-emoji">🏍️</span>
+                  <Bike size={22} strokeWidth={1.75} />
                   <span>2 Wheeler (Bike/Scooter)</span>
                 </button>
               </div>
@@ -316,9 +328,9 @@ const AddVehicleModal = ({ onClose, onAdd }) => {
           {step === 5 && (
             <form onSubmit={handleAdd} className="modal-step-content animate-fade-in-up">
               <h3 className="step-title">Vehicle Details</h3>
-              <div className="selected-vehicle-summary">
-                🚗 <strong>{selectedMake?.name} {selectedModel?.name}</strong>
-                — {selectedVariant?.year} {selectedVariant?.name} ({selectedVariant?.fuelType})
+              <div className="selected-vehicle-summary" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                {vehicleType === '2_WHEELER' ? <Bike size={18} strokeWidth={1.75} /> : <Car size={18} strokeWidth={1.75} />}
+                <span><strong>{selectedMake?.name} {selectedModel?.name}</strong> — {selectedVariant?.year} {selectedVariant?.name} ({selectedVariant?.fuelType})</span>
               </div>
 
               <div className="form-group mt-4">
@@ -410,8 +422,9 @@ const EditVehicleModal = ({ vehicle, onClose, onSave }) => {
             border: '1px solid var(--border-color)',
           }}
         >
-          <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-            🚗 {make} {model} ({year})
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <Car size={16} strokeWidth={1.75} className="text-primary" />
+            <span>{make} {model} ({year})</span>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
             Variant: {variant} · {vehicle.variant?.fuelType}
@@ -552,7 +565,9 @@ const GaragePage = () => {
           </div>
         ) : vehicles.length === 0 ? (
           <div className="garage-empty animate-fade-in-up">
-            <div className="garage-empty-icon">🚗</div>
+            <div className="garage-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Car size={48} strokeWidth={1.5} className="text-muted" />
+            </div>
             <h2>Your Garage is Empty</h2>
             <p>Add your car, motorcycle, or scooter to get personalized part fitment recommendations.</p>
             <Button

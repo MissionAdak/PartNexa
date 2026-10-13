@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Car, Bike, Star, Search, Edit2, Trash2, Plus, Check } from 'lucide-react';
 import { useVehicles } from '../contexts/VehicleContext';
 import { vehiclesService } from '../services';
 import { Button, Modal, Input } from '../components/ui';
@@ -24,22 +25,23 @@ const VehicleCard = ({ vehicle, isActive, onSwitchActive, onEdit, onRemove, onSe
     >
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
         {isActive && (
-          <div className="badge" style={{ background: '#10b981', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.04em', padding: '3px 8px', borderRadius: '6px' }}>
-            ✓ ACTIVE FITMENT
+          <div className="badge" style={{ background: '#10b981', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.04em', padding: '3px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Check size={12} strokeWidth={2.0} /> ACTIVE FITMENT
           </div>
         )}
         {vehicle.isPrimary && (
-          <div className="primary-badge badge badge-primary">
-            ⭐ Primary Vehicle
+          <div className="primary-badge badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+            <Star size={12} strokeWidth={2.5} fill="currentColor" />
+            <span>Primary Vehicle</span>
           </div>
         )}
       </div>
       <div className="vehicle-card-body">
-        <div className="vehicle-icon">
+        <div className="vehicle-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {make?.name ? (
             <BrandLogo brandName={make.name} size={38} />
           ) : (
-            is2Wheeler ? '🏍️' : '🚗'
+            is2Wheeler ? <Bike size={24} strokeWidth={1.75} /> : <Car size={24} strokeWidth={1.75} />
           )}
         </div>
         <div className="vehicle-info">
@@ -76,8 +78,10 @@ const VehicleCard = ({ vehicle, isActive, onSwitchActive, onEdit, onRemove, onSe
           to={`/products?vehicleVariantId=${variant?.id}&compatibleOnly=true`}
           className="btn btn-primary btn-sm"
           id={`find-parts-${vehicle.id}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
         >
-          🔍 Find Parts
+          <Search size={14} strokeWidth={2} />
+          <span>Find Parts</span>
         </Link>
         {!vehicle.isPrimary && (
           <button
@@ -94,8 +98,10 @@ const VehicleCard = ({ vehicle, isActive, onSwitchActive, onEdit, onRemove, onSe
           id={`edit-vehicle-${vehicle.id}`}
           title="Edit vehicle details"
           aria-label={`Edit ${vehicle.nickname || model?.name}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
         >
-          ✏️ Edit
+          <Edit2 size={13} strokeWidth={2} />
+          <span>Edit</span>
         </button>
         <button
           className="btn btn-ghost btn-sm danger-btn"
@@ -103,8 +109,9 @@ const VehicleCard = ({ vehicle, isActive, onSwitchActive, onEdit, onRemove, onSe
           id={`remove-vehicle-${vehicle.id}`}
           title="Delete vehicle"
           aria-label={`Remove ${vehicle.nickname || model?.name}`}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          🗑️
+          <Trash2 size={14} strokeWidth={2} />
         </button>
       </div>
     </div>
@@ -152,8 +159,9 @@ const EditVehicleModal = ({ vehicle, onClose, onSave }) => {
             border: '1px solid var(--border-color)',
           }}
         >
-          <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-            🚗 {make} {model} ({year})
+          <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <Car size={16} strokeWidth={1.75} className="text-primary" />
+            <span>{make} {model} ({year})</span>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
             Variant: {variant} · {vehicle.variant?.fuelType}
@@ -296,7 +304,9 @@ const GaragePage = () => {
           </div>
         ) : vehicles.length === 0 ? (
           <div className="garage-empty animate-fade-in-up">
-            <div className="garage-empty-icon">🚗</div>
+            <div className="garage-empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Car size={48} strokeWidth={1.5} className="text-muted" />
+            </div>
             <h2>Your Garage is Empty</h2>
             <p>Add your car, motorcycle, or scooter to get personalized part fitment recommendations.</p>
             <Button

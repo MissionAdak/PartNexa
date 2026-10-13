@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import procurementService from '../../services/procurementService';
 import SupplierLogo from '../../components/admin/procurement/SupplierLogo';
 import ReceiveStockModal from '../../components/admin/procurement/ReceiveStockModal';
+import { Inbox, Package, Truck, Check, ExternalLink } from 'lucide-react';
 
 export default function PurchaseOrderDetailPage() {
   const { id } = useParams();
@@ -147,9 +148,12 @@ export default function PurchaseOrderDetailPage() {
             fontWeight: 600,
             fontSize: '0.82rem',
             cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
           }}
         >
-          Bulk Procurement Hub ↗
+          Bulk Procurement Hub <ExternalLink size={12} strokeWidth={1.75} />
         </button>
       </div>
 
@@ -214,7 +218,7 @@ export default function PurchaseOrderDetailPage() {
                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)',
               }}
             >
-              <span>📥</span> Receive Stock
+              <Inbox size={16} strokeWidth={1.75} /> Receive Stock
             </button>
           )}
 
@@ -232,9 +236,12 @@ export default function PurchaseOrderDetailPage() {
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
               }}
             >
-              📦 Mark Shipped
+              <Package size={15} strokeWidth={1.75} /> Mark Shipped
             </button>
           )}
 
@@ -251,9 +258,12 @@ export default function PurchaseOrderDetailPage() {
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
               }}
             >
-              🚚 Mark In Transit
+              <Truck size={15} strokeWidth={1.75} /> Mark In Transit
             </button>
           )}
 
@@ -270,9 +280,12 @@ export default function PurchaseOrderDetailPage() {
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
               }}
             >
-              ✓ Confirm Supplier
+              <Check size={15} strokeWidth={2.0} /> Confirm Supplier
             </button>
           )}
         </div>

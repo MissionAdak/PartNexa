@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Car, Bike, X } from 'lucide-react';
 import { vehiclesService } from '../../services';
 import { useVehicles } from '../../contexts/VehicleContext';
 import VehicleSelectorModal from '../vehicle/VehicleSelectorModal';
@@ -166,8 +167,8 @@ export const VehicleCompatibilityBar = ({
             {activeVehicleDetails?.make ? (
               <BrandLogo brandName={activeVehicleDetails.make} size={36} />
             ) : (
-              <span className="compatibility-icon">
-                {isTwoWheeler ? '🏍️' : '🚗'}
+              <span className="compatibility-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isTwoWheeler ? <Bike size={22} strokeWidth={1.75} /> : <Car size={22} strokeWidth={1.75} />}
               </span>
             )}
           </div>
@@ -232,8 +233,9 @@ export const VehicleCompatibilityBar = ({
                 onClick={handleClearVehicle}
                 id="clear-vehicle-btn"
                 title="Clear selected vehicle"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                ✕ Clear
+                <X size={14} strokeWidth={1.75} /> Clear
               </button>
             </div>
           ) : (

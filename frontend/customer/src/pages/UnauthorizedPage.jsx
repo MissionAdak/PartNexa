@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ShieldAlert } from 'lucide-react';
 
 export const UnauthorizedPage = () => {
   const { user, logout } = useAuth();
@@ -73,7 +74,7 @@ export const UnauthorizedPage = () => {
             fontSize: '2rem',
           }}
         >
-          🛡️
+          <ShieldAlert size={36} strokeWidth={1.75} style={{ color: '#ef4444' }} />
         </div>
 
         <div

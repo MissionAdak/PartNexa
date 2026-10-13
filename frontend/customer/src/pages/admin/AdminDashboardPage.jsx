@@ -7,6 +7,7 @@ import {
   OrderStatusDistributionChart,
 } from '../../components/admin/charts/InteractiveCharts';
 import toast from 'react-hot-toast';
+import { TrendingUp, CircleDollarSign, Zap, Crown, Wrench, Bike } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const [kpiData, setKpiData] = useState(null);
@@ -80,8 +81,8 @@ export default function AdminDashboardPage() {
       <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
         {/* Sales */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-primary-bg)', color: 'var(--color-primary)' }}>
-            📈
+          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-primary-bg)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <TrendingUp size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Delivered Sales</div>
@@ -94,8 +95,8 @@ export default function AdminDashboardPage() {
 
         {/* GMV */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)' }}>
-            💰
+          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-purple-bg)', color: 'var(--color-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CircleDollarSign size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Gross Merchandise Value (GMV)</div>
@@ -108,8 +109,8 @@ export default function AdminDashboardPage() {
 
         {/* Platform Revenue */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
-            ⚡
+          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Zap size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Platform Net Revenue</div>
@@ -122,8 +123,8 @@ export default function AdminDashboardPage() {
 
         {/* Subscriptions */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)' }}>
-            ⭐
+          <div className="kpi-icon-box" style={{ backgroundColor: 'var(--color-warning-bg)', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Crown size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Active Subscriptions</div>
@@ -136,8 +137,8 @@ export default function AdminDashboardPage() {
 
         {/* Shop Commissions */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6' }}>
-            🔧
+          <div className="kpi-icon-box" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Wrench size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Total Shop Commissions</div>
@@ -150,8 +151,8 @@ export default function AdminDashboardPage() {
 
         {/* Delivery Activity */}
         <div className="kpi-card">
-          <div className="kpi-icon-box" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' }}>
-            🛵
+          <div className="kpi-icon-box" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Bike size={22} strokeWidth={1.75} />
           </div>
           <div className="kpi-content">
             <div className="kpi-title">Delivery Fleet Activity</div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Search, Building2, Package, X, Wrench } from 'lucide-react';
 
 export default function ProductsInventoryPage() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function ProductsInventoryPage() {
 
   // Category Modal
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '', icon: '🔧' });
+  const [newCategory, setNewCategory] = useState({ name: '', description: '', icon: '' });
 
   // Brand Modal
   const [showBrandModal, setShowBrandModal] = useState(false);
@@ -75,7 +76,7 @@ export default function ProductsInventoryPage() {
       await adminService.createCategory(newCategory);
       toast.success(`Category "${newCategory.name}" created successfully.`);
       setShowCategoryModal(false);
-      setNewCategory({ name: '', description: '', icon: '🔧' });
+      setNewCategory({ name: '', description: '', icon: '' });
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create category.');
@@ -239,7 +240,7 @@ export default function ProductsInventoryPage() {
       <div className="toolbar">
         {activeTab === 'catalog' ? (
           <form onSubmit={(e) => { e.preventDefault(); fetchData(); }} className="search-box">
-            <span>🔍</span>
+            <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
             <input
               type="text"
               placeholder="Search product title, part number, brand..."
@@ -427,7 +428,7 @@ export default function ProductsInventoryPage() {
                                 boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)',
                               }}
                             >
-                              🏭 Procure Stock
+                              <Building2 size={13} strokeWidth={1.75} /> Procure Stock
                             </button>
                           )}
                         </div>
@@ -482,7 +483,7 @@ export default function ProductsInventoryPage() {
                         </div>
                       </td>
                       <td>
-                        <span style={{ fontSize: '1.25rem' }}>{cat.icon || '📦'}</span>
+                        <Package size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
                       </td>
                       <td>
                         <code style={{ fontSize: '0.8rem', padding: '0.2rem 0.4rem', borderRadius: '4px', backgroundColor: 'var(--bg-tertiary)' }}>
@@ -561,7 +562,9 @@ export default function ProductsInventoryPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add New Product Category</h3>
-              <button onClick={() => setShowCategoryModal(false)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setShowCategoryModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleCreateCategory}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -587,7 +590,7 @@ export default function ProductsInventoryPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>Icon (Emoji)</label>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>Category Icon</label>
                   <input
                     type="text"
                     value={newCategory.icon}
@@ -611,7 +614,9 @@ export default function ProductsInventoryPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>Register Verified Brand</h3>
-              <button onClick={() => setShowBrandModal(false)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setShowBrandModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleCreateBrand}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -652,7 +657,9 @@ export default function ProductsInventoryPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add New Product to Catalog</h3>
-              <button onClick={() => setShowAddModal(false)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleCreateProduct}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -742,7 +749,9 @@ export default function ProductsInventoryPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Adjust Inventory Stock
               </h3>
-              <button onClick={() => setStockEditItem(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setStockEditItem(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleSaveStock}>
               <div className="modal-body">

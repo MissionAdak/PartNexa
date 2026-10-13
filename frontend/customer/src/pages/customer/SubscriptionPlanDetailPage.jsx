@@ -4,6 +4,22 @@ import { subscriptionsService, vehiclesService } from '../../services';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, Modal, Input, Badge, Skeleton } from '../../components/ui';
 import RazorpayModal from '../../components/checkout/RazorpayModal';
+import {
+  ShieldCheck,
+  Wrench,
+  Check,
+  Tag,
+  BarChart3,
+  Car,
+  Sparkles,
+  Clock,
+  Smartphone,
+  MapPin,
+  FileText,
+  RotateCcw,
+  Zap,
+  Banknote,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import './SubscriptionPlanDetailPage.css';
 
@@ -66,7 +82,7 @@ const SubscriptionPlanDetailPage = () => {
 
   const handleOpenSubscribe = () => {
     if (!user) {
-      toast('Please log in or create an account to activate this membership.', { icon: '🔐' });
+      toast('Please log in or create an account to activate this membership.');
       navigate(`/login?redirect=/subscriptions/${id}`);
       return;
     }
@@ -96,8 +112,8 @@ const SubscriptionPlanDetailPage = () => {
 
       if (!data.requiresOnlinePayment) {
         setCheckoutModalOpen(false);
-        toast.success('🎉 Subscription Activated! Payment scheduled on first service.');
-        navigate('/my-subscriptions');
+        toast.success('Subscription Activated! Payment scheduled on first service.');
+        navigate('/customer/my-subscriptions');
       } else {
         setCheckoutModalOpen(false);
         setPaymentSession({
@@ -126,8 +142,8 @@ const SubscriptionPlanDetailPage = () => {
         razorpaySignature: result.razorpaySignature,
       });
 
-      toast.success(`🎉 ${plan.name} activated! Welcome to PartNexa Care.`, { id: toastId });
-      navigate('/my-subscriptions');
+      toast.success(`${plan.name} activated! Welcome to PartNexa Care.`, { id: toastId });
+      navigate('/customer/my-subscriptions');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Verification failed.', { id: toastId });
     }
@@ -222,8 +238,8 @@ const SubscriptionPlanDetailPage = () => {
               >
                 Activate {plan.name}
               </Button>
-              <div className="pricing-box-guarantee">
-                🛡️ 100% PartNexa Fitment & Quality Guarantee
+              <div className="pricing-box-guarantee" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={16} strokeWidth={1.75} /> 100% PartNexa Fitment & Quality Guarantee
               </div>
             </div>
           </div>
@@ -236,7 +252,9 @@ const SubscriptionPlanDetailPage = () => {
           <div className="detail-main-col">
             {/* Included Services Section */}
             <section className="detail-card" id="included-services-card">
-              <h2 className="detail-section-heading">🔧 Included Maintenance & Repair Services</h2>
+              <h2 className="detail-section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Wrench size={20} strokeWidth={1.75} /> Included Maintenance & Repair Services
+              </h2>
               <p className="detail-section-sub">
                 Every service visit is carried out by certified master mechanics with OEM/OES components
               </p>
@@ -244,7 +262,9 @@ const SubscriptionPlanDetailPage = () => {
               <div className="services-catalog-grid">
                 {plan.includedServices?.map((service, idx) => (
                   <div key={idx} className="service-catalog-item">
-                    <div className="service-check-icon">✓</div>
+                    <div className="service-check-icon">
+                      <Check size={14} strokeWidth={2.2} />
+                    </div>
                     <div>
                       <h3 className="service-item-name">{service.name}</h3>
                       <p className="service-item-desc">{service.description}</p>
@@ -256,7 +276,9 @@ const SubscriptionPlanDetailPage = () => {
 
             {/* Discount Benefits Section */}
             <section className="detail-card" id="discount-benefits-card">
-              <h2 className="detail-section-heading">🏷️ Exclusive Member Discount Benefits</h2>
+              <h2 className="detail-section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Tag size={20} strokeWidth={1.75} /> Exclusive Member Discount Benefits
+              </h2>
               <p className="detail-section-sub">
                 Automatically applied at checkout across all products, orders, and partnered garage services
               </p>
@@ -274,7 +296,9 @@ const SubscriptionPlanDetailPage = () => {
 
             {/* Service Limits & Entitlements Section */}
             <section className="detail-card" id="service-limits-card">
-              <h2 className="detail-section-heading">📊 Service Limits & Entitlements Quotas</h2>
+              <h2 className="detail-section-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart3 size={20} strokeWidth={1.75} /> Service Limits & Entitlements Quotas
+              </h2>
               <p className="detail-section-sub">
                 Allowable usage limits per active subscription billing period ({billingCycle === 'YEARLY' ? '365 Days' : '30 Days'})
               </p>
@@ -306,24 +330,44 @@ const SubscriptionPlanDetailPage = () => {
           <div className="detail-side-col">
             {/* Vehicle Eligibility Card */}
             <div className="side-detail-card">
-              <h3 className="side-card-title">🚗 Vehicle Eligibility</h3>
+              <h3 className="side-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Car size={16} strokeWidth={1.75} /> Vehicle Eligibility
+              </h3>
               <p className="eligibility-text">{plan.eligibility}</p>
               <div className="eligibility-chips">
-                <span className="el-chip">✓ Hatchbacks & Sedans</span>
-                <span className="el-chip">✓ Compact & Full SUVs</span>
-                <span className="el-chip">✓ Motorcycles & Scooters</span>
+                <span className="el-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={13} strokeWidth={2.2} /> Hatchbacks & Sedans
+                </span>
+                <span className="el-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={13} strokeWidth={2.2} /> Compact & Full SUVs
+                </span>
+                <span className="el-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Check size={13} strokeWidth={2.2} /> Motorcycles & Scooters
+                </span>
               </div>
             </div>
 
             {/* Coverage Perks */}
             <div className="side-detail-card">
-              <h3 className="side-card-title">✨ Member Perks</h3>
+              <h3 className="side-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={16} strokeWidth={1.75} /> Member Perks
+              </h3>
               <ul className="side-perks-list">
-                <li>🕒 Priority garage bay reservations</li>
-                <li>📲 Direct master mechanic hotline</li>
-                <li>📍 GPS-tracked technician dispatch</li>
-                <li>🧾 Digital service history passbook</li>
-                <li>🔄 Easy auto-renewal or cancel anytime</li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={13} strokeWidth={1.75} /> Priority garage bay reservations
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Smartphone size={13} strokeWidth={1.75} /> Direct master mechanic hotline
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={13} strokeWidth={1.75} /> GPS-tracked technician dispatch
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FileText size={13} strokeWidth={1.75} /> Digital service history passbook
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RotateCcw size={13} strokeWidth={1.75} /> Easy auto-renewal or cancel anytime
+                </li>
               </ul>
             </div>
 
@@ -409,7 +453,9 @@ const SubscriptionPlanDetailPage = () => {
                     onChange={() => setPaymentMethod('RAZORPAY')}
                   />
                   <div className="pay-option-content">
-                    <div className="pay-option-title">⚡ Razorpay Sandbox / Demo Gateway</div>
+                    <div className="pay-option-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Zap size={15} strokeWidth={1.75} /> Razorpay Sandbox / Demo Gateway
+                    </div>
                     <div className="pay-option-sub">UPI, Credit/Debit Card, Net Banking (Instant Activation)</div>
                   </div>
                 </label>
@@ -423,7 +469,9 @@ const SubscriptionPlanDetailPage = () => {
                     onChange={() => setPaymentMethod('CASH_ON_DELIVERY')}
                   />
                   <div className="pay-option-content">
-                    <div className="pay-option-title">💵 Cash / UPI on First Service Visit (COD)</div>
+                    <div className="pay-option-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Banknote size={15} strokeWidth={1.75} /> Cash / UPI on First Service Visit (COD)
+                    </div>
                     <div className="pay-option-sub">Activate immediately; pay during your first technician appointment</div>
                   </div>
                 </label>

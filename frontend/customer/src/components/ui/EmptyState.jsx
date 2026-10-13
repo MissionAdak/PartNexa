@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from './Button';
+import { Package, AlertTriangle } from 'lucide-react';
 
 export const EmptyState = ({
   icon,
@@ -38,7 +39,7 @@ export const EmptyState = ({
           color: 'var(--color-text-muted)',
         }}
       >
-        {icon || '📦'}
+        {icon || <Package size={32} strokeWidth={1.75} />}
       </div>
       <h3 style={{ fontSize: 'var(--font-size-xl)', marginBottom: '0.5rem', color: 'var(--color-text-primary)' }}>
         {title}
@@ -89,7 +90,7 @@ export const ErrorState = ({
           marginBottom: '1rem',
         }}
       >
-        ⚠️
+        <AlertTriangle size={28} strokeWidth={1.75} />
       </div>
       <h3 style={{ fontSize: 'var(--font-size-lg)', marginBottom: '0.5rem', color: 'var(--color-text-primary)' }}>
         {title}

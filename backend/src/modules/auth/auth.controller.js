@@ -6,7 +6,7 @@ const register = async (req, res, next) => {
     const { firstName, lastName, email, password, phone } = req.body;
     const result = await authService.register({ firstName, lastName, email, password, phone });
     return sendCreated(res, {
-      message: 'Account created successfully. Welcome to PartSphere!',
+      message: 'Account created successfully. Welcome to PartNexa!',
       data: result,
     });
   } catch (err) {

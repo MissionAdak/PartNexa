@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { ShoppingCart, X, Package, Trash2, FileText } from 'lucide-react';
 import procurementService from '../../../services/procurementService';
 
 export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCartUpdated, onPoCreated }) {
@@ -116,7 +117,7 @@ export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCar
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>🛒</span>
+              <ShoppingCart size={22} strokeWidth={1.75} color="var(--admin-blue)" />
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                 Procurement Cart
               </h2>
@@ -155,10 +156,9 @@ export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCar
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1rem',
               }}
             >
-              ✕
+              <X size={16} strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -166,8 +166,8 @@ export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCar
         {/* Cart Item List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
           {items.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Package size={48} strokeWidth={1.5} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
               <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
                 Procurement Cart is Empty
               </div>
@@ -218,7 +218,7 @@ export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCar
                         }}
                         title="Remove item"
                       >
-                        🗑️
+                        <Trash2 size={16} strokeWidth={1.75} />
                       </button>
                     </div>
 
@@ -431,7 +431,11 @@ export default function ProcurementCartDrawer({ isOpen, onClose, cartData, onCar
                 gap: '0.5rem',
               }}
             >
-              {loading ? 'Creating Purchase Order...' : '📑 Create Purchase Order'}
+              {loading ? 'Creating Purchase Order...' : (
+                <>
+                  <FileText size={18} strokeWidth={1.75} /> Create Purchase Order
+                </>
+              )}
             </button>
           </div>
         )}

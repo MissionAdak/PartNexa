@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
 import toast from 'react-hot-toast';
+import { Users, User, Wrench, Bike, Search, X } from 'lucide-react';
 
 export default function CustomerCareHubPage() {
   const [tickets, setTickets] = useState([]);
@@ -129,33 +130,40 @@ export default function CustomerCareHubPage() {
       {/* Role Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
         {[
-          { key: 'ALL', label: 'All Inquiries' },
-          { key: 'CUSTOMER', label: '👤 Customers' },
-          { key: 'SHOP_OWNER', label: '🔧 Workshops' },
-          { key: 'DELIVERY_PARTNER', label: '🛵 Delivery Fleet' },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveRole(tab.key)}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 700,
-              fontSize: '0.92rem',
-              backgroundColor: activeRole === tab.key ? 'var(--color-primary-bg)' : 'transparent',
-              color: activeRole === tab.key ? 'var(--color-primary)' : 'var(--text-secondary)',
-              border: activeRole === tab.key ? '1px solid var(--color-primary)' : '1px solid transparent',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { key: 'ALL', label: 'All Inquiries', icon: Users },
+          { key: 'CUSTOMER', label: 'Customers', icon: User },
+          { key: 'SHOP_OWNER', label: 'Workshops', icon: Wrench },
+          { key: 'DELIVERY_PARTNER', label: 'Delivery Fleet', icon: Bike },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveRole(tab.key)}
+              style={{
+                padding: '0.6rem 1.25rem',
+                borderRadius: 'var(--radius-md)',
+                fontWeight: 700,
+                fontSize: '0.92rem',
+                backgroundColor: activeRole === tab.key ? 'var(--color-primary-bg)' : 'transparent',
+                color: activeRole === tab.key ? 'var(--color-primary)' : 'var(--text-secondary)',
+                border: activeRole === tab.key ? '1px solid var(--color-primary)' : '1px solid transparent',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+              }}
+            >
+              <Icon size={16} strokeWidth={1.75} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Toolbar */}
       <div className="toolbar">
         <form onSubmit={(e) => { e.preventDefault(); fetchTickets(); }} className="search-box">
-          <span>🔍</span>
+          <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Search ticket number, subject, user..."
@@ -300,7 +308,9 @@ export default function CustomerCareHubPage() {
                   {selectedTicket.subject}
                 </h3>
               </div>
-              <button onClick={() => setSelectedTicket(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setSelectedTicket(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
 
             {/* Assignment Toolbar */}
@@ -393,7 +403,9 @@ export default function CustomerCareHubPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Resolve Ticket: {selectedTicket?.ticketNumber}
               </h3>
-              <button onClick={() => setShowResolveModal(false)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setShowResolveModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleConfirmResolve}>
               <div className="modal-body">

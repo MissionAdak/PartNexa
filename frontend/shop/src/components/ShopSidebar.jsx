@@ -1,18 +1,28 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useShopAuth } from '../contexts/ShopAuthContext';
+import {
+  LayoutDashboard,
+  Calendar,
+  Wallet,
+  Truck,
+  Wrench,
+  Ticket,
+  Settings,
+  Lock,
+} from 'lucide-react';
 
 export const ShopSidebar = () => {
   const { shop } = useShopAuth();
 
   const links = [
-    { to: '/', label: 'Shop Dashboard', icon: '📊', end: true },
-    { to: '/calendar', label: 'Service Calendar', icon: '📅' },
-    { to: '/commission', label: 'Commission & Ledger', icon: '💰' },
-    { to: '/deliveries', label: 'Incoming Deliveries', icon: '🚚' },
-    { to: '/used-parts', label: 'Used-Part Intake', icon: '🔧' },
-    { to: '/tickets', label: 'Support Tickets', icon: '🎫' },
-    { to: '/profile', label: 'Workshop Profile', icon: '⚙️' },
+    { to: '/', label: 'Shop Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/calendar', label: 'Service Calendar', icon: Calendar },
+    { to: '/commission', label: 'Commission & Ledger', icon: Wallet },
+    { to: '/deliveries', label: 'Incoming Deliveries', icon: Truck },
+    { to: '/used-parts', label: 'Used-Part Intake', icon: Wrench },
+    { to: '/tickets', label: 'Support Tickets', icon: Ticket },
+    { to: '/profile', label: 'Workshop Profile', icon: Settings },
   ];
 
   return (
@@ -54,7 +64,7 @@ export const ShopSidebar = () => {
               transition: 'all var(--transition-fast)',
             })}
           >
-            <span style={{ fontSize: '1.1rem' }}>{link.icon}</span>
+            <link.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
             <span>{link.label}</span>
           </NavLink>
         ))}
@@ -86,8 +96,9 @@ export const ShopSidebar = () => {
             <strong>Categories:</strong> {(shop.vehicleCategories || ['CAR', 'BIKE']).join(', ')}
           </div>
 
-          <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
-            🔒 Commission releases only when service is completed & payment clears.
+          <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Lock size={12} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+            <span>Commission releases only when service is completed & payment clears.</span>
           </div>
         </div>
       )}

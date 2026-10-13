@@ -4,6 +4,23 @@ import { useAuth } from '../contexts/AuthContext';
 import { useVehicles } from '../contexts/VehicleContext';
 import { Button, Modal, Input } from '../components/ui';
 import { BrandLogo } from '../components/vehicle/BrandLogos';
+import {
+  Disc,
+  Battery,
+  Cpu,
+  Car,
+  Droplet,
+  Snowflake,
+  Wrench,
+  Calendar,
+  Store,
+  ClipboardList,
+  Home,
+  Check,
+  MapPin,
+  Star,
+  Clock,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import './ServicesPage.css';
 
@@ -11,7 +28,7 @@ const SERVICES_CATALOG = [
   {
     id: 'brakes',
     title: 'Brake Pad & Rotor Replacement',
-    icon: '🛑',
+    icon: <Disc size={28} strokeWidth={1.75} />,
     eta: '45 - 60 mins',
     price: 499,
     description: 'Precision caliper cleaning, high-temp lubricant application, and OE brake pad installation.',
@@ -20,7 +37,7 @@ const SERVICES_CATALOG = [
   {
     id: 'battery',
     title: 'Battery Health Scan & Fitting',
-    icon: '🔋',
+    icon: <Battery size={28} strokeWidth={1.75} />,
     eta: '20 - 30 mins',
     price: 199,
     description: 'Complete alternator load test, terminal de-oxidation, and zero-downtime battery installation.',
@@ -29,7 +46,7 @@ const SERVICES_CATALOG = [
   {
     id: 'obd',
     title: 'Engine Diagnostics & OBD2 Scan',
-    icon: '💻',
+    icon: <Cpu size={28} strokeWidth={1.75} />,
     eta: '30 mins',
     price: 399,
     description: 'Comprehensive digital ECU scan for error trouble codes (DTC), sensor calibration, and clear check-engine.',
@@ -38,7 +55,7 @@ const SERVICES_CATALOG = [
   {
     id: 'suspension',
     title: 'Suspension & Shock Absorber Service',
-    icon: '🚗',
+    icon: <Car size={28} strokeWidth={1.75} />,
     eta: '90 - 120 mins',
     price: 699,
     description: 'Strut mounting, bushing inspection, hydraulic damping tests, and steering alignment check.',
@@ -47,7 +64,7 @@ const SERVICES_CATALOG = [
   {
     id: 'oil',
     title: 'Periodic Maintenance & Oil Change',
-    icon: '🛢️',
+    icon: <Droplet size={28} strokeWidth={1.75} />,
     eta: '60 mins',
     price: 349,
     description: 'Fully synthetic oil drain and flush, genuine OEM oil filter swap, and 24-point vehicle inspection.',
@@ -56,7 +73,7 @@ const SERVICES_CATALOG = [
   {
     id: 'ac',
     title: 'AC Gas Charge & Cabin Filtration',
-    icon: '❄️',
+    icon: <Snowflake size={28} strokeWidth={1.75} />,
     eta: '45 mins',
     price: 599,
     description: 'R134a refrigerant leak testing, vacuum leak detection, compressor oil top-up, and PM2.5 filter swap.',
@@ -369,8 +386,8 @@ const ServicesPage = () => {
       <section className="services-hero">
         <div className="container">
           <div className="services-hero-content animate-fade-in-up">
-            <div className="services-hero-badge">
-              <span>🔧</span> Do-It-For-Me (DIFM) Certified Repair Network
+            <div className="services-hero-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Wrench size={14} strokeWidth={1.75} /> Do-It-For-Me (DIFM) Certified Repair Network
             </div>
             <h1 className="services-hero-title">
               Professional Vehicle Fitment & Mechanical Services
@@ -386,11 +403,15 @@ const ServicesPage = () => {
                 onClick={() => handleOpenBooking(SERVICES_CATALOG[0])}
                 id="hero-book-doorstep-btn"
               >
-                📅 Book Doorstep Mechanic
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={16} strokeWidth={1.75} /> Book Doorstep Mechanic
+                </span>
               </Button>
               <a href="#partner-workshops" style={{ textDecoration: 'none' }}>
                 <Button variant="outline" size="lg" id="hero-find-workshop-btn">
-                  🏬 Find Partner Workshop
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Store size={16} strokeWidth={1.75} /> Find Partner Workshop
+                  </span>
                 </Button>
               </a>
             </div>
@@ -403,8 +424,8 @@ const ServicesPage = () => {
         {myAppointments.length > 0 && (
           <section className="my-appointments-section animate-fade-in" style={{ marginBottom: '48px' }}>
             <div className="section-title-wrap">
-              <h2 className="section-main-title" style={{ fontSize: '1.4rem' }}>
-                📋 My Active Service Bookings ({myAppointments.length})
+              <h2 className="section-main-title" style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ClipboardList size={20} strokeWidth={1.75} /> My Active Service Bookings ({myAppointments.length})
               </h2>
               <p className="section-subtitle">
                 Your confirmed appointments with certified mechanics and partner workshops
@@ -442,9 +463,20 @@ const ServicesPage = () => {
                         fontWeight: 700,
                         fontSize: '0.85rem',
                         color: 'var(--text-primary)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
                       }}
                     >
-                      {appt.mode === 'DOORSTEP' ? '🏡 Doorstep Service' : '🏬 Workshop Visit'}
+                      {appt.mode === 'DOORSTEP' ? (
+                        <>
+                          <Home size={14} strokeWidth={1.75} /> Doorstep Service
+                        </>
+                      ) : (
+                        <>
+                          <Store size={14} strokeWidth={1.75} /> Workshop Visit
+                        </>
+                      )}
                     </span>
                     <span
                       className="badge"
@@ -463,17 +495,19 @@ const ServicesPage = () => {
                   <h4 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', color: 'var(--text-primary)' }}>
                     {appt.serviceName}
                   </h4>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                    🚗 {appt.vehicleInfo} {appt.vehicleNumber ? `[${appt.vehicleNumber}]` : ''}
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Car size={14} strokeWidth={1.75} /> {appt.vehicleInfo} {appt.vehicleNumber ? `[${appt.vehicleNumber}]` : ''}
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    📅 Date: {new Date(appt.preferredDate).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                    {' · '}
-                    💰 Quoted: ₹{appt.quotedLaborPrice}
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={13} strokeWidth={1.75} /> Date: {new Date(appt.preferredDate).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                    <span>·</span>
+                    <span>Quoted: ₹{appt.quotedLaborPrice}</span>
                   </div>
                 </div>
               ))}
@@ -498,7 +532,9 @@ const ServicesPage = () => {
                   <div>
                     <h3 className="service-title">{service.title}</h3>
                     <div className="service-meta-row">
-                      <span className="service-eta">⏱️ {service.eta}</span>
+                      <span className="service-eta" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={13} strokeWidth={1.75} /> {service.eta}
+                      </span>
                       <span className="service-price">₹{service.price}</span>
                     </div>
                   </div>
@@ -509,7 +545,9 @@ const ServicesPage = () => {
                 <ul className="service-features-list">
                   {service.features.map((feat, i) => (
                     <li key={i}>
-                      <span className="check-bullet">✓</span> {feat}
+                      <span className="check-bullet" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Check size={12} strokeWidth={2.2} />
+                      </span> {feat}
                     </li>
                   ))}
                 </ul>
@@ -545,7 +583,9 @@ const ServicesPage = () => {
                 onClick={() => setSelectedCity(city)}
                 id={`city-filter-${city.toLowerCase().replace(/\s+/g, '-')}`}
               >
-                📍 {city}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={13} strokeWidth={1.75} /> {city}
+                </span>
               </button>
             ))}
           </div>
@@ -564,11 +604,13 @@ const ServicesPage = () => {
                     <div className="shop-card-header">
                       <div>
                         <h3 className="shop-name">{shop.name}</h3>
-                        <div className="shop-location">
-                          <span>📍</span> {shop.address}
+                        <div className="shop-location" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <MapPin size={13} strokeWidth={1.75} /> {shop.address}
                         </div>
                       </div>
-                      <div className="shop-rating-pill">★ {shop.rating || '4.8'}</div>
+                      <div className="shop-rating-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <Star size={12} strokeWidth={1.75} fill="#eab308" color="#eab308" /> {shop.rating || '4.8'}
+                      </div>
                     </div>
 
                     <div className="shop-card-stats">
@@ -634,8 +676,8 @@ const ServicesPage = () => {
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                     {selectedService.title}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    ⏱️ ETA: {selectedService.eta}
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} strokeWidth={1.75} /> ETA: {selectedService.eta}
                   </div>
                 </div>
               </div>
@@ -670,7 +712,9 @@ const ServicesPage = () => {
                   style={{ flex: 1 }}
                   onClick={() => setBookingData({ ...bookingData, serviceMode: 'DOORSTEP' })}
                 >
-                  🏡 Doorstep Service
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Home size={14} strokeWidth={1.75} /> Doorstep Service
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -681,7 +725,9 @@ const ServicesPage = () => {
                   style={{ flex: 1 }}
                   onClick={() => setBookingData({ ...bookingData, serviceMode: 'WORKSHOP' })}
                 >
-                  🏬 Partner Workshop
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Store size={14} strokeWidth={1.75} /> Partner Workshop
+                  </span>
                 </button>
               </div>
             </div>
@@ -762,7 +808,7 @@ const ServicesPage = () => {
                           {v.nickname ? `"${v.nickname}" — ` : ''}
                           {make} {model} {year} ({variantName})
                           {v.regNumber ? ` [${v.regNumber}]` : ''}
-                          {isActive ? ' [✓ ACTIVE]' : isPrimary ? ' [⭐ PRIMARY]' : ''}
+                          {isActive ? ' [ACTIVE]' : isPrimary ? ' [PRIMARY]' : ''}
                         </option>
                       );
                     })}
@@ -871,7 +917,7 @@ const ServicesPage = () => {
                 >
                   {shops.map((shop) => (
                     <option key={shop.id} value={shop.id}>
-                      🏬 {shop.name} ({shop.city || selectedCity}) — {shop.address}
+                      {shop.name} ({shop.city || selectedCity}) — {shop.address}
                     </option>
                   ))}
                 </select>
@@ -912,7 +958,7 @@ const ServicesPage = () => {
                   >
                     {addresses.map((addr) => (
                       <option key={addr.id} value={addr.id}>
-                        🏡 {addr.label || 'Home'}: {addr.line1}, {addr.city} {addr.pincode}
+                        {addr.label || 'Home'}: {addr.line1}, {addr.city} {addr.pincode}
                         {addr.isDefault ? ' (Default)' : ''}
                       </option>
                     ))}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import toast from 'react-hot-toast';
+import { ShieldCheck } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -72,7 +73,7 @@ export default function AdminLoginPage() {
               marginBottom: '1rem',
             }}
           >
-            🛡️
+            <ShieldCheck size={32} strokeWidth={1.75} style={{ color: '#FFFFFF' }} />
           </div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
             PartNexa Admin

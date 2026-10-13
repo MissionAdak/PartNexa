@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { Building2, X, Check } from 'lucide-react';
 import procurementService from '../../../services/procurementService';
 
 const AVAILABLE_CATEGORIES = [
@@ -124,7 +125,7 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>🏢</span>
+              <Building2 size={22} strokeWidth={1.75} color="var(--admin-blue)" />
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                 Add Supplier / Company
               </h2>
@@ -146,10 +147,9 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1rem',
             }}
           >
-            ✕
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -357,9 +357,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                       fontSize: '0.8rem',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
                     }}
                   >
-                    {checked ? '✓ ' : ''}{vType}
+                    {checked && <Check size={12} strokeWidth={2.2} />}
+                    {vType}
                   </button>
                 );
               })}
@@ -388,9 +392,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                       fontSize: '0.75rem',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
                     }}
                   >
-                    {checked ? '✓ ' : ''}{cat}
+                    {checked && <Check size={12} strokeWidth={2.2} />}
+                    {cat}
                   </button>
                 );
               })}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDeliveryAuth } from '../contexts/DeliveryAuthContext';
 import deliveryService from '../services/deliveryService';
 import toast from 'react-hot-toast';
+import { Star, Bike } from 'lucide-react';
 
 export const DeliveryProfilePage = () => {
   const { user, partner, refreshProfile, logout } = useDeliveryAuth();
@@ -84,7 +85,9 @@ export const DeliveryProfilePage = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>Fleet Rating:</span>
-              <strong style={{ color: 'var(--color-amber)' }}>★ {partner?.rating || 4.9} / 5.0</strong>
+              <strong style={{ color: 'var(--color-amber)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Star size={13} fill="currentColor" /> {partner?.rating || 4.9} / 5.0
+              </strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>Total Completed Deliveries:</span>
@@ -109,8 +112,8 @@ export const DeliveryProfilePage = () => {
 
         {/* Edit Vehicle Info */}
         <div className="delivery-card">
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1.25rem' }}>
-            🛵 Registered Vehicle Details
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <Bike size={18} strokeWidth={1.75} /> Registered Vehicle Details
           </h2>
 
           <form onSubmit={handleSave}>

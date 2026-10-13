@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import { Car, Bike, Star, Zap, Search, ArrowRight, Check, X, Plus } from 'lucide-react';
 import { vehiclesService } from '../../services';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { BrandLogo } from './BrandLogos';
@@ -255,7 +256,7 @@ export const VehicleSelectorModal = ({
       });
     }
 
-    toast.success(`Active vehicle set to ${makeObj.name} ${modelObj.name}! 🚗`);
+    toast.success(`Active vehicle set to ${makeObj.name} ${modelObj.name}!`);
     onClose();
   };
 
@@ -367,7 +368,7 @@ export const VehicleSelectorModal = ({
                 aria-label="Close vehicle selector"
                 id="vsm-close-btn"
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -400,7 +401,9 @@ export const VehicleSelectorModal = ({
                             {makeName ? (
                               <BrandLogo brandName={makeName} size={40} />
                             ) : (
-                              <span className="vsm-garage-type-icon">{is2W ? '🏍️' : '🚗'}</span>
+                              <span className="vsm-garage-type-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {is2W ? <Bike size={24} strokeWidth={1.75} /> : <Car size={24} strokeWidth={1.75} />}
+                              </span>
                             )}
                           </div>
 
@@ -409,8 +412,16 @@ export const VehicleSelectorModal = ({
                             <div className="vsm-garage-title-row">
                               <h4 className="vsm-garage-title">{displayName}</h4>
                               <div className="vsm-garage-badges">
-                                {isAct && <span className="vsm-badge-active">✓ ACTIVE</span>}
-                                {isPrim && <span className="vsm-badge-primary">⭐ PRIMARY</span>}
+                                {isAct && (
+                                  <span className="vsm-badge-active" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                    <Check size={11} strokeWidth={2.5} /> ACTIVE
+                                  </span>
+                                )}
+                                {isPrim && (
+                                  <span className="vsm-badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Star size={11} strokeWidth={2.5} fill="currentColor" /> PRIMARY
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -438,7 +449,9 @@ export const VehicleSelectorModal = ({
                         <div className="vsm-garage-actions-col">
                           {isAct ? (
                             <div className="vsm-active-indicator">
-                              <span className="vsm-active-check">✓ Active</span>
+                              <span className="vsm-active-check" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Check size={12} strokeWidth={2.0} /> Active
+                              </span>
                             </div>
                           ) : (
                             <button
@@ -479,8 +492,9 @@ export const VehicleSelectorModal = ({
                       setStep(1);
                     }}
                     id="vsm-add-another-vehicle-btn"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   >
-                    <span>➕</span> Add Another Vehicle
+                    <Plus size={15} strokeWidth={1.75} /> Add Another Vehicle
                   </button>
 
                   <Link
@@ -525,7 +539,7 @@ export const VehicleSelectorModal = ({
                 aria-label="Close vehicle selector"
                 id="vsm-close-btn"
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -547,7 +561,7 @@ export const VehicleSelectorModal = ({
                     title={isCompleted ? `Go back to ${s.label}` : s.label}
                   >
                     <div className="vsm-step-icon">
-                      {isCompleted ? '✓' : stepNum}
+                      {isCompleted ? <Check size={14} strokeWidth={2.0} /> : stepNum}
                     </div>
                     <div className="vsm-step-info">
                       <span className="vsm-step-tag">Step {stepNum}</span>
@@ -580,8 +594,8 @@ export const VehicleSelectorModal = ({
                       role="button"
                       tabIndex={0}
                     >
-                      <div className="vsm-type-icon-wrapper">
-                        <span className="vsm-type-emoji">🚗</span>
+                      <div className="vsm-type-icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Car size={32} strokeWidth={1.75} className="text-primary" />
                       </div>
                       <div className="vsm-type-content">
                         <h4>4 Wheeler (Cars & SUVs)</h4>
@@ -590,7 +604,9 @@ export const VehicleSelectorModal = ({
                           <span>20 Manufacturers Available</span>
                         </div>
                       </div>
-                      <div className="vsm-type-arrow">→</div>
+                      <div className="vsm-type-arrow" style={{ display: 'flex', alignItems: 'center' }}>
+                        <ArrowRight size={18} strokeWidth={1.75} />
+                      </div>
                     </div>
 
                     <div
@@ -603,8 +619,8 @@ export const VehicleSelectorModal = ({
                       role="button"
                       tabIndex={0}
                     >
-                      <div className="vsm-type-icon-wrapper">
-                        <span className="vsm-type-emoji">🏍️</span>
+                      <div className="vsm-type-icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Bike size={32} strokeWidth={1.75} className="text-teal" />
                       </div>
                       <div className="vsm-type-content">
                         <h4>2 Wheeler (Bikes & Scooters)</h4>
@@ -613,15 +629,18 @@ export const VehicleSelectorModal = ({
                           <span>9 Major Brands Available</span>
                         </div>
                       </div>
-                      <div className="vsm-type-arrow">→</div>
+                      <div className="vsm-type-arrow" style={{ display: 'flex', alignItems: 'center' }}>
+                        <ArrowRight size={18} strokeWidth={1.75} />
+                      </div>
                     </div>
                   </div>
 
                   {/* Quick Select from Recently Selected */}
                   {recentVehicles.length > 0 && (
                     <div className="vsm-recents-section">
-                      <div className="vsm-recents-title">
-                        <span>⚡ Recently Selected Vehicles:</span>
+                      <div className="vsm-recents-title" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Zap size={14} strokeWidth={2} />
+                        <span>Recently Selected Vehicles:</span>
                       </div>
                       <div className="vsm-recents-chips">
                         {(recentVehicles || []).map((rv) => (
@@ -632,8 +651,8 @@ export const VehicleSelectorModal = ({
                             onClick={() => handleQuickSelectRecent(rv)}
                             id={`recent-chip-${rv.variantId}`}
                           >
-                            <span className="recent-chip-icon">
-                              {rv.type === 'CAR' ? '🚗' : '🏍️'}
+                            <span className="recent-chip-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                              {rv.type === 'CAR' ? <Car size={14} strokeWidth={1.75} /> : <Bike size={14} strokeWidth={1.75} />}
                             </span>
                             <span className="recent-chip-text">
                               {rv.year} {rv.makeName} {rv.modelName} ({rv.variantName})
@@ -655,8 +674,16 @@ export const VehicleSelectorModal = ({
                       <h3>Select {vehicleType === '4_WHEELER' ? 'Car' : '2-Wheeler'} Manufacturer</h3>
                       <p>Displaying authentic database-verified brands with live model catalogs</p>
                     </div>
-                    <div className="vsm-active-tag">
-                      {vehicleType === '4_WHEELER' ? '🚗 4-Wheeler' : '🏍️ 2-Wheeler'}
+                    <div className="vsm-active-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {vehicleType === '4_WHEELER' ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Car size={14} strokeWidth={1.75} /> 4-Wheeler
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Bike size={14} strokeWidth={1.75} /> 2-Wheeler
+                        </span>
+                      )}
                       <button type="button" className="vsm-tag-change" onClick={() => setStep(1)}>
                         Change
                       </button>
@@ -665,7 +692,7 @@ export const VehicleSelectorModal = ({
 
                   {/* Brand Search Bar */}
                   <div className="vsm-search-bar">
-                    <span className="vsm-search-icon">🔍</span>
+                    <Search size={16} strokeWidth={1.75} className="vsm-search-icon" />
                     <input
                       type="text"
                       placeholder="Search brand (e.g. Maruti, Hyundai, Tata, BMW, Mercedes)..."
@@ -675,8 +702,8 @@ export const VehicleSelectorModal = ({
                       autoFocus
                     />
                     {brandSearch && (
-                      <button type="button" className="vsm-search-clear" onClick={() => setBrandSearch('')}>
-                        ✕
+                      <button type="button" className="vsm-search-clear" onClick={() => setBrandSearch('')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={14} strokeWidth={1.75} />
                       </button>
                     )}
                   </div>
@@ -737,7 +764,7 @@ export const VehicleSelectorModal = ({
 
                   {/* Model Search */}
                   <div className="vsm-search-bar">
-                    <span className="vsm-search-icon">🔍</span>
+                    <Search size={16} strokeWidth={1.75} className="vsm-search-icon" />
                     <input
                       type="text"
                       placeholder={`Search ${selectedMake?.name || ''} models (e.g. Swift, Nexon, Creta)...`}
@@ -747,8 +774,8 @@ export const VehicleSelectorModal = ({
                       autoFocus
                     />
                     {modelSearch && (
-                      <button type="button" className="vsm-search-clear" onClick={() => setModelSearch('')}>
-                        ✕
+                      <button type="button" className="vsm-search-clear" onClick={() => setModelSearch('')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <X size={14} strokeWidth={1.75} />
                       </button>
                     )}
                   </div>
@@ -771,8 +798,12 @@ export const VehicleSelectorModal = ({
                           role="button"
                           tabIndex={0}
                         >
-                          <div className="vsm-model-icon">
-                            {model.type === 'BIKE' || model.type === 'SCOOTER' ? '🏍️' : '🚗'}
+                          <div className="vsm-model-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {model.type === 'BIKE' || model.type === 'SCOOTER' ? (
+                              <Bike size={20} strokeWidth={1.75} />
+                            ) : (
+                              <Car size={20} strokeWidth={1.75} />
+                            )}
                           </div>
                           <div className="vsm-model-details">
                             <span className="vsm-model-name">{model.name}</span>
@@ -780,7 +811,9 @@ export const VehicleSelectorModal = ({
                               {model._count?.variants ? `${model._count.variants} Variants Available` : 'Available in Catalog'}
                             </span>
                           </div>
-                          <span className="vsm-model-arrow">→</span>
+                          <span className="vsm-model-arrow" style={{ display: 'flex', alignItems: 'center' }}>
+                            <ArrowRight size={16} strokeWidth={1.75} />
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -883,15 +916,15 @@ export const VehicleSelectorModal = ({
 
                       <div className="vsm-hero-perks">
                         <div className="vsm-perk-item">
-                          <span className="vsm-perk-icon">✓</span>
+                          <Check size={14} strokeWidth={2.0} className="vsm-perk-icon" />
                           <span>Guaranteed 100% Fitment Match</span>
                         </div>
                         <div className="vsm-perk-item">
-                          <span className="vsm-perk-icon">✓</span>
+                          <Check size={14} strokeWidth={2.0} className="vsm-perk-icon" />
                           <span>Zero-Risk Return Protection</span>
                         </div>
                         <div className="vsm-perk-item">
-                          <span className="vsm-perk-icon">✓</span>
+                          <Check size={14} strokeWidth={2.0} className="vsm-perk-icon" />
                           <span>DIFM Service Scheduling Enabled</span>
                         </div>
                       </div>

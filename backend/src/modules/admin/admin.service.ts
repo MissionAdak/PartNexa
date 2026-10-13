@@ -1360,7 +1360,7 @@ export const verifyUsedPart = async (id: string, status: string, notes?: string)
     where: { listingId: id },
     create: {
       listingId: id,
-      notes: notes || 'Verified by PartSphere administrator.',
+      notes: notes || 'Verified by PartNexa administrator.',
       approvedAt: isApproved ? new Date() : null,
       rejectedAt: !isApproved ? new Date() : null,
       rejectionReason: !isApproved ? (notes || 'Rejected during administrative review.') : null,

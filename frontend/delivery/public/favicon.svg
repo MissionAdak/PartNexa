@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <!-- Primary Electric Blue Gradient -->
+    <linearGradient id="pn-blue-grad" x1="6" y1="8" x2="42" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#38BDF8" />
+      <stop offset="50%" stopColor="#0284C7" />
+      <stop offset="100%" stopColor="#0369A1" />
+    </linearGradient>
+
+    <!-- Secondary Performance Teal Gradient -->
+    <linearGradient id="pn-teal-grad" x1="42" y1="28" x2="6" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#2DD4BF" />
+      <stop offset="50%" stopColor="#0D9488" />
+      <stop offset="100%" stopColor="#0F766E" />
+    </linearGradient>
+
+    <!-- Technical Squircle Background Gradient -->
+    <linearGradient id="pn-bg-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#0B1528" />
+      <stop offset="100%" stopColor="#062224" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base Frame -->
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#pn-bg-grad)" stroke="#0284C7" stroke-opacity="0.35" stroke-width="1.5" />
+
+  <!-- Flow 1: Top 'P' / Automotive Spares Velocity Loop -->
+  <path
+    d="M13 34V15C13 11.6863 15.6863 9 19 9H27C31.4183 9 35 12.5817 35 17C35 21.4183 31.4183 25 27 25H20"
+    stroke="url(#pn-blue-grad)"
+    stroke-width="4.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Flow 2: Return Nexus / Repair & Circular Reuse Loop -->
+  <path
+    d="M35 17V33C35 36.3137 32.3137 39 29 39H21C16.5817 39 13 35.4183 13 31C13 26.5817 16.5817 23 21 23H28"
+    stroke="url(#pn-teal-grad)"
+    stroke-width="4.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Central Precision Fitment Hub -->
+  <circle cx="24" cy="24" r="3.2" fill="#FFFFFF" />
+  <circle cx="24" cy="24" r="1.5" fill="#0284C7" />
+
+  <!-- Tech Calibration Nodes -->
+  <circle cx="27" cy="17" r="1.5" fill="#38BDF8" />
+  <circle cx="21" cy="31" r="1.5" fill="#2DD4BF" />
+</svg>

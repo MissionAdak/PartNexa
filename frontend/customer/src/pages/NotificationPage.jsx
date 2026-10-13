@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import notificationsService from '../services/notificationsService';
 import toast from 'react-hot-toast';
+import { Package, Truck, Wrench, CreditCard, Crown, RotateCcw, ShieldCheck, Bell, Check, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 import './NotificationPage.css';
 
 function formatFullTime(dateString) {
@@ -38,27 +39,27 @@ function getNotificationMeta(notif) {
   const title = (notif.title || '').toLowerCase();
 
   if (type.includes('ORDER') || title.includes('order')) {
-    return { icon: '📦', badge: 'Order', badgeColor: 'blue' };
+    return { icon: <Package size={18} strokeWidth={1.75} />, badge: 'Order', badgeColor: 'blue' };
   }
   if (type.includes('DELIVERY') || title.includes('delivery') || title.includes('rider')) {
-    return { icon: '🚚', badge: 'Logistics', badgeColor: 'amber' };
+    return { icon: <Truck size={18} strokeWidth={1.75} />, badge: 'Logistics', badgeColor: 'amber' };
   }
   if (type.includes('SHOP') || type.includes('WORKSHOP') || type.includes('SERVICE') || title.includes('service') || title.includes('workshop')) {
-    return { icon: '🔧', badge: 'Service', badgeColor: 'emerald' };
+    return { icon: <Wrench size={18} strokeWidth={1.75} />, badge: 'Service', badgeColor: 'emerald' };
   }
   if (type.includes('PAYMENT') || title.includes('payment') || title.includes('commission')) {
-    return { icon: '💳', badge: 'Payment', badgeColor: 'purple' };
+    return { icon: <CreditCard size={18} strokeWidth={1.75} />, badge: 'Payment', badgeColor: 'purple' };
   }
   if (type.includes('SUBSCRIPTION') || title.includes('subscription') || title.includes('membership')) {
-    return { icon: '👑', badge: 'Care Pass', badgeColor: 'teal' };
+    return { icon: <Crown size={18} strokeWidth={1.75} />, badge: 'Care Pass', badgeColor: 'teal' };
   }
   if (type.includes('USED_PART') || title.includes('used part') || title.includes('valuation')) {
-    return { icon: '♻️', badge: 'Eco-Part', badgeColor: 'green' };
+    return { icon: <RotateCcw size={18} strokeWidth={1.75} />, badge: 'Eco-Part', badgeColor: 'green' };
   }
   if (type.includes('KYC') || title.includes('kyc')) {
-    return { icon: '🛡️', badge: 'Compliance', badgeColor: 'rose' };
+    return { icon: <ShieldCheck size={18} strokeWidth={1.75} />, badge: 'Compliance', badgeColor: 'rose' };
   }
-  return { icon: '🔔', badge: 'Alert', badgeColor: 'slate' };
+  return { icon: <Bell size={18} strokeWidth={1.75} />, badge: 'Alert', badgeColor: 'slate' };
 }
 
 export const NotificationPage = ({ portal: initialPortal }) => {
@@ -205,8 +206,9 @@ export const NotificationPage = ({ portal: initialPortal }) => {
                 className="btn btn-secondary btn-sm"
                 id="btn-mark-all-read"
                 onClick={handleMarkAllAsRead}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                ✓ Mark all as read
+                <Check size={14} strokeWidth={2.0} /> Mark all as read
               </button>
             )}
             <button
@@ -216,8 +218,9 @@ export const NotificationPage = ({ portal: initialPortal }) => {
               disabled={isLoading || isRefreshing}
               title="Refresh notifications"
               aria-label="Refresh"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <span className={isRefreshing ? 'spinning' : ''}>🔄</span>
+              <RefreshCw size={14} strokeWidth={1.75} className={isRefreshing ? 'spinning' : ''} />
             </button>
           </div>
         </div>
@@ -268,8 +271,8 @@ export const NotificationPage = ({ portal: initialPortal }) => {
             </div>
           ) : notifications.length === 0 ? (
             <div className="notification-empty-state">
-              <div className="empty-state-illustration">
-                {filter === 'UNREAD' ? '✨' : '🔔'}
+              <div className="empty-state-illustration" style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                {filter === 'UNREAD' ? <Sparkles size={36} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> : <Bell size={36} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />}
               </div>
               <h2 className="empty-state-title">
                 {filter === 'UNREAD' ? "You're all caught up!" : 'No notifications yet'}
@@ -332,8 +335,9 @@ export const NotificationPage = ({ portal: initialPortal }) => {
                               className="inline-action-btn mark-read-icon"
                               title="Mark as read"
                               onClick={(e) => handleMarkAsRead(notif.id, e)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                             >
-                              ✓ Read
+                              <Check size={13} strokeWidth={2.0} /> Read
                             </button>
                           )}
                           <button
@@ -341,8 +345,9 @@ export const NotificationPage = ({ portal: initialPortal }) => {
                             className="inline-action-btn delete-icon"
                             title="Delete notification"
                             onClick={(e) => handleDelete(notif.id, e)}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            🗑️
+                            <Trash2 size={14} strokeWidth={1.75} />
                           </button>
                         </div>
                       </div>

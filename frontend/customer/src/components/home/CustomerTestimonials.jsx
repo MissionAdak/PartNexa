@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ShieldCheck, CheckCircle2, Wrench, Lock, RefreshCw, Car, Bike, MessageSquare } from 'lucide-react';
 import { INITIAL_TESTIMONIALS } from '../../data/testimonialsData';
 import './CustomerTestimonials.css';
 
@@ -76,27 +77,27 @@ const VerifiedBadge = ({ verified, isDemo }) => {
 const TrustSummaryStrip = () => {
   const trustFeatures = [
     {
-      icon: '🛡️',
+      icon: <ShieldCheck size={20} strokeWidth={1.75} />,
       title: 'Verified Parts',
       desc: '100% OEM & certified genuine',
     },
     {
-      icon: '🎯',
+      icon: <CheckCircle2 size={20} strokeWidth={1.75} />,
       title: 'Easy Compatibility',
       desc: 'Exact fitment by make, model & year',
     },
     {
-      icon: '🔧',
+      icon: <Wrench size={20} strokeWidth={1.75} />,
       title: 'Home Installation',
       desc: 'Certified DIFM mechanics at doorstep',
     },
     {
-      icon: '🔒',
+      icon: <Lock size={20} strokeWidth={1.75} />,
       title: 'Secure Checkout',
       desc: 'Protected payments & cash on delivery',
     },
     {
-      icon: '♻️',
+      icon: <RefreshCw size={20} strokeWidth={1.75} />,
       title: 'Used-Part Resale',
       desc: 'Inspected circular parts with buyback',
     },
@@ -213,7 +214,7 @@ export const CustomerTestimonials = ({ items = INITIAL_TESTIMONIALS }) => {
         <div className="testimonials-header-row">
           <div className="testimonials-header-content">
             <div className="testimonials-trust-label">
-              <span className="testimonials-trust-label-icon">💬</span>
+              <MessageSquare size={14} strokeWidth={1.75} className="testimonials-trust-label-icon" />
               <span>CUSTOMER STORIES</span>
             </div>
             <h2 id="customer-feedback-title" className="section-title">
@@ -322,11 +323,13 @@ export const CustomerTestimonials = ({ items = INITIAL_TESTIMONIALS }) => {
                       </div>
                       {item.vehicle && (
                         <div className="testimonial-vehicle-badge">
-                          <span className="testimonial-vehicle-icon">
+                          <span className="testimonial-vehicle-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
                             {item.vehicle.toLowerCase().includes('bike') ||
-                            item.vehicle.toLowerCase().includes('enfield')
-                              ? '🏍️'
-                              : '🚗'}
+                            item.vehicle.toLowerCase().includes('enfield') ? (
+                              <Bike size={14} strokeWidth={1.75} />
+                            ) : (
+                              <Car size={14} strokeWidth={1.75} />
+                            )}
                           </span>
                           <span>{item.vehicle}</span>
                         </div>

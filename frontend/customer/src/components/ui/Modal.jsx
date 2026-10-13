@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import './Modal.css';
 
 export const Modal = ({
@@ -42,7 +43,7 @@ export const Modal = ({
             onClick={onClose}
             aria-label="Close modal"
           >
-            ✕
+            <X size={18} strokeWidth={1.75} />
           </button>
         </div>
         <div className="modal-body">{children}</div>

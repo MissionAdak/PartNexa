@@ -1,7 +1,9 @@
 import React from 'react';
 import { useShopAuth } from '../../contexts/ShopAuthContext';
 import { Link } from 'react-router-dom';
+import { Check, Moon, Sun, ExternalLink } from 'lucide-react';
 import NotificationBell from '../notifications/NotificationBell';
+import PartNexaLogo from '../common/PartNexaLogo';
 
 export const ShopNavbar = () => {
   const { shop, user, logout, theme, toggleTheme } = useShopAuth();
@@ -23,33 +25,12 @@ export const ShopNavbar = () => {
     >
       {/* Brand & Partner Identification */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        <Link to="/shop" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-teal))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              fontWeight: 800,
-              fontSize: '1.1rem',
-              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)',
-            }}
-          >
-            ⚙️
-          </div>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.15rem', color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-              PartNexa <span style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>WORKSHOP</span>
-            </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Mechanical Workshop Console
-            </div>
-          </div>
-        </Link>
+        <PartNexaLogo
+          variant="horizontal"
+          portal="workshop"
+          size="md"
+          linkTo="/shop"
+        />
 
         {shop && (
           <div
@@ -67,8 +48,8 @@ export const ShopNavbar = () => {
             <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{shop.name}</span>
             <span style={{ color: 'var(--color-text-muted)' }}>•</span>
             <span style={{ color: 'var(--color-text-secondary)' }}>{shop.city}</span>
-            <span className="badge badge-success" style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem' }}>
-              ✓ Verified Partner
+            <span className="badge badge-success" style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+              <Check size={11} strokeWidth={2.2} /> Verified Partner
             </span>
           </div>
         )}
@@ -112,16 +93,17 @@ export const ShopNavbar = () => {
             fontWeight: 600,
           }}
         >
-          {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          {theme === 'light' ? <Moon size={14} strokeWidth={1.75} /> : <Sun size={14} strokeWidth={1.75} />}
+          <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
         </button>
 
         {/* Customer Portal Link */}
         <Link
           to="/customer"
           className="btn btn-outline btn-sm"
-          style={{ fontSize: '0.78rem' }}
+          style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
         >
-          Customer Portal ↗
+          Customer Portal <ExternalLink size={12} strokeWidth={1.75} />
         </Link>
 
         {/* Owner Profile & Logout */}

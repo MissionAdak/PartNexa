@@ -50,10 +50,10 @@ const sendMail = async ({ to, subject, html, text }) => {
 const sendWelcomeEmail = async (user) => {
   return sendMail({
     to: user.email,
-    subject: 'Welcome to PartSphere!',
+    subject: 'Welcome to PartNexa!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #FF6B35;">Welcome to PartSphere, ${user.firstName}! 🚗</h1>
+        <h1 style="color: #0284C7;">Welcome to PartNexa, ${user.firstName}! 🚗</h1>
         <p>Your account has been created successfully.</p>
         <p>Start by adding your vehicle to get compatible part recommendations.</p>
         <a href="http://localhost:5173/garage" 

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDeliveryAuth } from '../contexts/DeliveryAuthContext';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../components/common/PartNexaLogo';
+import { Sun, Moon } from 'lucide-react';
 
 export const DeliveryRegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -89,7 +91,7 @@ export const DeliveryRegisterPage = () => {
           }}
           title="Toggle Theme"
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
         </button>
       </div>
 
@@ -104,25 +106,16 @@ export const DeliveryRegisterPage = () => {
       >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div
-            style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--color-emerald), var(--color-primary))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.8rem',
-              color: '#FFFFFF',
-              margin: '0 auto 1rem',
-              boxShadow: 'var(--shadow-primary)',
-            }}
-          >
-            🛵
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              portal="delivery"
+              size="lg"
+              linkTo="/dashboard"
+            />
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.65rem', fontWeight: 800, marginBottom: '0.35rem' }}>
-            Join PartSphere Delivery Fleet
+            Join PartNexa Delivery Fleet
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
             Earn competitive per-trip payouts with transparent doorstep verification

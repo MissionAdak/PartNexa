@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supportService } from '../../services';
-import { Button, Input, Select } from '../../components/ui';
+import { supportService } from '../services';
+import { Button, Input, Select } from '../components/ui';
 import toast from 'react-hot-toast';
+import { PhoneCall, MessageSquare, Mail } from 'lucide-react';
 import './SupportPage.css';
 
 const FAQS = [
@@ -92,21 +93,27 @@ const SupportPage = () => {
         {/* Contact Channels */}
         <div className="channels-grid">
           <div className="channel-card">
-            <div className="channel-icon">📞</div>
+            <div className="channel-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PhoneCall size={28} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+            </div>
             <h3 className="channel-name">24/7 Helpline</h3>
             <div className="channel-val">1800-419-NEXA</div>
             <div className="channel-timing">Toll-free across India</div>
           </div>
 
           <div className="channel-card">
-            <div className="channel-icon">💬</div>
+            <div className="channel-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MessageSquare size={28} strokeWidth={1.75} style={{ color: '#10B981' }} />
+            </div>
             <h3 className="channel-name">WhatsApp Support</h3>
             <div className="channel-val">+91 99887 76655</div>
             <div className="channel-timing">Avg response: &lt; 5 mins</div>
           </div>
 
           <div className="channel-card">
-            <div className="channel-icon">✉️</div>
+            <div className="channel-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={28} strokeWidth={1.75} style={{ color: '#3B82F6' }} />
+            </div>
             <h3 className="channel-name">Email Desk</h3>
             <div className="channel-val">support@partnexa.in</div>
             <div className="channel-timing">24-hour turnaround</div>

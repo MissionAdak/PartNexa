@@ -3,6 +3,26 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ordersService, paymentsService, returnsService } from '../services';
 import { Button, Badge, Skeleton, EmptyState } from '../components/ui';
 import RazorpayModal from '../components/checkout/RazorpayModal';
+import {
+  FileText,
+  Banknote,
+  Zap,
+  Check,
+  RotateCcw,
+  ShieldCheck,
+  Clock,
+  CreditCard,
+  XCircle,
+  MapPin,
+  Phone,
+  Wrench,
+  Calendar,
+  Lock,
+  Truck,
+  MessageSquare,
+  ClipboardList,
+  X,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import './OrderDetailPage.css';
 
@@ -152,7 +172,7 @@ const OrderDetailPage = () => {
       await paymentsService.switchPaymentMethod(order.id, {
         paymentMethod: 'CASH_ON_DELIVERY',
       });
-      toast.success('Order switched to Cash on Delivery! 📦');
+      toast.success('Order switched to Cash on Delivery!');
       fetchOrderDetail();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to switch payment method.');
@@ -207,9 +227,19 @@ const OrderDetailPage = () => {
         <div className="order-detail-top">
           <div className="order-detail-title-wrap">
             <h1>Order #{order.orderNumber || order.id}</h1>
-            <p>
-              Placed on {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Recently'} · Payment:{' '}
-              <strong>{order.paymentMethod === 'CASH_ON_DELIVERY' ? '💵 Cash on Delivery' : '⚡ Razorpay'}</strong>
+            <p style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+              <span>Placed on {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Recently'} · Payment:</span>
+              <strong>
+                {order.paymentMethod === 'CASH_ON_DELIVERY' ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Banknote size={14} strokeWidth={1.75} /> Cash on Delivery
+                  </span>
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Zap size={14} strokeWidth={1.75} /> Razorpay
+                  </span>
+                )}
+              </strong>
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -223,7 +253,9 @@ const OrderDetailPage = () => {
               size="sm"
               onClick={() => toast.success(`Invoice for #${order.orderNumber || order.id} downloaded`)}
             >
-              📄 Download Invoice
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <FileText size={14} strokeWidth={1.75} /> Download Invoice
+              </span>
             </Button>
           </div>
         </div>
@@ -239,7 +271,9 @@ const OrderDetailPage = () => {
 
           <div className="stepper-track">
             <div className={`stepper-step ${order.status !== 'CANCELLED' ? 'completed' : 'danger'}`}>
-              <div className="stepper-dot">✓</div>
+              <div className="stepper-dot">
+                <Check size={12} strokeWidth={2.2} />
+              </div>
               <div>
                 <div className="stepper-label">Order Confirmed</div>
                 <div className="stepper-time">
@@ -249,7 +283,7 @@ const OrderDetailPage = () => {
             </div>
 
             <div className={`stepper-step ${isShipped ? 'completed' : 'pending'}`}>
-              <div className="stepper-dot">{isShipped ? '✓' : '2'}</div>
+              <div className="stepper-dot">{isShipped ? <Check size={12} strokeWidth={2.2} /> : '2'}</div>
               <div>
                 <div className="stepper-label">Dispatched / In Transit</div>
                 <div className="stepper-time">{isShipped ? 'On the way' : 'Pending dispatch'}</div>
@@ -257,7 +291,7 @@ const OrderDetailPage = () => {
             </div>
 
             <div className={`stepper-step ${isOutForDelivery ? 'completed' : 'pending'}`}>
-              <div className="stepper-dot">{isOutForDelivery ? '✓' : '3'}</div>
+              <div className="stepper-dot">{isOutForDelivery ? <Check size={12} strokeWidth={2.2} /> : '3'}</div>
               <div>
                 <div className="stepper-label">Out for Delivery</div>
                 <div className="stepper-time">{isOutForDelivery ? 'With Delivery Rider' : 'Pending route'}</div>
@@ -265,7 +299,7 @@ const OrderDetailPage = () => {
             </div>
 
             <div className={`stepper-step ${isDelivered ? 'completed' : 'pending'}`}>
-              <div className="stepper-dot">{isDelivered ? '✓' : '4'}</div>
+              <div className="stepper-dot">{isDelivered ? <Check size={12} strokeWidth={2.2} /> : '4'}</div>
               <div>
                 <div className="stepper-label">Delivered</div>
                 <div className="stepper-time">{isDelivered ? 'Delivered to Doorstep' : 'Awaiting arrival'}</div>
@@ -274,7 +308,7 @@ const OrderDetailPage = () => {
 
             {order.difmType && order.difmType !== 'NO_INSTALLATION' && (
               <div className={`stepper-step ${isDifmCompleted ? 'completed' : 'pending'}`}>
-                <div className="stepper-dot">{isDifmCompleted ? '✓' : '5'}</div>
+                <div className="stepper-dot">{isDifmCompleted ? <Check size={12} strokeWidth={2.2} /> : '5'}</div>
                 <div>
                   <div className="stepper-label">
                     {order.difmType === 'HOME_INSTALLATION' ? 'Home Installation' : 'Workshop Fitment'}
@@ -360,16 +394,16 @@ const OrderDetailPage = () => {
                           {isItemDelivered && (
                             <div className="item-return-status-strip">
                               {activeReturn ? (
-                                <span className={`return-badge return-badge-${activeReturn.status.toLowerCase()}`}>
-                                  🔄 Return: {activeReturn.status.replace(/_/g, ' ')}
+                                <span className={`return-badge return-badge-${activeReturn.status.toLowerCase()}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <RotateCcw size={12} strokeWidth={1.75} /> Return: {activeReturn.status.replace(/_/g, ' ')}
                                 </span>
                               ) : isEligible ? (
-                                <span className="return-window-tag eligible">
-                                  🛡️ {itemElig.message || 'Return available'}
+                                <span className="return-window-tag eligible" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <ShieldCheck size={12} strokeWidth={1.75} /> {itemElig.message || 'Return available'}
                                 </span>
                               ) : isWindowEnded ? (
-                                <span className="return-window-tag expired">
-                                  ⌛ Return window ended
+                                <span className="return-window-tag expired" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <Clock size={12} strokeWidth={1.75} /> Return window ended
                                 </span>
                               ) : null}
                             </div>
@@ -388,8 +422,9 @@ const OrderDetailPage = () => {
                             type="button"
                             className="btn-return-action"
                             onClick={() => handleOpenReturnModal(item)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                           >
-                            ↩️ Return Item
+                            <RotateCcw size={13} strokeWidth={1.75} /> Return Item
                           </button>
                         )}
 
@@ -466,12 +501,22 @@ const OrderDetailPage = () => {
           <div className="order-detail-side-col">
             {/* Payment Status Card */}
             <div className="order-side-card" id="order-payment-status-card">
-              <h3 className="card-title-bordered">💳 Payment Status</h3>
+              <h3 className="card-title-bordered" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CreditCard size={18} strokeWidth={1.75} /> Payment Status
+              </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Method:</span>
                   <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {order.paymentMethod === 'CASH_ON_DELIVERY' ? '💵 Cash on Delivery' : '⚡ Razorpay Online'}
+                    {order.paymentMethod === 'CASH_ON_DELIVERY' ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Banknote size={14} strokeWidth={1.75} /> Cash on Delivery
+                      </span>
+                    ) : (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Zap size={14} strokeWidth={1.75} /> Razorpay Online
+                      </span>
+                    )}
                   </span>
                 </div>
 
@@ -479,13 +524,21 @@ const OrderDetailPage = () => {
                   <span style={{ color: 'var(--text-secondary)' }}>Payment Status:</span>
                   <span>
                     {order.paymentStatus === 'PAID' || order.paymentStatus === 'CAPTURED' ? (
-                      <span className="status-pill-paid">✓ PAID</span>
+                      <span className="status-pill-paid" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Check size={12} strokeWidth={2.2} /> PAID
+                      </span>
                     ) : order.paymentMethod === 'CASH_ON_DELIVERY' ? (
-                      <span className="status-pill-cod">⏳ PENDING COD</span>
+                      <span className="status-pill-cod" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={12} strokeWidth={1.75} /> PENDING COD
+                      </span>
                     ) : order.paymentStatus === 'FAILED' ? (
-                      <span className="status-pill-pending">❌ FAILED</span>
+                      <span className="status-pill-pending" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <XCircle size={12} strokeWidth={1.75} /> FAILED
+                      </span>
                     ) : (
-                      <span className="status-pill-pending">⏳ PENDING</span>
+                      <span className="status-pill-pending" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={12} strokeWidth={1.75} /> PENDING
+                      </span>
                     )}
                   </span>
                 </div>
@@ -510,7 +563,9 @@ const OrderDetailPage = () => {
                       loading={isRetryingPayment}
                       id="order-retry-payment-btn"
                     >
-                      🔄 Complete / Retry Payment
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <RotateCcw size={14} strokeWidth={1.75} /> Complete / Retry Payment
+                      </span>
                     </Button>
                     <Button
                       variant="teal"
@@ -520,7 +575,9 @@ const OrderDetailPage = () => {
                       loading={isSwitchingToCOD}
                       id="order-switch-cod-btn"
                     >
-                      💵 Switch to Cash on Delivery
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Banknote size={14} strokeWidth={1.75} /> Switch to Cash on Delivery
+                      </span>
                     </Button>
                   </div>
                 )}
@@ -529,7 +586,9 @@ const OrderDetailPage = () => {
 
             {/* Delivery Address Card */}
             <div className="order-side-card">
-              <h3 className="card-title-bordered">📍 Delivery Address</h3>
+              <h3 className="card-title-bordered" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={18} strokeWidth={1.75} /> Delivery Address
+              </h3>
               <div style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
                 <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                   {order.address?.fullName || 'Customer'}
@@ -539,8 +598,8 @@ const OrderDetailPage = () => {
                 <div>
                   {order.address?.city}, {order.address?.state} - {order.address?.pincode}
                 </div>
-                <div style={{ marginTop: '8px', color: 'var(--text-muted)' }}>
-                  📞 {order.address?.phone || 'Phone not specified'}
+                <div style={{ marginTop: '8px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Phone size={13} strokeWidth={1.75} /> {order.address?.phone || 'Phone not specified'}
                 </div>
               </div>
             </div>
@@ -551,16 +610,16 @@ const OrderDetailPage = () => {
                 className="order-side-card"
                 style={{ borderColor: 'var(--color-teal-400)', background: 'var(--bg-surface)' }}
               >
-                <h3 className="card-title-bordered" style={{ color: 'var(--color-teal-600)' }}>
-                  🔧 {order.difmType === 'HOME_INSTALLATION' ? 'Doorstep Mechanic (Option A)' : 'Partnered Workshop (Option B)'}
+                <h3 className="card-title-bordered" style={{ color: 'var(--color-teal-600)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Wrench size={16} strokeWidth={1.75} /> {order.difmType === 'HOME_INSTALLATION' ? 'Doorstep Mechanic (Option A)' : 'Partnered Workshop (Option B)'}
                 </h3>
                 <div style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                     {order.difmRequest?.shop?.name || 'Assigned Partner Workshop'}
                   </div>
                   {order.difmRequest?.shop?.phone && (
-                    <div className="text-xs text-muted" style={{ marginTop: '2px' }}>
-                      📞 Workshop Contact: {order.difmRequest.shop.phone}
+                    <div className="text-xs text-muted" style={{ marginTop: '2px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Phone size={12} strokeWidth={1.75} /> Workshop Contact: {order.difmRequest.shop.phone}
                     </div>
                   )}
                   <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -570,8 +629,8 @@ const OrderDetailPage = () => {
                     </Badge>
                   </div>
                   {order.difmRequest?.preferredDate && (
-                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      📅 Scheduled Date: {new Date(order.difmRequest.preferredDate).toLocaleDateString()}
+                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={12} strokeWidth={1.75} /> Scheduled Date: {new Date(order.difmRequest.preferredDate).toLocaleDateString()}
                     </div>
                   )}
 
@@ -588,8 +647,8 @@ const OrderDetailPage = () => {
                         textAlign: 'center',
                       }}
                     >
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#059669', marginBottom: '0.35rem' }}>
-                        🔐 Installation Confirmation Code
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#059669', marginBottom: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Lock size={13} strokeWidth={1.75} /> Installation Confirmation Code
                       </div>
                       <div
                         style={{
@@ -627,7 +686,7 @@ const OrderDetailPage = () => {
                         gap: '6px',
                       }}
                     >
-                      <span>🛡️</span>
+                      <ShieldCheck size={16} strokeWidth={1.75} style={{ color: '#065F46' }} />
                       <span>Verified by Customer Confirmation Code</span>
                     </div>
                   )}
@@ -638,7 +697,9 @@ const OrderDetailPage = () => {
             {/* Delivery Assignment Info */}
             {order.deliveryAssignments && order.deliveryAssignments.length > 0 && (
               <div className="order-side-card">
-                <h3 className="card-title-bordered">🚚 Logistics Partner</h3>
+                <h3 className="card-title-bordered" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Truck size={18} strokeWidth={1.75} /> Logistics Partner
+                </h3>
                 <div style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                     {order.deliveryAssignments[0].deliveryPartner?.user
@@ -662,7 +723,9 @@ const OrderDetailPage = () => {
               </p>
               <Link to={`/support?orderId=${order.orderNumber || order.id}`} style={{ textDecoration: 'none' }}>
                 <Button variant="outline" size="sm" fullWidth>
-                  💬 Contact PartNexa Support
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <MessageSquare size={14} strokeWidth={1.75} /> Contact PartNexa Support
+                  </span>
                 </Button>
               </Link>
             </div>
@@ -685,7 +748,7 @@ const OrderDetailPage = () => {
           <div className="return-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.6rem' }}>↩️</span>
+                <RotateCcw size={22} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Request Spare-Part Return</h3>
                   <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
@@ -699,7 +762,7 @@ const OrderDetailPage = () => {
                 onClick={() => setReturnModalItem(null)}
                 disabled={isSubmittingReturn}
               >
-                ✕
+                <X size={18} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -851,7 +914,7 @@ const OrderDetailPage = () => {
           <div className="return-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '1.4rem' }}>📋</span>
+                <ClipboardList size={22} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Return Request Details</h3>
               </div>
               <button
@@ -859,7 +922,7 @@ const OrderDetailPage = () => {
                 className="modal-close-btn"
                 onClick={() => setViewingReturnRecord(null)}
               >
-                ✕
+                <X size={18} strokeWidth={1.75} />
               </button>
             </div>
 

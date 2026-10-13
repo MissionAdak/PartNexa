@@ -3,14 +3,40 @@ import { Link } from 'react-router-dom';
 import { subscriptionsService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 import { Button, Modal, Badge, Skeleton } from '../components/ui';
+import {
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  XCircle,
+  ShieldCheck,
+  Car,
+  Lightbulb,
+  Sparkles,
+  RefreshCw,
+  BarChart3,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import './MySubscriptionsPage.css';
 
+const renderStatusIcon = (status) => {
+  switch (status) {
+    case 'ACTIVE':
+      return <CheckCircle2 size={13} strokeWidth={2.0} />;
+    case 'PENDING':
+      return <Clock size={13} strokeWidth={1.75} />;
+    case 'CANCELLED':
+      return <AlertTriangle size={13} strokeWidth={1.75} />;
+    case 'EXPIRED':
+    default:
+      return <XCircle size={13} strokeWidth={1.75} />;
+  }
+};
+
 const STATUS_BADGE_MAP = {
-  ACTIVE: { variant: 'teal', label: 'Active Member', icon: '🟢' },
-  PENDING: { variant: 'blue', label: 'Pending Payment', icon: '⏳' },
-  CANCELLED: { variant: 'warning', label: 'Cancelled (Active till period end)', icon: '🟠' },
-  EXPIRED: { variant: 'default', label: 'Expired', icon: '⚪' },
+  ACTIVE: { variant: 'teal', label: 'Active Member' },
+  PENDING: { variant: 'blue', label: 'Pending Payment' },
+  CANCELLED: { variant: 'warning', label: 'Cancelled (Active till period end)' },
+  EXPIRED: { variant: 'default', label: 'Expired' },
 };
 
 const MySubscriptionsPage = () => {
@@ -66,7 +92,7 @@ const MySubscriptionsPage = () => {
     const toastId = toast.loading('Simulating membership renewal...');
     try {
       const res = await subscriptionsService.renewSubscription(subId);
-      toast.success('🎉 Subscription renewed for another cycle! Quotas reset.', { id: toastId });
+      toast.success('Subscription renewed for another cycle! Quotas reset.', { id: toastId });
       loadSubscriptions();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to renew subscription.', { id: toastId });
@@ -162,7 +188,9 @@ const MySubscriptionsPage = () => {
         <div className="container">
           <div className="my-sub-header-content">
             <div>
-              <div className="my-sub-badge">🛡️ PartNexa Care Management</div>
+              <div className="my-sub-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={14} strokeWidth={1.75} /> PartNexa Care Management
+              </div>
               <h1 className="my-sub-title">My Maintenance Subscriptions</h1>
               <p className="my-sub-desc">
                 Track your active vehicle coverage, check and redeem service quotas, manage renewal settings, and view past billing statements.
@@ -189,7 +217,9 @@ const MySubscriptionsPage = () => {
           </div>
         ) : subscriptions.length === 0 ? (
           <div className="no-sub-card">
-            <div className="no-sub-icon">🚗</div>
+            <div className="no-sub-icon">
+              <Car size={48} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+            </div>
             <h2 className="no-sub-title">No Active Maintenance Subscription</h2>
             <p className="no-sub-desc">
               You do not have any vehicle maintenance plan registered yet. Join PartNexa Care to get complimentary towing, free annual scheduled services, and up to 25% off all genuine spare parts.
@@ -211,8 +241,8 @@ const MySubscriptionsPage = () => {
                   <div className="active-sub-top">
                     <div className="active-sub-meta">
                       <div className="sub-badge-group">
-                        <span className={`status-pill ${activeSub.status.toLowerCase()}`}>
-                          {STATUS_BADGE_MAP[activeSub.status]?.icon}{' '}
+                        <span className={`status-pill ${activeSub.status.toLowerCase()}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          {renderStatusIcon(activeSub.status)}
                           {STATUS_BADGE_MAP[activeSub.status]?.label || activeSub.status}
                         </span>
                         <span className="cycle-pill">
@@ -221,7 +251,9 @@ const MySubscriptionsPage = () => {
                       </div>
                       <h2 className="active-plan-name">{activeSub.plan?.name || 'Maintenance Plan'}</h2>
                       <div className="active-vehicle-info">
-                        <span className="veh-icon">🚗</span>
+                        <span className="veh-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          <Car size={16} strokeWidth={1.75} />
+                        </span>
                         <span className="veh-name">
                           {activeSub.vehicle?.variant
                             ? `${activeSub.vehicle.variant?.model?.make?.name} ${activeSub.vehicle.variant?.model?.name}`
@@ -277,8 +309,10 @@ const MySubscriptionsPage = () => {
                   </div>
 
                   {/* Notice Box */}
-                  <div className="renewal-notice-box">
-                    <span className="info-icon">💡</span>
+                  <div className="renewal-notice-box" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="info-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <Lightbulb size={14} strokeWidth={1.75} />
+                    </span>
                     <span>
                       {activeSub.autoRenew
                         ? 'Automated renewal simulation is active. Your plan will renew on ' +
@@ -298,7 +332,9 @@ const MySubscriptionsPage = () => {
                       onClick={() => openRedeemModal(activeSub)}
                       id="redeem-entitlement-btn"
                     >
-                      ✨ Redeem Service Entitlement
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={14} strokeWidth={1.75} /> Redeem Service Entitlement
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
@@ -307,7 +343,9 @@ const MySubscriptionsPage = () => {
                       id="simulate-renewal-btn"
                       title="Simulate scheduled auto-renewal in demo environment"
                     >
-                      🔄 Simulate Renewal
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <RefreshCw size={14} strokeWidth={1.75} /> Simulate Renewal
+                      </span>
                     </Button>
                     {activeSub.status === 'ACTIVE' && (
                       <Button
@@ -328,7 +366,9 @@ const MySubscriptionsPage = () => {
                       id="simulate-expire-btn"
                       title="Simulate expiration transition for testing"
                     >
-                      ⏳ Test Expiration
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} strokeWidth={1.75} /> Test Expiration
+                      </span>
                     </Button>
                   </div>
                 </div>
@@ -340,7 +380,9 @@ const MySubscriptionsPage = () => {
               <section className="entitlements-tracker-section" id="entitlements-tracker">
                 <div className="section-title-row">
                   <div>
-                    <h2 className="section-title">📊 Service Entitlements & Quota Tracker</h2>
+                    <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <BarChart3 size={20} strokeWidth={1.75} /> Service Entitlements & Quota Tracker
+                    </h2>
                     <p className="section-subtitle">
                       Allowable services for this billing period ({formatDate(activeSub.startDate)} – {formatDate(activeSub.endDate)})
                     </p>
@@ -435,8 +477,8 @@ const MySubscriptionsPage = () => {
                     <div className="history-item-main">
                       <div className="history-item-title-row">
                         <span className="history-plan-name">{sub.plan?.name || 'Care Membership'}</span>
-                        <span className={`status-pill ${sub.status.toLowerCase()}`}>
-                          {STATUS_BADGE_MAP[sub.status]?.icon} {sub.status}
+                        <span className={`status-pill ${sub.status.toLowerCase()}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          {renderStatusIcon(sub.status)} {sub.status}
                         </span>
                         <span className="history-cycle-pill">{sub.billingCycle}</span>
                       </div>
@@ -487,8 +529,11 @@ const MySubscriptionsPage = () => {
             <p className="cancel-modal-intro">
               Are you sure you want to cancel your <strong>{subToCancel?.plan?.name}</strong> membership?
             </p>
-            <div className="cancel-notice-box">
-              🛡️ <strong>Good news:</strong> You will continue to receive all service entitlements, roadside assistance, and parts discount benefits until the end of your prepaid period (<strong>{formatDate(subToCancel?.endDate)}</strong>).
+            <div className="cancel-notice-box" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <ShieldCheck size={18} strokeWidth={1.75} style={{ color: 'var(--color-success)', flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong>Good news:</strong> You will continue to receive all service entitlements, roadside assistance, and parts discount benefits until the end of your prepaid period (<strong>{formatDate(subToCancel?.endDate)}</strong>).
+              </div>
             </div>
 
             <div className="form-group">

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../../components/common/PartNexaLogo';
+import { Sun, Moon } from 'lucide-react';
 
 export const DeliveryRegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -178,7 +180,7 @@ export const DeliveryRegisterPage = () => {
           }}
           title="Toggle Theme"
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
         </button>
       </div>
 
@@ -196,22 +198,13 @@ export const DeliveryRegisterPage = () => {
       >
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #10b981, #0284c7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.8rem',
-              color: '#FFFFFF',
-              margin: '0 auto 1rem',
-              boxShadow: '0 8px 16px rgba(16, 185, 129, 0.35)',
-            }}
-          >
-            🛵
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              portal="delivery"
+              size="lg"
+              linkTo="/delivery"
+            />
           </div>
           <h1
             style={{

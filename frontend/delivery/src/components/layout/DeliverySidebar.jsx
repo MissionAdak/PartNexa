@@ -1,18 +1,19 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
+import { LayoutDashboard, Package, Bike, Search, Banknote, ShieldCheck, Settings, Star } from 'lucide-react';
 
 export const DeliverySidebar = () => {
   const { partner, kyc } = useDeliveryAuth();
 
   const navItems = [
-    { label: 'Rider Dashboard', path: '/dashboard', icon: '📊' },
-    { label: 'Available Jobs', path: '/jobs/available', icon: '📦' },
-    { label: 'Active Trips', path: '/jobs/my', icon: '🛵' },
-    { label: 'Used-Part Pickups', path: '/used-parts', icon: '🔍' },
-    { label: 'COD & Reconciliation', path: '/cod', icon: '💵' },
-    { label: 'KYC & Verification', path: '/kyc', icon: '📋' },
-    { label: 'Vehicle & Profile', path: '/profile', icon: '⚙️' },
+    { label: 'Rider Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Available Jobs', path: '/jobs/available', icon: Package },
+    { label: 'Active Trips', path: '/jobs/my', icon: Bike },
+    { label: 'Used-Part Pickups', path: '/used-parts', icon: Search },
+    { label: 'COD & Reconciliation', path: '/cod', icon: Banknote },
+    { label: 'KYC & Verification', path: '/kyc', icon: ShieldCheck },
+    { label: 'Vehicle & Profile', path: '/profile', icon: Settings },
   ];
 
   return (
@@ -63,8 +64,8 @@ export const DeliverySidebar = () => {
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.65rem', paddingTop: '0.65rem', borderTop: '1px solid var(--color-border)' }}>
               <div>
                 <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Rating: </span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-amber)' }}>
-                  ★ {partner.rating || 5.0}
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-amber)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <Star size={12} fill="currentColor" /> {partner.rating || 5.0}
                 </span>
               </div>
               <div>
@@ -79,32 +80,35 @@ export const DeliverySidebar = () => {
 
         {/* Navigation List */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.65rem 0.95rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                background: isActive ? 'var(--color-primary-glow)' : 'transparent',
-                border: isActive ? '1px solid var(--color-primary-glow)' : '1px solid transparent',
-                transition: 'all var(--transition-fast)',
-              })}
-            >
-              <span style={{ fontSize: '1.15rem' }}>{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.65rem 0.95rem',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  background: isActive ? 'var(--color-primary-glow)' : 'transparent',
+                  border: isActive ? '1px solid var(--color-primary-glow)' : '1px solid transparent',
+                  transition: 'all var(--transition-fast)',
+                })}
+              >
+                <Icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 
-      {/* Footer Info: PartSphere Logistics Version */}
+      {/* Footer Info: PartNexa Logistics Version */}
       <div
         style={{
           padding: '0.85rem',
@@ -116,7 +120,7 @@ export const DeliverySidebar = () => {
           textAlign: 'center',
         }}
       >
-        <div style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>PartSphere Logistics Hub</div>
+        <div style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>PartNexa Logistics Hub</div>
         <div>Phase 3 Delivery Network v1.0</div>
       </div>
     </aside>

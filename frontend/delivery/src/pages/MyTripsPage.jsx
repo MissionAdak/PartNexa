@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import deliveryService from '../services/deliveryService';
 import toast from 'react-hot-toast';
+import { Bike, Package, ArrowRight, MapPin, Navigation, CheckCircle2, Search } from 'lucide-react';
 
 export const MyTripsPage = () => {
   const [trips, setTrips] = useState([]);
@@ -43,7 +44,9 @@ export const MyTripsPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🛵</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Bike size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading your delivery trips...</div>
       </div>
     );
@@ -82,13 +85,15 @@ export const MyTripsPage = () => {
 
       {filteredTrips.length === 0 ? (
         <div className="delivery-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>✨</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Package size={44} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>No Trips Found</div>
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
             You do not have any trips matching this filter.
           </div>
-          <Link to="/jobs/available" className="btn btn-primary btn-sm">
-            Browse Available Jobs Feed →
+          <Link to="/jobs/available" className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            Browse Available Jobs Feed <ArrowRight size={14} strokeWidth={1.75} />
           </Link>
         </div>
       ) : (
@@ -126,16 +131,16 @@ export const MyTripsPage = () => {
               {/* Locations */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ padding: '0.75rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase' }}>
-                    📍 Pickup Location
+                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <MapPin size={13} strokeWidth={1.75} /> Pickup Location
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{trip.pickupLocation?.name}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{trip.pickupLocation?.address}</div>
                 </div>
 
                 <div style={{ padding: '0.75rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase' }}>
-                    🎯 Drop Destination
+                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Navigation size={13} strokeWidth={1.75} /> Drop Destination
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{trip.dropLocation?.name}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{trip.dropLocation?.address}</div>
@@ -149,8 +154,9 @@ export const MyTripsPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'PICKED_UP')}
                       className="btn btn-primary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
-                      📦 Confirm Picked Up
+                      <Package size={14} strokeWidth={1.75} /> Confirm Picked Up
                     </button>
                   )}
 
@@ -158,8 +164,9 @@ export const MyTripsPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'IN_TRANSIT')}
                       className="btn btn-amber btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
-                      🛵 Start Transit
+                      <Bike size={14} strokeWidth={1.75} /> Start Transit
                     </button>
                   )}
 
@@ -167,8 +174,9 @@ export const MyTripsPage = () => {
                     <button
                       onClick={() => handleUpdateStatus(trip.id, 'DELIVERED')}
                       className="btn btn-emerald btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
-                      🏁 Confirm Delivered
+                      <CheckCircle2 size={14} strokeWidth={1.75} /> Confirm Delivered
                     </button>
                   )}
 
@@ -176,9 +184,9 @@ export const MyTripsPage = () => {
                     <Link
                       to={`/jobs/${trip.id}/inspect`}
                       className="btn btn-primary btn-sm"
-                      style={{ background: '#9333EA' }}
+                      style={{ background: '#9333EA', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >
-                      🔍 Conduct Doorstep Inspection Checklist →
+                      <Search size={14} strokeWidth={1.75} /> Conduct Doorstep Inspection Checklist <ArrowRight size={14} strokeWidth={1.75} />
                     </Link>
                   )}
                 </div>

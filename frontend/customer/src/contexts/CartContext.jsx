@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { useVehicle } from './VehicleContext';
 import { cartService } from '../services';
 import toast from 'react-hot-toast';
+import { AlertTriangle } from 'lucide-react';
 
 const CartContext = createContext(null);
 
@@ -307,7 +308,7 @@ export const CartProvider = ({ children }) => {
         setCart(data.cart);
         if (data.warnings && data.warnings.length > 0) {
           data.warnings.forEach((w) => {
-            toast(w, { icon: '⚠️', duration: 6000 });
+            toast(w, { icon: <AlertTriangle size={18} strokeWidth={1.75} color="#F59E0B" />, duration: 6000 });
           });
         }
         return { isValid: data.isValid, warnings: data.warnings, cart: data.cart };

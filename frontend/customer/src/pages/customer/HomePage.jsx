@@ -1,5 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  Car,
+  Bike,
+  Zap,
+  Search,
+  Cog,
+  Disc,
+  Lightbulb,
+  BatteryCharging,
+  CircleDot,
+  Sparkles,
+  Volume2,
+  Wrench,
+  Snowflake,
+  ShieldCheck,
+  RotateCcw,
+  Truck,
+  Lock,
+  CheckCircle2,
+  Check,
+  ArrowRight,
+} from 'lucide-react';
 import { catalogService, vehiclesService } from '../../services';
 import ProductCard, { ProductCardSkeleton } from '../../components/product/ProductCard';
 import CustomerTestimonials from '../../components/home/CustomerTestimonials';
@@ -73,25 +95,30 @@ const VehicleSearch = () => {
   };
 
   const vehicleTypes = [
-    { id: 'CAR', label: '🚗 Car', icon: '🚗' },
-    { id: 'BIKE', label: '🏍️ Bike', icon: '🏍️' },
-    { id: 'SCOOTER', label: '🛵 Scooter', icon: '🛵' },
+    { id: 'CAR', label: 'Car', icon: Car },
+    { id: 'BIKE', label: 'Bike', icon: Bike },
+    { id: 'SCOOTER', label: 'Scooter', icon: Zap },
   ];
 
   return (
     <div className="vehicle-search-widget">
       <h2 className="vehicle-search-title">Find Parts for Your Vehicle</h2>
       <div className="vehicle-type-tabs">
-        {vehicleTypes.map((vt) => (
-          <button
-            key={vt.id}
-            className={`vehicle-type-tab ${vehicleType === vt.id ? 'active' : ''}`}
-            onClick={() => setVehicleType(vt.id)}
-            id={`vehicle-type-${vt.id.toLowerCase()}`}
-          >
-            {vt.label}
-          </button>
-        ))}
+        {vehicleTypes.map((vt) => {
+          const IconComp = vt.icon;
+          return (
+            <button
+              key={vt.id}
+              className={`vehicle-type-tab ${vehicleType === vt.id ? 'active' : ''}`}
+              onClick={() => setVehicleType(vt.id)}
+              id={`vehicle-type-${vt.id.toLowerCase()}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+            >
+              <IconComp size={16} strokeWidth={1.75} />
+              <span>{vt.label}</span>
+            </button>
+          );
+        })}
       </div>
       <form className="vehicle-search-form" onSubmit={handleSearch}>
         <select
@@ -135,9 +162,7 @@ const VehicleSearch = () => {
         </select>
 
         <button type="submit" className="btn btn-primary vehicle-search-btn" id="hero-search-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:18,height:18}}>
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
+          <Search size={18} strokeWidth={2} style={{ marginRight: '0.4rem' }} />
           Find Parts
         </button>
       </form>
@@ -152,7 +177,9 @@ const CategoryCard = ({ category }) => (
     className="category-card card"
     id={`category-${category.slug}`}
   >
-    <div className="category-icon">{getCategoryEmoji(category.slug)}</div>
+    <div className="category-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {getCategoryIcon(category.slug)}
+    </div>
     <div>
       <h3 className="category-name">{category.name}</h3>
       {category._count?.products > 0 && (
@@ -162,45 +189,51 @@ const CategoryCard = ({ category }) => (
   </Link>
 );
 
-const getCategoryEmoji = (slug) => {
+const getCategoryIcon = (slug) => {
+  const iconProps = { size: 28, strokeWidth: 1.75 };
   const map = {
-    'engine-components': '⚙️',
-    'brakes-suspension': '🛞',
-    'electrical-lighting': '💡',
-    'battery': '🔋',
-    'tyres-wheels': '⭕',
-    'car-accessories': '✨',
-    'music-systems': '🎵',
-    'body-parts': '🚘',
-    'transmission': '🔧',
-    'cooling-system': '❄️',
+    'engine-components': <Cog {...iconProps} />,
+    'brakes-suspension': <Disc {...iconProps} />,
+    'electrical-lighting': <Lightbulb {...iconProps} />,
+    'battery': <BatteryCharging {...iconProps} />,
+    'tyres-wheels': <CircleDot {...iconProps} />,
+    'car-accessories': <Sparkles {...iconProps} />,
+    'music-systems': <Volume2 {...iconProps} />,
+    'body-parts': <Car {...iconProps} />,
+    'transmission': <Wrench {...iconProps} />,
+    'cooling-system': <Snowflake {...iconProps} />,
   };
-  return map[slug] || '🔩';
+  return map[slug] || <Wrench {...iconProps} />;
 };
 
 // ---- Trust Banner ----
 const TrustBanner = () => {
   const items = [
-    { icon: '✅', title: 'Verified Parts', desc: 'Every part authenticity-checked' },
-    { icon: '🔧', title: 'Home Installation', desc: 'Expert mechanic at your doorstep' },
-    { icon: '↩️', title: 'Easy Returns', desc: '7-day hassle-free returns' },
-    { icon: '🚚', title: 'Fast Delivery', desc: 'Pan-India in 2-5 business days' },
-    { icon: '🔒', title: 'Secure Payment', desc: 'Razorpay-powered checkout' },
+    { icon: ShieldCheck, title: 'Verified Parts', desc: 'Every part authenticity-checked' },
+    { icon: Wrench, title: 'Home Installation', desc: 'Expert mechanic at your doorstep' },
+    { icon: RotateCcw, title: 'Easy Returns', desc: '7-day hassle-free returns' },
+    { icon: Truck, title: 'Fast Delivery', desc: 'Pan-India in 2-5 business days' },
+    { icon: Lock, title: 'Secure Payment', desc: 'Razorpay-powered checkout' },
   ];
 
   return (
     <div className="trust-banner">
       <div className="container">
         <div className="trust-items">
-          {items.map((item, i) => (
-            <div key={i} className="trust-item-card">
-              <span className="trust-item-icon">{item.icon}</span>
-              <div>
-                <div className="trust-item-title">{item.title}</div>
-                <div className="trust-item-desc">{item.desc}</div>
+          {items.map((item, i) => {
+            const IconComp = item.icon;
+            return (
+              <div key={i} className="trust-item-card">
+                <span className="trust-item-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <IconComp size={22} strokeWidth={1.75} />
+                </span>
+                <div>
+                  <div className="trust-item-title">{item.title}</div>
+                  <div className="trust-item-desc">{item.desc}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -250,7 +283,10 @@ const HomePage = () => {
 
         <div className="container hero-content">
           <div className="hero-text animate-fade-in-up">
-            <div className="hero-tag badge badge-primary">🇮🇳 India's #1 Parts Marketplace</div>
+            <div className="hero-tag badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <CheckCircle2 size={14} strokeWidth={2.2} />
+              <span>India's #1 Automotive Parts Marketplace</span>
+            </div>
             <h1 className="hero-title font-display">
               Your Vehicle Deserves
               <br />
@@ -282,7 +318,7 @@ const HomePage = () => {
             {[
               { value: '50,000+', label: 'Parts Listed' },
               { value: '1,200+', label: 'Verified Shops' },
-              { value: '4.8★', label: 'Avg. Rating' },
+              { value: '4.8', label: 'Avg. Rating' },
               { value: '2.5L+', label: 'Happy Customers' },
             ].map((stat, i) => (
               <div key={i} className="hero-stat">
@@ -322,8 +358,9 @@ const HomePage = () => {
               <h2 className="section-title">Featured Parts</h2>
               <p className="section-subtitle">Top-selling parts on PartNexa</p>
             </div>
-            <Link to="/products" className="btn btn-outline" id="view-all-products-btn">
-              View All →
+            <Link to="/products" className="btn btn-outline" id="view-all-products-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span>View All</span>
+              <ArrowRight size={16} strokeWidth={1.75} />
             </Link>
           </div>
 
@@ -360,8 +397,9 @@ const HomePage = () => {
               </p>
               <div className="difm-features">
                 {['Certified Mechanics', 'Same-day Booking', 'Warranty on Work', 'Upfront Pricing'].map((f) => (
-                  <div key={f} className="difm-feature">
-                    <span className="text-success">✓</span> {f}
+                  <div key={f} className="difm-feature" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Check size={16} strokeWidth={2.2} className="text-success" />
+                    <span>{f}</span>
                   </div>
                 ))}
               </div>
@@ -371,16 +409,30 @@ const HomePage = () => {
             </div>
             <div className="difm-visual">
               <div className="difm-card-stack">
-                {['🔧 Engine Oil Filter', '🔋 Battery Replacement', '💡 Headlight Bulb', '🛞 Brake Pads'].map((item, i) => (
-                  <div
-                    key={i}
-                    className="difm-card"
-                    style={{ transform: `rotate(${(i - 1.5) * 3}deg) translateY(${i * -4}px)` }}
-                  >
-                    <span>{item}</span>
-                    <span className="text-success text-sm">✓ Install Available</span>
-                  </div>
-                ))}
+                {[
+                  { label: 'Engine Oil Filter', icon: Wrench },
+                  { label: 'Battery Replacement', icon: BatteryCharging },
+                  { label: 'Headlight Bulb', icon: Lightbulb },
+                  { label: 'Brake Pads', icon: Disc },
+                ].map((item, i) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <div
+                      key={i}
+                      className="difm-card"
+                      style={{ transform: `rotate(${(i - 1.5) * 3}deg) translateY(${i * -4}px)` }}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <IconComponent size={18} strokeWidth={1.75} />
+                        <span>{item.label}</span>
+                      </span>
+                      <span className="text-success text-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Check size={14} strokeWidth={2.2} />
+                        <span>Install Available</span>
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

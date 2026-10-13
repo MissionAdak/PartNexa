@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../services/shopService';
 import toast from 'react-hot-toast';
+import { Ticket } from 'lucide-react';
 
 const TICKET_CATEGORIES = [
   { id: 'COMMISSION_PAYOUT', label: 'Commission & Payout Inquiries' },
@@ -95,7 +96,7 @@ export const ShopTicketsPage = () => {
         <div>
           <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Workshop Support Tickets</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-            Direct assistance channel with PartSphere operations, logistics, and finance teams.
+            Direct assistance channel with PartNexa operations, logistics, and finance teams.
           </p>
         </div>
 
@@ -110,7 +111,9 @@ export const ShopTicketsPage = () => {
         </div>
       ) : tickets.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎫</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Ticket size={40} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>No Support Tickets</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             You have no active support cases. Open a ticket if you need help with orders, payouts, or deliveries.
@@ -238,7 +241,7 @@ export const ShopTicketsPage = () => {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Type reply to PartSphere team..."
+                  placeholder="Type reply to PartNexa team..."
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   disabled={replying}
@@ -258,7 +261,7 @@ export const ShopTicketsPage = () => {
           <div className="modal-card">
             <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}>Open Support Ticket</h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-              Submit an operational, payout, or delivery inquiry to PartSphere helpdesk.
+              Submit an operational, payout, or delivery inquiry to PartNexa helpdesk.
             </p>
 
             <form onSubmit={handleCreateTicket}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import { Scale, X, Clock, Info } from 'lucide-react';
 
 export default function SupplierComparisonModal({ isOpen, onClose, selectedItem, onSelectSupplierOption }) {
   if (!isOpen || !selectedItem) return null;
@@ -51,7 +51,7 @@ export default function SupplierComparisonModal({ isOpen, onClose, selectedItem,
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>⚖️</span>
+              <Scale size={22} strokeWidth={1.75} color="var(--admin-blue)" />
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                 Supplier Comparison Matrix
               </h2>
@@ -73,10 +73,9 @@ export default function SupplierComparisonModal({ isOpen, onClose, selectedItem,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1rem',
             }}
           >
-            ✕
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -91,9 +90,12 @@ export default function SupplierComparisonModal({ isOpen, onClose, selectedItem,
               borderRadius: 'var(--radius-sm)',
               backgroundColor: 'var(--bg-secondary)',
               border: '1px solid var(--border-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
-            ℹ️ Objective market comparison based on verified catalog pricing, Minimum Order Quantity (MOQ), warehouse stock, and dispatch lead times.
+            <Info size={14} style={{ flexShrink: 0 }} /> Objective market comparison based on verified catalog pricing, Minimum Order Quantity (MOQ), warehouse stock, and dispatch lead times.
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -161,7 +163,8 @@ export default function SupplierComparisonModal({ isOpen, onClose, selectedItem,
                         <strong>{opt.moq}</strong> units
                       </td>
                       <td style={{ padding: '1rem 0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        ⏱️ {opt.leadTime || `${opt.leadTimeDays} days`}
+                        <Clock size={13} strokeWidth={1.75} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                        {opt.leadTime || `${opt.leadTimeDays} days`}
                       </td>
                       <td style={{ padding: '1rem 0.75rem', fontSize: '0.85rem' }}>
                         <span style={{ color: opt.stockQuantity > 50 ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 700 }}>

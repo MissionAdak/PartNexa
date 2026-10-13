@@ -3,6 +3,25 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
+import {
+  User,
+  FileText,
+  CreditCard,
+  FileCheck,
+  Bike,
+  ShieldCheck,
+  ClipboardList,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  Check,
+  Lock,
+  SlidersHorizontal,
+  X,
+  Search,
+  Upload,
+  Clock,
+} from 'lucide-react';
 
 export const KycUploadPage = () => {
   const { user, partner, refreshProfile } = useDeliveryAuth();
@@ -36,7 +55,7 @@ export const KycUploadPage = () => {
       type: 'PROFILE_PHOTO',
       step: 5,
       label: 'Profile Photograph',
-      icon: '👤',
+      icon: User,
       required: true,
       description: 'Clear frontal photo of your face without sunglasses or helmet.',
       accept: 'image/jpeg,image/png,image/webp',
@@ -45,7 +64,7 @@ export const KycUploadPage = () => {
       type: 'AADHAAR_CARD',
       step: 2,
       label: 'Identity Proof (Aadhaar / Govt ID)',
-      icon: '🆔',
+      icon: FileText,
       required: true,
       description: 'Official Government ID proof (Aadhaar, Passport, or Voter ID).',
       accept: 'image/jpeg,image/png,image/webp,application/pdf',
@@ -54,7 +73,7 @@ export const KycUploadPage = () => {
       type: 'DRIVING_LICENSE',
       step: 3,
       label: 'Driving Licence (DL)',
-      icon: '🪪',
+      icon: CreditCard,
       required: true,
       description: 'Valid, unexpired commercial or transport two-wheeler / LMV driving licence.',
       accept: 'image/jpeg,image/png,image/webp,application/pdf',
@@ -63,7 +82,7 @@ export const KycUploadPage = () => {
       type: 'VEHICLE_RC',
       step: 4,
       label: 'Vehicle Registration Certificate (RC)',
-      icon: '📜',
+      icon: FileCheck,
       required: true,
       description: 'Vehicle Registration Certificate matching your delivery vehicle.',
       accept: 'image/jpeg,image/png,image/webp,application/pdf',
@@ -72,7 +91,7 @@ export const KycUploadPage = () => {
       type: 'VEHICLE_PHOTO',
       step: 5,
       label: 'Vehicle Photograph',
-      icon: '🛵',
+      icon: Bike,
       required: true,
       description: 'Photo of the vehicle showing the number plate clearly.',
       accept: 'image/jpeg,image/png,image/webp',
@@ -81,7 +100,7 @@ export const KycUploadPage = () => {
       type: 'INSURANCE',
       step: 5,
       label: 'Vehicle Insurance (Optional)',
-      icon: '🛡️',
+      icon: ShieldCheck,
       required: false,
       description: 'Valid third-party or comprehensive motor insurance policy document.',
       accept: 'image/jpeg,image/png,image/webp,application/pdf',
@@ -242,7 +261,9 @@ export const KycUploadPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }}>📋</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <ClipboardList size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Loading KYC Verification portal...</div>
       </div>
     );
@@ -268,7 +289,7 @@ export const KycUploadPage = () => {
             gap: '1rem',
           }}
         >
-          <span style={{ fontSize: '2rem' }}>🎉</span>
+          <CheckCircle2 size={32} strokeWidth={1.75} style={{ color: '#10b981' }} />
           <div>
             <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>
               Registration Completed! Welcome to PartNexa Fleet.
@@ -349,23 +370,25 @@ export const KycUploadPage = () => {
 
           <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
             {status === 'APPROVED' && (
-              <span style={{ color: '#10b981' }}>
-                ✅ Congratulations! Your KYC documents are APPROVED. You are authorized to go online and accept delivery jobs.
+              <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <CheckCircle2 size={16} strokeWidth={2} /> Congratulations! Your KYC documents are APPROVED. You are authorized to go online and accept delivery jobs.
               </span>
             )}
             {status === 'PENDING' && (
-              <span style={{ color: '#f59e0b' }}>
-                ⏳ Your documents have been submitted and are currently Under Review by the PartNexa Compliance Desk.
+              <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Clock size={16} strokeWidth={1.75} /> Your documents have been submitted and are currently Under Review by the PartNexa Compliance Desk.
               </span>
             )}
             {status === 'NOT_SUBMITTED' && (
-              <span>
-                ⚠️ Please complete the verification steps below and upload clear copies of all required documents.
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <AlertTriangle size={16} strokeWidth={1.75} style={{ color: '#f59e0b' }} /> Please complete the verification steps below and upload clear copies of all required documents.
               </span>
             )}
             {status === 'REJECTED' && (
               <div style={{ color: '#ef4444' }}>
-                <strong>❌ Your KYC was rejected.</strong>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <AlertCircle size={16} strokeWidth={1.75} /> Your KYC was rejected.
+                </strong>
                 <div style={{ marginTop: '0.25rem', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
                   Reason: <em>"{kycData?.rejectionReason || 'Please replace unclear documents and resubmit.'}"</em>
                 </div>
@@ -434,7 +457,7 @@ export const KycUploadPage = () => {
                   boxShadow: isActive ? '0 0 0 4px rgba(2, 132, 199, 0.25)' : 'none',
                 }}
               >
-                {isDone && currentStep !== st.number ? '✓' : st.number}
+                {isDone && currentStep !== st.number ? <Check size={14} strokeWidth={2.5} /> : st.number}
               </div>
               <span
                 style={{
@@ -755,7 +778,9 @@ export const KycUploadPage = () => {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.5rem' }}>{d.icon}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <d.icon size={22} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+                      </span>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{d.label}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -765,7 +790,7 @@ export const KycUploadPage = () => {
                     </div>
                     <div>
                       {hasDoc ? (
-                        <span style={{ color: '#10b981', fontWeight: 800, fontSize: '1.1rem' }}>✓</span>
+                        <CheckCircle2 size={18} strokeWidth={2} style={{ color: '#10b981' }} />
                       ) : (
                         <button
                           type="button"
@@ -821,11 +846,11 @@ export const KycUploadPage = () => {
                 </button>
               ) : status === 'PENDING' ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f59e0b', fontWeight: 700 }}>
-                  <span>🔒</span> Documents Locked Under Admin Review
+                  <Lock size={16} strokeWidth={1.75} /> Documents Locked Under Admin Review
                 </div>
               ) : (
-                <div style={{ color: '#10b981', fontWeight: 800 }}>
-                  ✅ KYC Approved & Active
+                <div style={{ color: '#10b981', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <CheckCircle2 size={18} strokeWidth={2} /> KYC Approved & Active
                 </div>
               )}
             </div>
@@ -846,8 +871,8 @@ export const KycUploadPage = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-              ⚙️ Admin KYC Review Simulation Console
+            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <SlidersHorizontal size={16} strokeWidth={1.75} /> Admin KYC Review Simulation Console
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
               Test the end-to-end lifecycle: Submit → Admin Review → Approval / Rejection → Resubmission.
@@ -903,9 +928,9 @@ export const KycUploadPage = () => {
               <div style={{ fontWeight: 800, fontSize: '1rem' }}>Document Secure Viewer</div>
               <button
                 onClick={() => setPreviewModalUrl(null)}
-                style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               >
-                ✕
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
             <div style={{ padding: '1.5rem', textAlign: 'center', maxHeight: '75vh', overflow: 'auto' }}>
@@ -990,7 +1015,9 @@ export const KycUploadPage = () => {
             >
               {isPdf ? (
                 <div style={{ textAlign: 'center', padding: '1rem' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '0.25rem' }}>📄</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                    <FileText size={40} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                  </div>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     PDF Document
                   </div>
@@ -1023,9 +1050,12 @@ export const KycUploadPage = () => {
                   fontWeight: 700,
                   cursor: 'pointer',
                   backdropFilter: 'blur(4px)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
                 }}
               >
-                🔍 Inspect
+                <Search size={13} strokeWidth={1.75} /> Inspect
               </button>
             </div>
           ) : (
@@ -1042,7 +1072,7 @@ export const KycUploadPage = () => {
                 color: 'var(--text-muted)',
               }}
             >
-              <span style={{ fontSize: '2rem', marginBottom: '0.35rem' }}>📁</span>
+              <Upload size={32} strokeWidth={1.75} style={{ marginBottom: '0.5rem' }} />
               <span style={{ fontSize: '0.78rem' }}>Upload JPG, PNG, WebP or PDF (Max 10 MB)</span>
             </div>
           )}
@@ -1051,8 +1081,8 @@ export const KycUploadPage = () => {
         {/* Buttons / Actions */}
         <div>
           {isLocked ? (
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.4rem' }}>
-              🔒 Document locked during review
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+              <Lock size={13} strokeWidth={1.75} /> Document locked during review
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.5rem' }}>

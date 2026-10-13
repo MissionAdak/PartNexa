@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Search, Star, X } from 'lucide-react';
 
 export default function ShopsManagementPage() {
   const [shops, setShops] = useState([]);
@@ -97,7 +98,7 @@ export default function ShopsManagementPage() {
       {/* Toolbar */}
       <div className="toolbar">
         <form onSubmit={(e) => { e.preventDefault(); fetchShops(); }} className="search-box">
-          <span>🔍</span>
+          <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Search workshop name, owner, city..."
@@ -162,7 +163,9 @@ export default function ShopsManagementPage() {
                   <tr key={s.id}>
                     <td>
                       <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{s.name}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Rating ★ {s.rating || 4.8} ({s.totalRatings || 0} reviews)</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        Rating <Star size={12} strokeWidth={1.75} style={{ color: '#eab308', fill: '#eab308' }} /> {s.rating || 4.8} ({s.totalRatings || 0} reviews)
+                      </div>
                     </td>
                     <td>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>
@@ -258,7 +261,9 @@ export default function ShopsManagementPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Configure Commission: {commissionModalShop.name}
               </h3>
-              <button onClick={() => setCommissionModalShop(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setCommissionModalShop(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleSaveCommission}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

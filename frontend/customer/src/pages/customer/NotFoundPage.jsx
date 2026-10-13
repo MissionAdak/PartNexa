@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FileQuestion } from 'lucide-react';
 
 const NotFoundPage = () => (
   <div style={{
@@ -10,7 +11,9 @@ const NotFoundPage = () => (
     textAlign: 'center',
     padding: '2rem',
   }}>
-    <div style={{ fontSize: '6rem', marginBottom: '1rem' }}>🔩</div>
+    <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+      <FileQuestion size={72} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+    </div>
     <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '4rem', fontWeight: 800, marginBottom: '0.5rem' }}>
       404
     </h1>

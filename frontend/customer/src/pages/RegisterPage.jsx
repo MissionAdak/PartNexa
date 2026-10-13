@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../components/common/PartNexaLogo';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import './AuthPages.css';
 
 const RegisterPage = () => {
@@ -80,7 +82,7 @@ const RegisterPage = () => {
         confirmPassword: form.confirmPassword,
       });
 
-      toast.success('Account created! Let’s set up your vehicle 🚗');
+      toast.success('Account created! Let’s set up your vehicle.');
       navigate('/onboarding/vehicle');
     } catch (err) {
       const data = err.response?.data;
@@ -120,9 +122,13 @@ const RegisterPage = () => {
       <div className="auth-card card-glass animate-scale-in">
         {/* Header */}
         <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            Part<span className="text-primary">Nexa</span>
-          </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.85rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              size="lg"
+              linkTo="/customer"
+            />
+          </div>
           <h1 className="auth-title">Create Your Account</h1>
           <p className="auth-subtitle">
             Join thousands of car & two-wheeler owners for verified spare parts
@@ -211,8 +217,9 @@ const RegisterPage = () => {
                 onClick={() => setShowPass(!showPass)}
                 aria-label={showPass ? 'Hide password' : 'Show password'}
                 id="toggle-password-visibility"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                {showPass ? '🙈' : '👁️'}
+                {showPass ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
               </button>
             </div>
             {form.password && strength && (
@@ -262,8 +269,9 @@ const RegisterPage = () => {
                 onClick={() => setShowConfirmPass(!showConfirmPass)}
                 aria-label={showConfirmPass ? 'Hide password' : 'Show password'}
                 id="toggle-confirm-password-visibility"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                {showConfirmPass ? '🙈' : '👁️'}
+                {showConfirmPass ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
               </button>
             </div>
             {form.confirmPassword && form.password !== form.confirmPassword && (
@@ -297,8 +305,9 @@ const RegisterPage = () => {
               className="btn btn-ghost btn-sm text-xs"
               onClick={handleFillDemo}
               id="fill-demo-register-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              ⚡ Fill Sample Registration Details
+              <Zap size={13} strokeWidth={1.75} /> Fill Sample Registration Details
             </button>
           </div>
 

@@ -4,6 +4,7 @@ import { subscriptionsService, vehiclesService } from '../services';
 import { useAuth } from '../contexts/AuthContext';
 import { Button, Modal, Input, Badge } from '../components/ui';
 import RazorpayModal from '../components/checkout/RazorpayModal';
+import { ShieldCheck, Zap, Tag, Check, Star, Crown, X, Wrench, MapPin, Banknote } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './SubscriptionsPage.css';
 
@@ -72,7 +73,7 @@ const SubscriptionsPage = () => {
 
   const handleOpenSubscribe = (plan) => {
     if (!user) {
-      toast('Please log in or create an account to activate a membership.', { icon: '🔐' });
+      toast('Please log in or create an account to activate a membership.');
       navigate('/login?redirect=/subscriptions');
       return;
     }
@@ -113,7 +114,7 @@ const SubscriptionsPage = () => {
       if (!data.requiresOnlinePayment) {
         // COD / Pay on first visit flow: immediate activation!
         setCheckoutModalOpen(false);
-        toast.success('🎉 Subscription Activated! Payment scheduled on first service.');
+        toast.success('Subscription Activated! Payment scheduled on first service.');
         navigate('/customer/my-subscriptions');
       } else {
         // Online Razorpay flow: open sandbox modal
@@ -144,7 +145,7 @@ const SubscriptionsPage = () => {
         razorpaySignature: result.razorpaySignature,
       });
 
-      toast.success('🎉 Membership activated successfully! Welcome to PartNexa Care.', { id: toastId });
+      toast.success('Membership activated successfully! Welcome to PartNexa Care.', { id: toastId });
       navigate('/customer/my-subscriptions');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Payment verification failed.', { id: toastId });
@@ -158,7 +159,7 @@ const SubscriptionsPage = () => {
 
   const handleRazorpayCancel = () => {
     setIsRazorpayOpen(false);
-    toast('Subscription payment window closed.', { icon: 'ℹ️' });
+    toast('Subscription payment window closed.');
   };
 
   return (
@@ -166,7 +167,9 @@ const SubscriptionsPage = () => {
       {/* Hero Header */}
       <section className="sub-hero">
         <div className="container">
-          <div className="sub-hero-badge">🛡️ PartNexa Care Memberships</div>
+          <div className="sub-hero-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldCheck size={14} strokeWidth={1.75} /> PartNexa Care Memberships
+          </div>
           <h1 className="sub-hero-title">Zero-Stress Vehicle Maintenance Plans</h1>
           <p className="sub-hero-desc">
             Continuous automotive protection with free scheduled servicing, nationwide 24/7 roadside assistance,
@@ -235,7 +238,11 @@ const SubscriptionsPage = () => {
                 className={`plan-card ${isPopular ? 'popular' : ''}`}
                 id={`plan-card-${plan.slug}`}
               >
-                {isPopular && <div className="popular-badge">⭐ Most Popular</div>}
+                {isPopular && (
+                  <div className="popular-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Star size={12} strokeWidth={2} fill="currentColor" /> Most Popular
+                  </div>
+                )}
 
                 <div className="plan-header">
                   <h2 className="plan-name">{plan.name}</h2>
@@ -249,8 +256,8 @@ const SubscriptionsPage = () => {
                 </div>
 
                 {billingCycle === 'YEARLY' && plan.savingsPercent > 0 && (
-                  <div className="plan-savings-pill">
-                    ⚡ Includes {plan.savingsPercent}% annual commitment discount
+                  <div className="plan-savings-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Zap size={13} strokeWidth={1.75} /> Includes {plan.savingsPercent}% annual commitment discount
                   </div>
                 )}
 
@@ -269,8 +276,8 @@ const SubscriptionsPage = () => {
                 {/* Discount Highlights */}
                 <div className="plan-discounts-row">
                   {plan.discountBenefits?.map((db, idx) => (
-                    <span key={idx} className="discount-tag">
-                      🏷️ {db.discountPercent}% off {db.category}
+                    <span key={idx} className="discount-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Tag size={12} strokeWidth={1.75} /> {db.discountPercent}% off {db.category}
                     </span>
                   ))}
                 </div>
@@ -279,7 +286,9 @@ const SubscriptionsPage = () => {
                 <ul className="plan-benefits">
                   {plan.features?.map((f, idx) => (
                     <li key={idx} className="benefit-item">
-                      <span className="benefit-icon">✓</span>
+                      <span className="benefit-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Check size={14} strokeWidth={2.2} />
+                      </span>
                       <span>{f}</span>
                     </li>
                   ))}
@@ -320,8 +329,16 @@ const SubscriptionsPage = () => {
                 <tr>
                   <th className="feature-col">Feature & Coverage</th>
                   <th>Basic Care</th>
-                  <th className="highlight-col">Standard Care ⭐</th>
-                  <th>Premium Care 👑</th>
+                  <th className="highlight-col">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Standard Care <Star size={14} strokeWidth={1.75} fill="#eab308" color="#eab308" />
+                    </span>
+                  </th>
+                  <th>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Premium Care <Crown size={14} strokeWidth={1.75} style={{ color: '#eab308' }} />
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -339,9 +356,21 @@ const SubscriptionsPage = () => {
                 </tr>
                 <tr>
                   <td className="row-title">24/7 Breakdown Assistance</td>
-                  <td>✓ Nationwide</td>
-                  <td className="highlight-col">✓ Nationwide</td>
-                  <td>✓ Priority VIP Dispatch</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Check size={13} strokeWidth={2.2} /> Nationwide
+                    </span>
+                  </td>
+                  <td className="highlight-col">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Check size={13} strokeWidth={2.2} /> Nationwide
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Check size={13} strokeWidth={2.2} /> Priority VIP Dispatch
+                    </span>
+                  </td>
                 </tr>
                 <tr>
                   <td className="row-title">Emergency Towing Radius</td>
@@ -351,13 +380,21 @@ const SubscriptionsPage = () => {
                 </tr>
                 <tr>
                   <td className="row-title">Periodic General Service</td>
-                  <td>✕ Optional Add-on</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <X size={13} strokeWidth={2.2} /> Optional Add-on
+                    </span>
+                  </td>
                   <td className="highlight-col">1 Free Service / Term</td>
                   <td>2 Free Comprehensive Services</td>
                 </tr>
                 <tr>
                   <td className="row-title">Computer Diagnostic Scan</td>
-                  <td>✕</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <X size={13} strokeWidth={2.0} style={{ opacity: 0.35 }} />
+                    </span>
+                  </td>
                   <td className="highlight-col">2 Scans (40-Point OBD)</td>
                   <td>Unlimited On-Demand Scans</td>
                 </tr>
@@ -381,14 +418,30 @@ const SubscriptionsPage = () => {
                 </tr>
                 <tr>
                   <td className="row-title">Doorstep DIFM Labor Waiver</td>
-                  <td>✕</td>
-                  <td className="highlight-col">✕</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <X size={13} strokeWidth={2.0} style={{ opacity: 0.35 }} />
+                    </span>
+                  </td>
+                  <td className="highlight-col">
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <X size={13} strokeWidth={2.0} style={{ opacity: 0.35 }} />
+                    </span>
+                  </td>
                   <td>100% Free Mechanic Labor</td>
                 </tr>
                 <tr>
                   <td className="row-title">Valet Pickup & Drop</td>
-                  <td>✕</td>
-                  <td className="highlight-col">✕</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <X size={13} strokeWidth={2.0} style={{ opacity: 0.35 }} />
+                    </span>
+                  </td>
+                  <td className="highlight-col">
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <X size={13} strokeWidth={2.0} style={{ opacity: 0.35 }} />
+                    </span>
+                  </td>
                   <td>4 Free Visits / Term</td>
                 </tr>
                 <tr>
@@ -406,21 +459,27 @@ const SubscriptionsPage = () => {
         <section className="why-care-section">
           <div className="sub-perks-grid">
             <div className="sub-perk-card">
-              <div className="sub-perk-icon">🛡️</div>
+              <div className="sub-perk-icon">
+                <ShieldCheck size={28} strokeWidth={1.75} />
+              </div>
               <h3 className="sub-perk-title">100% Genuine Spare Parts</h3>
               <p className="sub-perk-desc">
                 All maintenance visits use factory-certified OEM and verified high-grade OES components with warranty.
               </p>
             </div>
             <div className="sub-perk-card">
-              <div className="sub-perk-icon">🔧</div>
+              <div className="sub-perk-icon">
+                <Wrench size={28} strokeWidth={1.75} />
+              </div>
               <h3 className="sub-perk-title">Certified Master Technicians</h3>
               <p className="sub-perk-desc">
                 Skilled mechanics equipped with digital OBD scanners, mobile hoists, and torque calibration rigs.
               </p>
             </div>
             <div className="sub-perk-card">
-              <div className="sub-perk-icon">📍</div>
+              <div className="sub-perk-icon">
+                <MapPin size={28} strokeWidth={1.75} />
+              </div>
               <h3 className="sub-perk-title">Doorstep Convenience</h3>
               <p className="sub-perk-desc">
                 Never wait in line at garages. Schedule servicing at your home, office, or apartment bay.
@@ -495,7 +554,9 @@ const SubscriptionsPage = () => {
                     onChange={() => setPaymentMethod('RAZORPAY')}
                   />
                   <div className="pay-option-content">
-                    <div className="pay-option-title">⚡ Razorpay Sandbox / Demo Gateway</div>
+                    <div className="pay-option-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Zap size={15} strokeWidth={1.75} /> Razorpay Sandbox / Demo Gateway
+                    </div>
                     <div className="pay-option-sub">UPI, Credit/Debit Card, Net Banking (Instant Activation)</div>
                   </div>
                 </label>
@@ -509,7 +570,9 @@ const SubscriptionsPage = () => {
                     onChange={() => setPaymentMethod('CASH_ON_DELIVERY')}
                   />
                   <div className="pay-option-content">
-                    <div className="pay-option-title">💵 Cash / UPI on First Service Visit (COD)</div>
+                    <div className="pay-option-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Banknote size={15} strokeWidth={1.75} /> Cash / UPI on First Service Visit (COD)
+                    </div>
                     <div className="pay-option-sub">Activate immediately; pay during your first technician appointment</div>
                   </div>
                 </label>

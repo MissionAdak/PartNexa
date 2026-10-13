@@ -117,7 +117,7 @@ export const VehicleProvider = ({ children }) => {
       `${target.variant?.model?.make?.name || ''} ${target.variant?.model?.name || ''}`.trim() ||
       'Selected Vehicle';
 
-    toast.success(`Active fitment switched to ${name}! 🚗`);
+    toast.success(`Active fitment switched to ${name}!`);
     return target;
   };
 
@@ -137,7 +137,7 @@ export const VehicleProvider = ({ children }) => {
         }
 
         await fetchVehicles();
-        toast.success('Vehicle added to your garage! 🚗');
+        toast.success('Vehicle added to your garage!');
         return created;
       } catch (err) {
         const msg = err.response?.data?.message || 'Failed to add vehicle.';
@@ -161,9 +161,9 @@ export const VehicleProvider = ({ children }) => {
       setVehicles([guestVehicle]);
       setPrimaryVehicleState(guestVehicle);
       setActiveVehicleState(guestVehicle);
-      localStorage.setItem('partsphere_guest_vehicle', JSON.stringify(guestVehicle));
+      localStorage.setItem('partnexa_guest_vehicle', JSON.stringify(guestVehicle));
       localStorage.setItem(ACTIVE_VEHICLE_STORAGE_KEY, guestVehicle.id);
-      toast.success('Vehicle added to active session! 🚗');
+      toast.success('Vehicle added to active session!');
       return guestVehicle;
     }
   };
@@ -197,7 +197,7 @@ export const VehicleProvider = ({ children }) => {
         const { data } = await vehiclesService.setPrimaryVehicle(id);
         // fetchVehicles preserves partnexa_active_vehicle_id, keeping active vehicle unchanged!
         await fetchVehicles();
-        toast.success('Primary vehicle updated in database! ⭐');
+        toast.success('Primary vehicle updated in database!');
         return data.data;
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to set primary vehicle.');
@@ -211,7 +211,7 @@ export const VehicleProvider = ({ children }) => {
       if (sel) {
         setPrimaryVehicleState(sel);
       }
-      toast.success('Primary vehicle updated! ⭐');
+      toast.success('Primary vehicle updated!');
     }
   };
 

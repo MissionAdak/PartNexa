@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import shopService from '../../services/shopService';
 import toast from 'react-hot-toast';
+import { Check, Calendar, Wallet, ArrowUpRight, Home, Building2, Lock } from 'lucide-react';
 
 export const ShopDashboardPage = () => {
   const [data, setData] = useState(null);
@@ -56,9 +57,9 @@ export const ShopDashboardPage = () => {
       const res = await shopService.verifyJobCompletion(completingJob.id, codeClean, technicianNotes);
       toast.success('Installation completion verified successfully!');
       if (res.data?.commission?.isReleased || res.data?.commission?.releaseStatus === 'RELEASED') {
-        toast.success('🎉 Commission RELEASED to your ledger balance! Both service completion and payment conditions met.');
+        toast.success('Commission RELEASED to your ledger balance! Both service completion and payment conditions met.');
       } else {
-        toast('⚠️ Service verified. Commission will be RELEASED once customer payment clears.', { icon: '⏳' });
+        toast('Service verified. Commission will be RELEASED once customer payment clears.');
       }
       setCompletingJob(null);
       setConfirmationCode('');
@@ -114,7 +115,9 @@ export const ShopDashboardPage = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
             <h1 style={{ fontSize: '1.75rem' }}>{shop?.name}</h1>
-            <span className="badge badge-success">✓ {shop?.verificationStatus}</span>
+            <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Check size={13} strokeWidth={2} /> {shop?.verificationStatus}
+            </span>
           </div>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
             {shop?.address}, {shop?.city} • Operational Rate: <strong>{shop?.commissionRate}% Platform Cut</strong>
@@ -122,11 +125,11 @@ export const ShopDashboardPage = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Link to="/shop/calendar" className="btn btn-secondary">
-            📅 View Calendar
+          <Link to="/shop/calendar" className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Calendar size={16} strokeWidth={1.75} /> View Calendar
           </Link>
-          <Link to="/shop/commission" className="btn btn-primary">
-            💰 Commission Ledger (₹{earnings?.releasedForPayout?.toLocaleString('en-IN') || 0} Released)
+          <Link to="/shop/commission" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Wallet size={16} strokeWidth={1.75} /> Commission Ledger (₹{earnings?.releasedForPayout?.toLocaleString('en-IN') || 0} Released)
           </Link>
         </div>
       </div>
@@ -211,8 +214,8 @@ export const ShopDashboardPage = () => {
                   Customer jobs assigned to your workshop. Update status through the service lifecycle.
                 </p>
               </div>
-              <Link to="/shop/calendar" className="btn btn-outline btn-sm">
-                Full Schedule ↗
+              <Link to="/shop/calendar" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                Full Schedule <ArrowUpRight size={14} strokeWidth={1.75} />
               </Link>
             </div>
 
@@ -243,8 +246,16 @@ export const ShopDashboardPage = () => {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.85rem' }}>{job.serviceName}</div>
-                        <span className={`badge ${job.locationType === 'DOORSTEP' ? 'badge-purple' : 'badge-info'}`} style={{ fontSize: '0.65rem' }}>
-                          {job.locationType === 'DOORSTEP' ? '🏠 Doorstep Visit' : '🏢 Shop Visit'}
+                        <span className={`badge ${job.locationType === 'DOORSTEP' ? 'badge-purple' : 'badge-info'}`} style={{ fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          {job.locationType === 'DOORSTEP' ? (
+                            <>
+                              <Home size={11} strokeWidth={1.75} /> Doorstep Visit
+                            </>
+                          ) : (
+                            <>
+                              <Building2 size={11} strokeWidth={1.75} /> Shop Visit
+                            </>
+                          )}
                         </span>
                       </td>
                       <td>
@@ -300,12 +311,12 @@ export const ShopDashboardPage = () => {
                               className="btn btn-success btn-sm"
                               id={`complete-job-btn-${job.id}`}
                             >
-                              ✓ Complete
+                              <Check size={13} strokeWidth={2} style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} /> Complete
                             </button>
                           )}
                           {job.status === 'COMPLETED' && (
-                            <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                              ✓ Finished
+                            <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Check size={13} strokeWidth={2} /> Finished
                             </span>
                           )}
                         </div>
@@ -426,8 +437,8 @@ export const ShopDashboardPage = () => {
           <div className="card">
             <div className="card-header">
               <h3 style={{ fontSize: '1.05rem' }}>Used-Part Intake</h3>
-              <Link to="/shop/used-parts" className="btn btn-outline btn-sm">
-                Queue ↗
+              <Link to="/shop/used-parts" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                Queue <ArrowUpRight size={14} strokeWidth={1.75} />
               </Link>
             </div>
 
@@ -490,7 +501,7 @@ export const ShopDashboardPage = () => {
         <div className="modal-overlay">
           <div className="modal-card">
             <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🔐</span> Enter Customer Confirmation Code
+              <Lock size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> Enter Customer Confirmation Code
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
               Confirm installation completion for <strong>{completingJob.serviceName}</strong> (Job #{completingJob.id?.substring(0, 8)}).

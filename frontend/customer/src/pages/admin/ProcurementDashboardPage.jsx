@@ -1,6 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  Factory,
+  Building2,
+  Plus,
+  ShoppingCart,
+  AlertTriangle,
+  Zap,
+  LayoutDashboard,
+  Package,
+  ClipboardList,
+  FileText,
+  Download,
+  Check,
+  User,
+  Phone,
+  Mail,
+  Building,
+  Car,
+  Scale,
+  Eye,
+  Truck,
+} from 'lucide-react';
 import procurementService from '../../services/procurementService';
 import ProcurementCartDrawer from '../../components/admin/procurement/ProcurementCartDrawer';
 import ReceiveStockModal from '../../components/admin/procurement/ReceiveStockModal';
@@ -301,7 +323,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '2rem' }}>🏭</span>
+            <Factory size={28} strokeWidth={1.75} color="var(--admin-blue)" />
             <h1
               style={{
                 fontSize: '1.85rem',
@@ -337,7 +359,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
               gap: '0.4rem',
             }}
           >
-            <span>🏢</span> Register Supplier
+            <Building2 size={16} strokeWidth={1.75} /> Register Supplier
           </button>
 
           <button
@@ -356,7 +378,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
               gap: '0.4rem',
             }}
           >
-            <span>➕</span> Add Catalog Part
+            <Plus size={16} strokeWidth={1.75} /> Add Catalog Part
           </button>
 
           {/* Cart Button with Live Counter Badge */}
@@ -378,7 +400,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
               position: 'relative',
             }}
           >
-            <span>🛒</span>
+            <ShoppingCart size={18} strokeWidth={1.75} />
             <span>Procurement Cart</span>
             {cartCount > 0 && (
               <span
@@ -495,7 +517,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <AlertTriangle size={18} strokeWidth={1.75} color="var(--color-danger, #EF4444)" />
               <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                 Low Stock Critical Alerts ({dashboardStats.lowStockAlerts.length} parts below reorder threshold)
               </span>
@@ -547,9 +569,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                     fontSize: '0.75rem',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
                   }}
                 >
-                  ⚡ Procure in Bulk
+                  <Zap size={14} strokeWidth={1.75} /> Procure in Bulk
                 </button>
               </div>
             ))}
@@ -569,11 +594,11 @@ export default function ProcurementDashboardPage({ initialTab }) {
         }}
       >
         {[
-          { id: 'overview', label: '📊 Overview & Active POs' },
-          { id: 'suppliers', label: `🏢 Supplier Directory (${suppliers.length})` },
-          { id: 'catalog', label: `📦 Spare Parts Catalog (${catalogItems.length})` },
-          { id: 'pos', label: `📑 Purchase Orders (${purchaseOrders.length})` },
-          { id: 'history', label: '📜 Procurement History & Audit' },
+          { id: 'overview', label: 'Overview & Active POs', icon: LayoutDashboard },
+          { id: 'suppliers', label: `Supplier Directory (${suppliers.length})`, icon: Building2 },
+          { id: 'catalog', label: `Spare Parts Catalog (${catalogItems.length})`, icon: Package },
+          { id: 'pos', label: `Purchase Orders (${purchaseOrders.length})`, icon: ClipboardList },
+          { id: 'history', label: 'Procurement History & Audit', icon: FileText },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -590,9 +615,13 @@ export default function ProcurementDashboardPage({ initialTab }) {
               borderBottom: activeTab === tab.id ? '3px solid var(--admin-blue)' : '3px solid transparent',
               whiteSpace: 'nowrap',
               transition: 'all 0.2s',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
             }}
           >
-            {tab.label}
+            <tab.icon size={16} strokeWidth={1.75} />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
@@ -773,7 +802,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
                                 boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
                               }}
                             >
-                              📥 Receive Stock
+                              <Download size={14} strokeWidth={1.75} /> Receive Stock
                             </button>
                           ) : (
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -909,9 +938,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                         color: 'var(--color-success)',
                         padding: '0.2rem 0.5rem',
                         borderRadius: 'var(--radius-sm)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
                       }}
                     >
-                      ✓ Verified Catalog
+                      <Check size={12} strokeWidth={2.2} /> Verified Catalog
                     </span>
                     <span
                       style={{
@@ -928,10 +960,10 @@ export default function ProcurementDashboardPage({ initialTab }) {
                   </div>
 
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.75rem' }}>
-                    <div>👤 Contact: <strong>{supplier.contactPerson}</strong></div>
-                    <div>📞 Phone: {supplier.phone}</div>
-                    <div>✉️ Email: {supplier.email}</div>
-                    {supplier.gstNumber && <div>🏛️ GSTIN: <code>{supplier.gstNumber}</code></div>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><User size={13} strokeWidth={1.75} /> Contact: <strong>{supplier.contactPerson}</strong></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Phone size={13} strokeWidth={1.75} /> Phone: {supplier.phone}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Mail size={13} strokeWidth={1.75} /> Email: {supplier.email}</div>
+                    {supplier.gstNumber && <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Building size={13} strokeWidth={1.75} /> GSTIN: <code>{supplier.gstNumber}</code></div>}
                   </div>
 
                   {/* Categories Tags */}
@@ -1023,8 +1055,8 @@ export default function ProcurementDashboardPage({ initialTab }) {
               boxShadow: 'var(--shadow-sm)',
             }}
           >
-            <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
-              🚗 Vehicle Fitment & Compatibility Engine (Database-Driven)
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <Car size={15} strokeWidth={1.75} /> Vehicle Fitment & Compatibility Engine (Database-Driven)
             </div>
 
             <div
@@ -1314,9 +1346,13 @@ export default function ProcurementDashboardPage({ initialTab }) {
                         fontSize: '0.78rem',
                         color: 'var(--text-secondary)',
                         marginBottom: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
                       }}
                     >
-                      🚗 Compatible with: <strong style={{ color: 'var(--text-primary)' }}>{item.vehicleMakeName} {item.vehicleModelName}</strong> ({item.variantName || 'All Variants'})
+                      <Car size={14} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                      <span>Compatible with: <strong style={{ color: 'var(--text-primary)' }}>{item.vehicleMakeName} {item.vehicleModelName}</strong> ({item.variantName || 'All Variants'})</span>
                     </div>
 
                     {/* Pricing Tiers Preview */}
@@ -1420,9 +1456,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                           fontWeight: 700,
                           cursor: 'pointer',
                           textDecoration: 'underline',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
                         }}
                       >
-                        ⚖️ Compare Suppliers
+                        <Scale size={13} strokeWidth={1.75} /> Compare Suppliers
                       </button>
                     </div>
 
@@ -1444,7 +1483,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
                         gap: '0.4rem',
                       }}
                     >
-                      🛒 Add to Procurement Cart
+                      <ShoppingCart size={15} strokeWidth={1.75} /> Add to Procurement Cart
                     </button>
                   </div>
                 </div>
@@ -1524,10 +1563,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                             color: 'var(--text-primary)',
                             fontWeight: 700,
                             fontSize: '0.8rem',
-                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
                           }}
                         >
-                          🔍 Details
+                          <Eye size={13} strokeWidth={1.75} /> Details
                         </button>
 
                         {/* Quick Status Transition Actions */}
@@ -1543,9 +1584,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                               fontWeight: 700,
                               fontSize: '0.78rem',
                               cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
                             }}
                           >
-                            📦 Mark Shipped
+                            <Package size={13} strokeWidth={1.75} /> Mark Shipped
                           </button>
                         )}
 
@@ -1561,9 +1605,12 @@ export default function ProcurementDashboardPage({ initialTab }) {
                               fontWeight: 700,
                               fontSize: '0.78rem',
                               cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
                             }}
                           >
-                            🚚 Mark In Transit
+                            <Truck size={13} strokeWidth={1.75} /> Mark In Transit
                           </button>
                         )}
 
@@ -1585,7 +1632,7 @@ export default function ProcurementDashboardPage({ initialTab }) {
                               boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
                             }}
                           >
-                            📥 Receive Stock
+                            <Download size={14} strokeWidth={1.75} /> Receive Stock
                           </button>
                         )}
                       </div>

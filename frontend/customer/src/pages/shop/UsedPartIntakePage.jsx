@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import shopService from '../../services/shopService';
 import toast from 'react-hot-toast';
+import { Wrench, Truck, Car, Download, Search, Eye, Star, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 export const UsedPartIntakePage = () => {
   const [intakes, setIntakes] = useState([]);
@@ -187,7 +188,9 @@ export const UsedPartIntakePage = () => {
         </div>
       ) : intakes.length === 0 ? (
         <div className="card" style={{ padding: '3.5rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔧</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Wrench size={44} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>No Parts in Workshop Queue</h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem', maxWidth: '460px', margin: '0 auto' }}>
             When customers register pre-owned components and select your workshop for drop-off or pickup, they will appear here.
@@ -268,8 +271,16 @@ export const UsedPartIntakePage = () => {
                     </div>
                     <div>
                       <strong>Handover Method:</strong>{' '}
-                      <span className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>
-                        {item.listing?.deliveryMethod === 'PICKUP' ? '🚚 Courier Pickup' : '🚗 Workshop Drop-Off'}
+                      <span className="badge badge-neutral" style={{ fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                        {item.listing?.deliveryMethod === 'PICKUP' ? (
+                          <>
+                            <Truck size={12} strokeWidth={1.75} /> Courier Pickup
+                          </>
+                        ) : (
+                          <>
+                            <Car size={12} strokeWidth={1.75} /> Workshop Drop-Off
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -315,20 +326,20 @@ export const UsedPartIntakePage = () => {
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     {isAssigned && (
-                      <button onClick={() => handleMarkReceived(item)} className="btn btn-secondary btn-sm">
-                        📥 Mark Part Received
+                      <button onClick={() => handleMarkReceived(item)} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Download size={14} strokeWidth={1.75} /> Mark Part Received
                       </button>
                     )}
 
                     {(isReceived || isAssigned || !item.inspectedAt) && (
-                      <button onClick={() => handleStartInspection(item)} className="btn btn-primary btn-sm">
-                        🔍 Perform Technical Inspection
+                      <button onClick={() => handleStartInspection(item)} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Search size={14} strokeWidth={1.75} /> Perform Technical Inspection
                       </button>
                     )}
 
                     {item.inspectedAt && (
-                      <button onClick={() => handleStartInspection(item)} className="btn btn-secondary btn-sm">
-                        👁 View / Re-inspect
+                      <button onClick={() => handleStartInspection(item)} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <Eye size={14} strokeWidth={1.75} /> View / Re-inspect
                       </button>
                     )}
                   </div>
@@ -547,7 +558,9 @@ export const UsedPartIntakePage = () => {
                               cursor: 'pointer',
                             }}
                           >
-                            {val}★
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                              {val} <Star size={11} fill="currentColor" strokeWidth={1.75} />
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -563,27 +576,33 @@ export const UsedPartIntakePage = () => {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
                   {[
-                    { id: 'PASSED', label: '✅ PASSED', desc: 'Meets PartNexa verified safety standards' },
-                    { id: 'REPAIR_REQUIRED', label: '⚠️ REPAIR REQUIRED', desc: 'Acceptable with minor workshop refurb' },
-                    { id: 'FAILED', label: '❌ FAILED', desc: 'Unsafe or defective component — reject listing' },
-                  ].map((verdict) => (
-                    <button
-                      type="button"
-                      key={verdict.id}
-                      onClick={() => setInspectionForm({ ...inspectionForm, technicalResult: verdict.id })}
-                      style={{
-                        padding: '1rem',
-                        textAlign: 'left',
-                        borderRadius: 'var(--radius-md)',
-                        border: inspectionForm.technicalResult === verdict.id ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        background: inspectionForm.technicalResult === verdict.id ? 'rgba(2, 132, 199, 0.08)' : 'var(--color-bg-elevated)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.25rem' }}>{verdict.label}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{verdict.desc}</div>
-                    </button>
-                  ))}
+                    { id: 'PASSED', label: 'PASSED', Icon: CheckCircle2, iconColor: '#10B981', desc: 'Meets PartNexa verified safety standards' },
+                    { id: 'REPAIR_REQUIRED', label: 'REPAIR REQUIRED', Icon: AlertTriangle, iconColor: '#F59E0B', desc: 'Acceptable with minor workshop refurb' },
+                    { id: 'FAILED', label: 'FAILED', Icon: XCircle, iconColor: '#EF4444', desc: 'Unsafe or defective component — reject listing' },
+                  ].map((verdict) => {
+                    const VerdictIcon = verdict.Icon;
+                    return (
+                      <button
+                        type="button"
+                        key={verdict.id}
+                        onClick={() => setInspectionForm({ ...inspectionForm, technicalResult: verdict.id })}
+                        style={{
+                          padding: '1rem',
+                          textAlign: 'left',
+                          borderRadius: 'var(--radius-md)',
+                          border: inspectionForm.technicalResult === verdict.id ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          background: inspectionForm.technicalResult === verdict.id ? 'rgba(2, 132, 199, 0.08)' : 'var(--color-bg-elevated)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: verdict.iconColor }}>
+                          <VerdictIcon size={16} strokeWidth={2} />
+                          {verdict.label}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{verdict.desc}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

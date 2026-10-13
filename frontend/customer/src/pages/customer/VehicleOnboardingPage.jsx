@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Car, Bike, Check } from 'lucide-react';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { vehiclesService } from '../../services';
 import { Button, Input } from '../../components/ui';
@@ -95,7 +96,7 @@ const VehicleOnboardingPage = () => {
         isPrimary: true,
       });
 
-      toast.success('🚗 Welcome to PartNexa! Your primary vehicle is set.');
+      toast.success('Welcome to PartNexa! Your primary vehicle is set.');
       navigate('/vehicles');
     } catch {
       // Error toast is handled in context
@@ -130,7 +131,7 @@ const VehicleOnboardingPage = () => {
                 }`}
               >
                 <div className="stepper-node-dot">
-                  {isCompleted ? '✓' : stepNum}
+                  {isCompleted ? <Check size={14} strokeWidth={2.0} /> : stepNum}
                 </div>
                 <span className="stepper-node-label">{s}</span>
               </div>
@@ -150,7 +151,9 @@ const VehicleOnboardingPage = () => {
                   onClick={() => setVehicleType('4_WHEELER')}
                   id="onboarding-type-4w"
                 >
-                  <span className="type-btn-icon">🚗</span>
+                  <span className="type-btn-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Car size={36} strokeWidth={1.75} />
+                  </span>
                   <div className="type-btn-label">4 Wheeler</div>
                   <div className="type-btn-desc">Cars, Sedans, SUVs, Hatchbacks</div>
                 </div>
@@ -160,7 +163,9 @@ const VehicleOnboardingPage = () => {
                   onClick={() => setVehicleType('2_WHEELER')}
                   id="onboarding-type-2w"
                 >
-                  <span className="type-btn-icon">🏍️</span>
+                  <span className="type-btn-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bike size={36} strokeWidth={1.75} />
+                  </span>
                   <div className="type-btn-label">2 Wheeler</div>
                   <div className="type-btn-desc">Motorcycles, Scooters, Superbikes</div>
                 </div>
@@ -334,9 +339,17 @@ const VehicleOnboardingPage = () => {
                     fontWeight: 800,
                     color: 'var(--text-primary)',
                     marginTop: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
                   }}
                 >
-                  🚗 {selectedMake?.name} {selectedModel?.name} ({selectedVariant?.year})
+                  {vehicleType === '2_WHEELER' ? (
+                    <Bike size={22} strokeWidth={1.75} className="text-teal" />
+                  ) : (
+                    <Car size={22} strokeWidth={1.75} className="text-primary" />
+                  )}
+                  <span>{selectedMake?.name} {selectedModel?.name} ({selectedVariant?.year})</span>
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'var(--color-primary-600)', marginTop: '4px' }}>
                   {selectedVariant?.name} · {selectedVariant?.fuelType}

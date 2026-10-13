@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 export const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -21,7 +22,7 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
           gap: '1rem',
         }}
       >
-        <div style={{ fontSize: '2.5rem', animation: 'spin 1s linear infinite' }}>⚙️</div>
+        <Loader2 size={40} strokeWidth={1.75} style={{ color: 'var(--color-primary, #0D9488)', animation: 'spin 1s linear infinite' }} />
         <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-muted, #94a3b8)' }}>
           Verifying PartNexa authorization...
         </div>

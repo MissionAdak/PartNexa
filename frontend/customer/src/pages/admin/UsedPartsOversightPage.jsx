@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Car, MapPin, Store, Wrench, AlertTriangle, X } from 'lucide-react';
 
 export default function UsedPartsOversightPage() {
   const [listings, setListings] = useState([]);
@@ -149,21 +150,21 @@ export default function UsedPartsOversightPage() {
                         <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.92rem' }}>
                           {item.title}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          🚗 {item.vehicleModel} • {item.partNumber ? `PN: ${item.partNumber}` : 'No SKU'}
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Car size={13} strokeWidth={1.75} /> {item.vehicleModel} • {item.partNumber ? `PN: ${item.partNumber}` : 'No SKU'}
                         </div>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                          Seller: {item.seller?.fullName || item.sellerName || 'Customer'} (📍 {item.location || 'Pan-India'})
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          Seller: {item.seller?.fullName || item.sellerName || 'Customer'} (<MapPin size={11} strokeWidth={1.75} /> {item.location || 'Pan-India'})
                         </div>
                       </td>
 
                       {/* Garage & Technician */}
                       <td>
-                        <div style={{ fontWeight: 700, fontSize: '0.86rem', color: 'var(--text-primary)' }}>
-                          🏪 {item.assignedShop?.shopName || intake?.shop?.shopName || 'Pending Assignment'}
+                        <div style={{ fontWeight: 700, fontSize: '0.86rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Store size={14} strokeWidth={1.75} /> {item.assignedShop?.shopName || intake?.shop?.shopName || 'Pending Assignment'}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          👨‍🔧 Tech: {intake?.inspectorName || 'Unassigned'}
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Wrench size={12} strokeWidth={1.75} /> Tech: {intake?.inspectorName || 'Unassigned'}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                           Mode: {item.handoverMethod === 'DROPOFF' ? 'Drop-Off' : 'Pickup'}
@@ -239,8 +240,8 @@ export default function UsedPartsOversightPage() {
                           Seller Payout: ₹{(item.payoutAmount || intake?.recommendedSellerPayout || Math.round((item.finalValuation || 0) * 0.9)).toLocaleString('en-IN')}
                         </div>
                         {intake?.adminOverridePrice && (
-                          <div style={{ fontSize: '0.7rem', color: '#d97706', marginTop: '2px' }}>
-                            ⚠️ Overridden: ₹{intake.adminOverridePrice} ({intake.adminOverrideReason})
+                          <div style={{ fontSize: '0.7rem', color: '#d97706', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertTriangle size={12} strokeWidth={1.75} /> Overridden: ₹{intake.adminOverridePrice} ({intake.adminOverrideReason})
                           </div>
                         )}
                       </td>
@@ -304,7 +305,9 @@ export default function UsedPartsOversightPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Administrative Valuation Review: {editingItem.title}
               </h3>
-              <button onClick={() => setEditingItem(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setEditingItem(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleSaveValuation}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
@@ -371,7 +374,9 @@ export default function UsedPartsOversightPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '650px' }}>
             <div className="modal-header">
               <h3>Technical Inspection Photos</h3>
-              <button onClick={() => setSelectedPhotosModal(null)}>✕</button>
+              <button onClick={() => setSelectedPhotosModal(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', padding: '1rem' }}>
               {selectedPhotosModal.map((url, idx) => (

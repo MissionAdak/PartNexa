@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import shopService from '../services/shopService';
 import toast from 'react-hot-toast';
+import { Check, Calendar, Wallet, ArrowUpRight, Home, Building2 } from 'lucide-react';
 
 export const ShopDashboardPage = () => {
   const [data, setData] = useState(null);
@@ -29,7 +30,7 @@ export const ShopDashboardPage = () => {
       const res = await shopService.updateJobStatus(jobId, newStatus);
       toast.success(`Job updated to ${newStatus}`);
       if (newStatus === 'COMPLETED' && res.data?.commissionStatus?.releaseStatus === 'RELEASED') {
-        toast.success('🎉 Commission RELEASED to your ledger balance! Both service completion and payment conditions met.');
+        toast.success('Commission RELEASED to your ledger balance! Both service completion and payment conditions met.');
       }
       fetchDashboard();
     } catch (err) {
@@ -82,7 +83,9 @@ export const ShopDashboardPage = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
             <h1 style={{ fontSize: '1.75rem' }}>{shop?.name}</h1>
-            <span className="badge badge-success">✓ {shop?.verificationStatus}</span>
+            <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Check size={13} strokeWidth={2} /> {shop?.verificationStatus}
+            </span>
           </div>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
             {shop?.address}, {shop?.city} • Operational Rate: <strong>{shop?.commissionRate}% Platform Cut</strong>
@@ -90,11 +93,11 @@ export const ShopDashboardPage = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Link to="/calendar" className="btn btn-secondary">
-            📅 View Calendar
+          <Link to="/calendar" className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Calendar size={16} strokeWidth={1.75} /> View Calendar
           </Link>
-          <Link to="/commission" className="btn btn-primary">
-            💰 Commission Ledger (₹{earnings?.releasedForPayout?.toLocaleString('en-IN') || 0} Released)
+          <Link to="/commission" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Wallet size={16} strokeWidth={1.75} /> Commission Ledger (₹{earnings?.releasedForPayout?.toLocaleString('en-IN') || 0} Released)
           </Link>
         </div>
       </div>
@@ -179,8 +182,8 @@ export const ShopDashboardPage = () => {
                   Customer jobs assigned to your workshop. Update status through the service lifecycle.
                 </p>
               </div>
-              <Link to="/calendar" className="btn btn-outline btn-sm">
-                Full Schedule ↗
+              <Link to="/calendar" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                Full Schedule <ArrowUpRight size={14} strokeWidth={1.75} />
               </Link>
             </div>
 
@@ -211,8 +214,16 @@ export const ShopDashboardPage = () => {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.85rem' }}>{job.serviceName}</div>
-                        <span className={`badge ${job.locationType === 'DOORSTEP' ? 'badge-purple' : 'badge-info'}`} style={{ fontSize: '0.65rem' }}>
-                          {job.locationType === 'DOORSTEP' ? '🏠 Doorstep Visit' : '🏢 Shop Visit'}
+                        <span className={`badge ${job.locationType === 'DOORSTEP' ? 'badge-purple' : 'badge-info'}`} style={{ fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          {job.locationType === 'DOORSTEP' ? (
+                            <>
+                              <Home size={11} strokeWidth={1.75} /> Doorstep Visit
+                            </>
+                          ) : (
+                            <>
+                              <Building2 size={11} strokeWidth={1.75} /> Shop Visit
+                            </>
+                          )}
                         </span>
                       </td>
                       <td>
@@ -262,13 +273,14 @@ export const ShopDashboardPage = () => {
                               onClick={() => handleUpdateStatus(job.id, 'COMPLETED')}
                               disabled={actionLoading === job.id}
                               className="btn btn-success btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
                             >
-                              ✓ Complete
+                              <Check size={13} strokeWidth={2} /> Complete
                             </button>
                           )}
                           {job.status === 'COMPLETED' && (
-                            <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>
-                              ✓ Finished
+                            <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Check size={13} strokeWidth={2} /> Finished
                             </span>
                           )}
                         </div>
@@ -384,8 +396,8 @@ export const ShopDashboardPage = () => {
           <div className="card">
             <div className="card-header">
               <h3 style={{ fontSize: '1.05rem' }}>Used-Part Intake</h3>
-              <Link to="/used-parts" className="btn btn-outline btn-sm">
-                Queue ↗
+              <Link to="/used-parts" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                Queue <ArrowUpRight size={14} strokeWidth={1.75} />
               </Link>
             </div>
 

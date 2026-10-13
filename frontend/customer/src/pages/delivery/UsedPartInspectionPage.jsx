@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
+import { Search, CheckCircle2, Check, X } from 'lucide-react';
 
 export const UsedPartInspectionPage = () => {
   const { id } = useParams();
@@ -98,7 +99,9 @@ export const UsedPartInspectionPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Search size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading doorstep inspection checklist...</div>
       </div>
     );
@@ -162,7 +165,7 @@ export const UsedPartInspectionPage = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '2rem' }}>🎉</span>
+            <CheckCircle2 size={32} strokeWidth={1.75} style={{ color: 'var(--color-emerald)', flexShrink: 0 }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--color-emerald)' }}>
                 Doorstep Verification Completed: {inspectionResultData?.verificationResult || 'APPROVED'}
@@ -292,17 +295,23 @@ export const UsedPartInspectionPage = () => {
             onClick={() => handleCompleteVerification('APPROVED')}
             disabled={submitting}
             className="btn btn-primary"
-            style={{ background: '#9333EA', padding: '0.85rem 1.75rem' }}
+            style={{ background: '#9333EA', padding: '0.85rem 1.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            {submitting ? 'Processing Payout...' : `✓ Approve Inspection & Trigger ₹${calculatedValuation} Payout`}
+            {submitting ? (
+              'Processing Payout...'
+            ) : (
+              <>
+                <Check size={16} strokeWidth={2} /> Approve Inspection & Trigger ₹{calculatedValuation} Payout
+              </>
+            )}
           </button>
           <button
             onClick={() => handleCompleteVerification('REJECTED')}
             disabled={submitting}
             className="btn btn-danger"
-            style={{ padding: '0.85rem 1.5rem' }}
+            style={{ padding: '0.85rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            ✕ Reject Part at Doorstep
+            <X size={16} strokeWidth={2} /> Reject Part at Doorstep
           </button>
         </div>
       ) : (

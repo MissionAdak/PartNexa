@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ShoppingCart, Wrench, Bike, ShieldCheck, Sun, Moon, AlertCircle, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../components/common/PartNexaLogo';
 import './AuthPages.css';
 
 export const ROLE_OPTIONS = [
   {
     id: 'CUSTOMER',
     label: 'Customer',
-    icon: '🛒',
+    icon: ShoppingCart,
     portal: 'Customer Marketplace',
     route: '/customer',
     seedEmail: 'demo@partsphere.in',
@@ -19,7 +21,7 @@ export const ROLE_OPTIONS = [
   {
     id: 'SHOP_OWNER',
     label: 'Mechanical Shop',
-    icon: '🔧',
+    icon: Wrench,
     portal: 'Workshop Management',
     route: '/shop',
     seedEmail: 'apex.shop@partsphere.in',
@@ -30,7 +32,7 @@ export const ROLE_OPTIONS = [
   {
     id: 'DELIVERY_PARTNER',
     label: 'Delivery Partner',
-    icon: '🛵',
+    icon: Bike,
     portal: 'Delivery Operations',
     route: '/delivery',
     seedEmail: 'rider.rajesh@partsphere.in',
@@ -41,7 +43,7 @@ export const ROLE_OPTIONS = [
   {
     id: 'ADMIN',
     label: 'Admin',
-    icon: '🛡️',
+    icon: ShieldCheck,
     portal: 'Executive Console',
     route: '/admin',
     seedEmail: 'admin@partsphere.in',
@@ -220,7 +222,8 @@ export const LoginPage = () => {
             boxShadow: 'var(--shadow-sm)',
           }}
         >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+          {theme === 'light' ? <Moon size={14} strokeWidth={1.75} /> : <Sun size={14} strokeWidth={1.75} />}
+          <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
         </button>
       </div>
 
@@ -239,21 +242,13 @@ export const LoginPage = () => {
       >
         {/* Header */}
         <div className="auth-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <Link
-            to="/customer"
-            className="auth-logo"
-            style={{
-              textDecoration: 'none',
-              fontSize: '1.8rem',
-              fontWeight: 800,
-              fontFamily: 'var(--font-display, sans-serif)',
-              color: 'var(--color-text-primary, #ffffff)',
-              display: 'inline-block',
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Part<span style={{ color: 'var(--color-primary, #0284c7)' }}>Nexa</span>
-          </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.85rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              size="lg"
+              linkTo="/customer"
+            />
+          </div>
           <h1
             className="auth-title"
             style={{
@@ -343,7 +338,12 @@ export const LoginPage = () => {
                     boxShadow: isSelected ? `0 0 12px ${role.badgeColor}33` : 'none',
                   }}
                 >
-                  <span style={{ fontSize: '1.35rem', marginBottom: '0.2rem' }}>{role.icon}</span>
+                  <role.icon
+                    size={22}
+                    strokeWidth={1.75}
+                    color={isSelected ? role.badgeColor : 'var(--color-text-primary, #ffffff)'}
+                    style={{ marginBottom: '0.35rem' }}
+                  />
                   <span
                     style={{
                       fontSize: '0.72rem',
@@ -441,7 +441,7 @@ export const LoginPage = () => {
               lineHeight: 1.4,
             }}
           >
-            <span style={{ fontSize: '1.1rem' }}>⛔</span>
+            <AlertCircle size={18} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <strong>{authError.toLowerCase().includes('access denied') ? '' : 'Authentication Error: '}</strong>{authError}
             </div>
@@ -464,8 +464,8 @@ export const LoginPage = () => {
               fontSize: '0.82rem',
             }}
           >
-            <span style={{ color: '#10b981', fontWeight: 600 }}>
-              🛵 New to PartNexa Delivery Fleet?
+            <span style={{ color: '#10b981', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Bike size={16} strokeWidth={1.75} /> New to PartNexa Delivery Fleet?
             </span>
             <Link
               to="/delivery/register"
@@ -474,9 +474,12 @@ export const LoginPage = () => {
                 color: '#10b981',
                 fontWeight: 700,
                 textDecoration: 'underline',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              Register as Delivery Partner →
+              Register as Delivery Partner <ArrowRight size={14} strokeWidth={1.75} />
             </Link>
           </div>
         )}
@@ -502,7 +505,7 @@ export const LoginPage = () => {
               name="email"
               type="email"
               className={`form-input ${errors.email ? 'error' : ''}`}
-              placeholder="name@partsphere.in"
+              placeholder="name@partnexa.in"
               value={form.email}
               onChange={handleChange}
               autoComplete="email"
@@ -595,11 +598,13 @@ export const LoginPage = () => {
                   border: 'none',
                   color: 'var(--color-text-muted, #94a3b8)',
                   cursor: 'pointer',
-                  fontSize: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   padding: '0.2rem',
                 }}
               >
-                {showPass ? '👁️' : '🔒'}
+                {showPass ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
               </button>
             </div>
             {errors.password && (
@@ -634,7 +639,7 @@ export const LoginPage = () => {
           >
             {loading ? (
               <>
-                <span style={{ animation: 'spin 1s linear infinite' }}>⚙️</span> Authenticating...
+                <Loader2 size={16} strokeWidth={1.75} className="spinner" style={{ animation: 'spin 1s linear infinite' }} /> Authenticating...
               </>
             ) : (
               `Sign In as ${currentRoleConfig.label}`

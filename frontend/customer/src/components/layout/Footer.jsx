@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../common/PartNexaLogo';
+import { Megaphone, Check, Wrench, ShieldCheck, Truck } from 'lucide-react';
 import './Footer.css';
 
 /**
@@ -121,7 +123,7 @@ const Footer = () => {
     if (!platform.url || platform.url === '#') {
       e.preventDefault();
       toast(`PartNexa on ${platform.name} is launching soon! Follow us for updates.`, {
-        icon: '📢',
+        icon: <Megaphone size={18} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />,
         style: {
           borderRadius: '10px',
           background: 'var(--color-bg-card, #1e293b)',
@@ -139,38 +141,13 @@ const Footer = () => {
         <div className="footer-grid">
           {/* Brand Col */}
           <div className="footer-brand">
-            <Link to="/" className="footer-logo">
-              <div className="footer-logo-icon">
-                <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="36" height="36" rx="10" fill="url(#fBrandGrad)" />
-                  <path
-                    d="M10 24L18 10L26 24"
-                    stroke="#FFFFFF"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path d="M13 19H23" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-                  <circle cx="18" cy="20" r="2.5" fill="#0D9488" />
-                  <defs>
-                    <linearGradient
-                      id="fBrandGrad"
-                      x1="0"
-                      y1="0"
-                      x2="36"
-                      y2="36"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#0284C7" />
-                      <stop offset="1" stopColor="#0D9488" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-              <span className="footer-logo-text">
-                Part<span className="text-primary">Nexa</span>
-              </span>
-            </Link>
+            <PartNexaLogo
+              variant="horizontal"
+              portal="customer"
+              size="md"
+              linkTo="/customer"
+              ariaLabel="PartNexa Homepage"
+            />
 
             <p className="footer-slogan">Buy. Install. Resell. Drive Smarter.</p>
 
@@ -180,8 +157,12 @@ const Footer = () => {
             </p>
 
             <div className="footer-badges">
-              <span className="badge badge-teal">✓ 100% Genuine Guarantee</span>
-              <span className="badge badge-primary">🔧 Certified DIFM Technicians</span>
+              <span className="badge badge-teal" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Check size={12} strokeWidth={2.0} /> 100% Genuine Guarantee
+              </span>
+              <span className="badge badge-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Wrench size={12} strokeWidth={1.75} /> Certified DIFM Technicians
+              </span>
             </div>
           </div>
 
@@ -250,12 +231,12 @@ const Footer = () => {
               </li>
             </ul>
             <div className="footer-trust">
-              <div className="trust-item">
-                <span>🛡️</span>
+              <div className="trust-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={16} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
                 <span>Razorpay Demo Sandbox Secure</span>
               </div>
-              <div className="trust-item">
-                <span>🚚</span>
+              <div className="trust-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Truck size={16} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
                 <span>Cash on Delivery (COD) Available</span>
               </div>
             </div>

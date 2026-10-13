@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { Download, X, Zap, Check } from 'lucide-react';
 import procurementService from '../../../services/procurementService';
 
 export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onStockReceived }) {
@@ -51,7 +52,7 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
       });
 
       toast.success(
-        `✅ Goods Received! ${result.goodsReceipt?.receiptNumber} recorded. Shared Inventory increased by +${payloadItems.reduce(
+        `Goods Received! ${result.goodsReceipt?.receiptNumber} recorded. Shared Inventory increased by +${payloadItems.reduce(
           (sum, i) => sum + i.quantityToReceive,
           0
         )} units.`
@@ -110,7 +111,7 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.3rem' }}>📥</span>
+              <Download size={22} strokeWidth={1.75} color="var(--color-success)" />
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                 Receive Inbound Stock
               </h2>
@@ -132,10 +133,9 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1rem',
             }}
           >
-            ✕
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -151,9 +151,15 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
               color: 'var(--text-primary)',
               marginBottom: '1.25rem',
               lineHeight: 1.4,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.5rem',
             }}
           >
-            ⚡ <strong>Shared Database Stock Intake:</strong> Upon confirming receipt, the received quantities will immediately update the shared PostgreSQL catalog inventory, generate an auditable <code>StockMovement</code> record, and become live for customer and workshop orders.
+            <Zap size={16} strokeWidth={1.75} color="var(--admin-blue)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <strong>Shared Database Stock Intake:</strong> Upon confirming receipt, the received quantities will immediately update the shared PostgreSQL catalog inventory, generate an auditable <code>StockMovement</code> record, and become live for customer and workshop orders.
+            </div>
           </div>
 
           <h3 style={{ fontSize: '0.88rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
@@ -208,10 +214,12 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
                           color: 'var(--color-success)',
                           backgroundColor: 'var(--color-success-bg)',
                           padding: '0.25rem 0.5rem',
-                          borderRadius: 'var(--radius-sm)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                         }}
                       >
-                        ✓ Completed
+                        <Check size={12} strokeWidth={2.2} /> Completed
                       </span>
                     ) : (
                       <input
@@ -350,7 +358,11 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
               boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)',
             }}
           >
-            {loading ? 'Receiving Stock...' : '✓ Confirm Stock Receipt'}
+            {loading ? 'Receiving Stock...' : (
+              <>
+                <Check size={16} strokeWidth={2.2} /> Confirm Stock Receipt
+              </>
+            )}
           </button>
         </div>
       </div>

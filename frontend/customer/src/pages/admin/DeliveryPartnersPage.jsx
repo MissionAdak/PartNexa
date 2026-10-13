@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { Search, Star, MapPin, X, FileText, Inbox, ExternalLink } from 'lucide-react';
 
 export default function DeliveryPartnersPage() {
   const [partners, setPartners] = useState([]);
@@ -111,7 +112,7 @@ export default function DeliveryPartnersPage() {
       {/* Toolbar */}
       <div className="toolbar">
         <form onSubmit={(e) => { e.preventDefault(); fetchPartners(); }} className="search-box">
-          <span>🔍</span>
+          <Search size={16} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Search by vehicle number, rider name..."
@@ -170,8 +171,8 @@ export default function DeliveryPartnersPage() {
                       <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{p.driverName}</div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{p.driverEmail}</div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.driverPhone}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-primary, #0284c7)', fontWeight: 600, marginTop: '0.15rem' }}>
-                        📍 City: {p.city || 'Bengaluru'}
+                      <div style={{ fontSize: '0.75rem', color: 'var(--color-primary, #0284c7)', fontWeight: 600, marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <MapPin size={12} strokeWidth={1.75} /> City: {p.city || 'Bengaluru'}
                       </div>
                     </td>
                     <td>
@@ -192,8 +193,8 @@ export default function DeliveryPartnersPage() {
                           {p.isOnline ? 'ONLINE' : 'OFFLINE'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        ★ {p.rating || 4.9} Rating • {p.activeTrips || 0} active trips
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Star size={12} strokeWidth={2} style={{ color: '#eab308', fill: '#eab308' }} /> {p.rating || 4.9} Rating • {p.activeTrips || 0} active trips
                       </div>
                     </td>
                     <td>
@@ -275,8 +276,8 @@ export default function DeliveryPartnersPage() {
                   Vehicle: {inspectPartner.vehicleNum} ({inspectPartner.vehicleType}) • Current Status: <strong>{inspectPartner.kycStatus}</strong>
                 </div>
               </div>
-              <button onClick={() => setInspectPartner(null)} style={{ fontSize: '1.25rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                ✕
+              <button onClick={() => setInspectPartner(null)} style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
               </button>
             </div>
 
@@ -330,7 +331,9 @@ export default function DeliveryPartnersPage() {
                           >
                             {isPdf ? (
                               <div style={{ textAlign: 'center', padding: '1rem' }}>
-                                <div style={{ fontSize: '2.5rem' }}>📄</div>
+                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.25rem' }}>
+                                  <FileText size={36} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                                </div>
                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
                                   PDF Document
                                 </div>
@@ -345,7 +348,7 @@ export default function DeliveryPartnersPage() {
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             ) : (
-                              <span style={{ fontSize: '2rem' }}>📄</span>
+                              <FileText size={32} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
                             )}
 
                             <span
@@ -359,9 +362,12 @@ export default function DeliveryPartnersPage() {
                                 borderRadius: '4px',
                                 fontSize: '0.7rem',
                                 fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
                               }}
                             >
-                              🔍 View
+                              <Search size={11} strokeWidth={1.75} /> View
                             </span>
                           </div>
                         </div>
@@ -380,7 +386,9 @@ export default function DeliveryPartnersPage() {
                 </div>
               ) : (
                 <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', backgroundColor: 'var(--bg-tertiary)', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                    <Inbox size={32} strokeWidth={1.75} style={{ color: 'var(--text-muted)' }} />
+                  </div>
                   <div>No KYC documents have been uploaded yet for this delivery partner.</div>
                 </div>
               )}
@@ -543,15 +551,15 @@ export default function DeliveryPartnersPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.75rem' }}
+                  style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 >
-                  Open in New Tab ↗
+                  Open in New Tab <ExternalLink size={12} strokeWidth={1.75} />
                 </a>
                 <button
                   onClick={() => setPreviewDoc(null)}
-                  style={{ background: 'transparent', border: 'none', fontSize: '1.25rem', color: 'var(--text-muted)', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 >
-                  ✕
+                  <X size={20} strokeWidth={1.75} />
                 </button>
               </div>
             </div>

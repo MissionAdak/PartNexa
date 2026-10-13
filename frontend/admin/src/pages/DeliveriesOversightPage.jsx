@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 export default function DeliveriesOversightPage() {
   const [deliveries, setDeliveries] = useState([]);
@@ -192,7 +193,9 @@ export default function DeliveriesOversightPage() {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Dispatch / Reassign Trip: {reassignModalItem.orderNumber}
               </h3>
-              <button onClick={() => setReassignModalItem(null)} style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+              <button onClick={() => setReassignModalItem(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <X size={20} strokeWidth={1.75} />
+              </button>
             </div>
             <form onSubmit={handleReassign}>
               <div className="modal-body">

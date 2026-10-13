@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { catalogService } from '../services';
 import { useCart } from '../contexts/CartContext';
 import { useVehicles } from '../contexts/VehicleContext';
+import { Star, ShieldCheck, ShoppingCart, Zap, Wrench, Bike, Car, CheckCircle2, AlertTriangle, X, MapPin, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './ProductDetailPage.css';
 
@@ -85,7 +86,9 @@ export const ProductDetailPage = () => {
     return (
       <div className="product-detail-page">
         <div className="container product-error-state card">
-          <div className="error-icon">🔩</div>
+          <div className="error-icon">
+            <Wrench size={48} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+          </div>
           <h2>Product Not Found</h2>
           <p>
             The automotive part or component you are looking for does not exist or has been removed from our catalog.
@@ -124,7 +127,7 @@ export const ProductDetailPage = () => {
     setAddingToCart(true);
     try {
       await addToCart(product, selectedShop?.shopId, quantity);
-      toast.success(`Added ${quantity}x ${product.name} to your cart! 🛒`);
+      toast.success(`Added ${quantity}x ${product.name} to your cart!`);
     } catch {
       toast.error('Failed to add item to cart.');
     } finally {
@@ -176,7 +179,11 @@ export const ProductDetailPage = () => {
             id="fitment-banner"
           >
             <div className="fitment-banner-icon">
-              {product.isCompatible ? '✅' : '⚠️'}
+              {product.isCompatible ? (
+                <CheckCircle2 size={24} strokeWidth={1.75} style={{ color: 'var(--color-success)' }} />
+              ) : (
+                <AlertTriangle size={24} strokeWidth={1.75} style={{ color: 'var(--color-warning)' }} />
+              )}
             </div>
             <div className="fitment-banner-text">
               <div className="fitment-banner-title">
@@ -209,7 +216,7 @@ export const ProductDetailPage = () => {
                 />
               ) : (
                 <div className="product-no-image">
-                  <span>🔩</span>
+                  <Wrench size={32} strokeWidth={1.75} style={{ opacity: 0.4 }} />
                   <p>No high-res image available</p>
                 </div>
               )}
@@ -267,8 +274,8 @@ export const ProductDetailPage = () => {
 
             {/* Ratings & Reviews summary */}
             <div className="product-rating-row">
-              <div className="stars-rating">
-                <span style={{ color: 'var(--color-gold)', fontSize: '16px' }}>★</span>
+              <div className="stars-rating" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Star size={16} fill="var(--color-gold)" stroke="var(--color-gold)" />
                 <span className="rating-num">{product.rating?.toFixed(1) || '4.5'}</span>
               </div>
               <span className="rating-divider">·</span>
@@ -280,7 +287,9 @@ export const ProductDetailPage = () => {
                 {product.reviewCount || 0} customer review{product.reviewCount !== 1 ? 's' : ''}
               </button>
               <span className="rating-divider">·</span>
-              <span className="verified-badge">🛡️ Verified OEM Spec</span>
+              <span className="verified-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <ShieldCheck size={14} strokeWidth={1.75} /> Verified OEM Spec
+              </span>
             </div>
 
             {/* Price Section */}
@@ -298,8 +307,8 @@ export const ProductDetailPage = () => {
 
               {/* Warranty Notice */}
               {product.warranty && (
-                <div className="warranty-banner">
-                  <span className="warranty-icon">🛡️</span>
+                <div className="warranty-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="warranty-icon"><ShieldCheck size={16} strokeWidth={1.75} /></span>
                   <span><strong>Warranty:</strong> {product.warranty}</span>
                 </div>
               )}
@@ -309,7 +318,9 @@ export const ProductDetailPage = () => {
             <div className="stock-status-row">
               {isOutOfStock ? (
                 <div className="stock-badge stock-out">
-                  <span className="stock-dot">✕</span>
+                  <span className="stock-dot" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <X size={12} strokeWidth={2.2} />
+                  </span>
                   <span>Out of Stock — Check back soon</span>
                 </div>
               ) : (
@@ -349,8 +360,14 @@ export const ProductDetailPage = () => {
                             <span className="badge badge-teal text-xs">Verified Workshop</span>
                           )}
                         </div>
-                        <div className="seller-meta">
-                          📍 {inv.shop?.city || 'Regional Hub'} · ★ {inv.shop?.rating?.toFixed(1) || '4.8'}
+                        <div className="seller-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <MapPin size={12} strokeWidth={1.75} /> {inv.shop?.city || 'Regional Hub'}
+                          </span>
+                          <span>·</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Star size={12} strokeWidth={1.75} fill="#eab308" color="#eab308" /> {inv.shop?.rating?.toFixed(1) || '4.8'}
+                          </span>
                           {inv.quantity > 0 ? (
                             <span className="text-success"> · {inv.quantity} in stock</span>
                           ) : (
@@ -401,8 +418,9 @@ export const ProductDetailPage = () => {
                 onClick={handleAddToCart}
                 disabled={isOutOfStock || addingToCart}
                 id="add-to-cart-button"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
-                🛒 {addingToCart ? 'Adding...' : 'Add to Cart'}
+                <ShoppingCart size={18} strokeWidth={1.75} /> {addingToCart ? 'Adding...' : 'Add to Cart'}
               </button>
 
               <button
@@ -411,14 +429,17 @@ export const ProductDetailPage = () => {
                 onClick={handleBuyNow}
                 disabled={isOutOfStock}
                 id="buy-now-button"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
-                ⚡ Buy Now
+                <Zap size={18} strokeWidth={1.75} /> Buy Now
               </button>
             </div>
 
             {/* DIFM Installation Banner */}
             <div className="difm-doorstep-card card">
-              <span className="difm-icon">🔧</span>
+              <span className="difm-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <Wrench size={20} strokeWidth={1.75} />
+              </span>
               <div>
                 <div className="difm-title">Do-It-For-Me (DIFM) Doorstep Fitting</div>
                 <div className="difm-desc">
@@ -544,12 +565,14 @@ export const ProductDetailPage = () => {
                   <div className="compatibility-vehicles-grid">
                     {product.compatibleVehicles.map((v, i) => (
                       <div key={v.id || i} className="compat-vehicle-card">
-                        <div className="compat-veh-icon">
+                        <div className="compat-veh-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {v.make?.toLowerCase().includes('hero') ||
                           v.make?.toLowerCase().includes('bajaj') ||
-                          v.make?.toLowerCase().includes('tvs')
-                            ? '🏍️'
-                            : '🚗'}
+                          v.make?.toLowerCase().includes('tvs') ? (
+                            <Bike size={20} strokeWidth={1.75} />
+                          ) : (
+                            <Car size={20} strokeWidth={1.75} />
+                          )}
                         </div>
                         <div className="compat-veh-info">
                           <div className="compat-veh-make">{v.make}</div>
@@ -573,9 +596,16 @@ export const ProductDetailPage = () => {
                 <div className="reviews-tab-layout">
                   <div className="reviews-summary-card">
                     <div className="big-rating-number">{product.rating?.toFixed(1) || '4.5'}</div>
-                    <div className="big-stars">
-                      {'★'.repeat(Math.round(product.rating || 4.5))}
-                      {'☆'.repeat(5 - Math.round(product.rating || 4.5))}
+                    <div className="big-stars" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={18}
+                          strokeWidth={1.75}
+                          fill={s <= Math.round(product.rating || 4.5) ? '#eab308' : 'none'}
+                          color="#eab308"
+                        />
+                      ))}
                     </div>
                     <div className="reviews-count-text">
                       Based on {product.reviewCount || 0} verified customer reviews
@@ -601,15 +631,22 @@ export const ProductDetailPage = () => {
                                   {rev.user?.firstName} {rev.user?.lastName}
                                 </div>
                                 {rev.isVerifiedPurchase && (
-                                  <span className="badge badge-success text-xs">
-                                    ✓ Verified Purchase
+                                  <span className="badge badge-success text-xs" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <Check size={11} strokeWidth={2.2} /> Verified Purchase
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="review-stars-display" style={{ color: 'var(--color-gold)' }}>
-                              {'★'.repeat(rev.rating)}
-                              {'☆'.repeat(5 - rev.rating)}
+                            <div className="review-stars-display" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star
+                                  key={s}
+                                  size={13}
+                                  strokeWidth={1.75}
+                                  fill={s <= rev.rating ? '#eab308' : 'none'}
+                                  color="#eab308"
+                                />
+                              ))}
                             </div>
                           </div>
                           {rev.title && <h5 className="review-headline">{rev.title}</h5>}

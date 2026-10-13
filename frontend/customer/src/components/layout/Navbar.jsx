@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Car, Bike, Plus, ArrowRight, Sun, Moon, Search, User, Package, Bell, Award, HelpCircle, LogOut, ShoppingCart, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { useVehicles } from '../../contexts/VehicleContext';
 import VehicleSelectorModal from '../vehicle/VehicleSelectorModal';
 import NotificationBell from '../notifications/NotificationBell';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../common/PartNexaLogo';
 import './Navbar.css';
 
 /**
@@ -259,25 +261,14 @@ const Navbar = () => {
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`} role="navigation" aria-label="Main navigation">
       <div className="navbar-inner">
         {/* Brand Logo - Navigates directly to Canonical Customer Home */}
-        <Link to="/customer" className="navbar-logo" id="navbar-logo" aria-label="PartNexa Customer Home">
-          <div className="logo-icon">
-            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <rect width="36" height="36" rx="10" fill="url(#brandGradNavbar)" />
-              <path d="M10 24L18 10L26 24" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13 19H23" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="18" cy="20" r="2.5" fill="#0D9488" />
-              <defs>
-                <linearGradient id="brandGradNavbar" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#0284C7" />
-                  <stop offset="1" stopColor="#0D9488" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <span className="logo-text">
-            Part<span className="text-primary">Nexa</span>
-          </span>
-        </Link>
+        <PartNexaLogo
+          id="navbar-logo"
+          variant="horizontal"
+          portal="customer"
+          size="md"
+          linkTo="/customer"
+          ariaLabel="PartNexa Customer Home"
+        />
 
         {/* Global Search (Desktop / Tablet Wide) */}
         <div className="navbar-search-wrapper">
@@ -316,11 +307,13 @@ const Navbar = () => {
                 title="Active Vehicle for Fitment (Click to switch)"
                 aria-label="Active vehicle selector"
               >
-                <span className="vehicle-pill-icon" aria-hidden="true">
+                <span className="vehicle-pill-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
                   {displayVehicle.variant?.model?.make?.type === 'BIKE' ||
-                  displayVehicle.variant?.model?.make?.type === 'SCOOTER'
-                    ? '🏍️'
-                    : '🚗'}
+                  displayVehicle.variant?.model?.make?.type === 'SCOOTER' ? (
+                    <Bike size={18} strokeWidth={1.75} />
+                  ) : (
+                    <Car size={18} strokeWidth={1.75} />
+                  )}
                 </span>
                 <div className="vehicle-pill-info">
                   <span className="vehicle-pill-name">
@@ -347,11 +340,15 @@ const Navbar = () => {
                 title="Select your vehicle for guaranteed fitment"
                 aria-label="Select Vehicle"
               >
-                <span className="vehicle-pill-icon" aria-hidden="true">🚗</span>
+                <span className="vehicle-pill-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <Car size={18} strokeWidth={1.75} />
+                </span>
                 <div className="vehicle-pill-info">
                   <span className="vehicle-pill-name">Select Vehicle</span>
                 </div>
-                <span className="vehicle-pill-badge-add">+</span>
+                <span className="vehicle-pill-badge-add" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Plus size={14} strokeWidth={2.2} />
+                </span>
               </button>
             </div>
           )}
@@ -450,7 +447,9 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <span>{item.name}</span>
-                  <span className="mobile-link-arrow" aria-hidden="true">→</span>
+                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ArrowRight size={16} strokeWidth={1.75} />
+                  </span>
                 </Link>
               );
             })}
@@ -474,7 +473,9 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <span>My Orders</span>
-                  <span className="mobile-link-arrow" aria-hidden="true">→</span>
+                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ArrowRight size={16} strokeWidth={1.75} />
+                  </span>
                 </Link>
                 <Link
                   to="/customer/my-subscriptions"
@@ -487,7 +488,9 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <span>My Subscriptions</span>
-                  <span className="mobile-link-arrow" aria-hidden="true">→</span>
+                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ArrowRight size={16} strokeWidth={1.75} />
+                  </span>
                 </Link>
                 <Link
                   to="/customer/profile"
@@ -504,7 +507,9 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <span>Profile Settings</span>
-                  <span className="mobile-link-arrow" aria-hidden="true">→</span>
+                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <ArrowRight size={16} strokeWidth={1.75} />
+                  </span>
                 </Link>
               </>
             ) : (
@@ -533,7 +538,9 @@ const Navbar = () => {
               role="menuitem"
             >
               <span>Customer Support</span>
-              <span className="mobile-link-arrow" aria-hidden="true">→</span>
+              <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <ArrowRight size={16} strokeWidth={1.75} />
+              </span>
             </Link>
           </div>
         </div>

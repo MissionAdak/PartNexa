@@ -1,11 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { usersService, ordersService, paymentsService } from '../services';
-import { Button, Input } from '../components/ui';
-import RazorpayModal from '../components/checkout/RazorpayModal';
-import NearbyShopsMap from '../components/checkout/NearbyShopsMap';
+import {
+  CheckCircle2,
+  Package,
+  AlertTriangle,
+  Lightbulb,
+  RefreshCw,
+  Banknote,
+  Lock,
+  CreditCard,
+  Check,
+  Clock,
+  ShieldCheck,
+  Wrench,
+  Phone,
+  MapPin,
+  Star,
+  Tag,
+  Store,
+  Home,
+} from 'lucide-react';
+import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { usersService, ordersService, paymentsService } from '../../services';
+import { Button, Input } from '../../components/ui';
+import RazorpayModal from '../../components/checkout/RazorpayModal';
+import NearbyShopsMap from '../../components/checkout/NearbyShopsMap';
 import toast from 'react-hot-toast';
 import './CheckoutPage.css';
 
@@ -109,8 +129,11 @@ const CheckoutPage = () => {
       const quoteData = res.data?.data;
       if (quoteData) {
         setQuote(quoteData);
-        // If shop is not explicitly selected yet, default to the assigned shop from backend
-        if (!selectedShopId && quoteData.difm?.assignedShop?.id) {
+        // For Home Installation, always align to backend's assigned local shop
+        if (difmOption === 'HOME_INSTALLATION' && quoteData.difm?.assignedShop?.id) {
+          setSelectedShopId(quoteData.difm.assignedShop.id);
+          setSelectedShopObj(quoteData.difm.assignedShop);
+        } else if (!selectedShopId && quoteData.difm?.assignedShop?.id) {
           setSelectedShopId(quoteData.difm.assignedShop.id);
           setSelectedShopObj(quoteData.difm.assignedShop);
         } else if (quoteData.difm?.assignedShop && !selectedShopObj) {
@@ -270,7 +293,7 @@ const CheckoutPage = () => {
         // COD flow: immediately confirmed, payment collection pending
         await clearCart();
         setConfirmedOrder(createdOrder);
-        toast.success('Order confirmed with Cash on Delivery! 📦');
+        toast.success('Order confirmed with Cash on Delivery!');
       } else {
         // Razorpay Sandbox flow:
         // Request backend payment order session with safe gateway reference
@@ -309,7 +332,7 @@ const CheckoutPage = () => {
       setPaymentFailureData(null);
       setPaymentSuccessData(verifiedData);
       setConfirmedOrder(verifiedData.order);
-      toast.success('Payment verified & order confirmed! 🎉', { id: toastId });
+      toast.success('Payment verified & order confirmed!', { id: toastId });
     } catch (err) {
       console.error('Payment verification failed:', err);
       const errMsg = err.response?.data?.message || 'Backend payment verification failed.';
@@ -401,7 +424,7 @@ const CheckoutPage = () => {
       await clearCart();
       setPaymentFailureData(null);
       setConfirmedOrder(updatedOrder);
-      toast.success('Switched to Cash on Delivery! Order is confirmed. 📦');
+      toast.success('Switched to Cash on Delivery! Order is confirmed.');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to switch payment method.');
     } finally {
@@ -445,7 +468,9 @@ const CheckoutPage = () => {
       <div className="checkout-page payment-result-view" id="payment-failure-screen">
         <div className="container">
           <div className="payment-failure-card">
-            <div className="failure-badge-icon">⚠️</div>
+            <div className="failure-badge-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={36} strokeWidth={1.5} />
+            </div>
             <h1 className="failure-title">Payment Not Completed</h1>
             <p className="failure-subtitle">
               {paymentFailureData.errorCode === 'PAYMENT_CANCELLED_BY_USER'
@@ -477,8 +502,9 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            <div className="failure-advice">
-              💡 Don't worry! Your order has been saved. You can retry paying online with Razorpay Sandbox or instantly switch this order to Cash on Delivery (COD).
+            <div className="failure-advice" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <Lightbulb size={18} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <span>Don't worry! Your order has been saved. You can retry paying online with Razorpay Sandbox or instantly switch this order to Cash on Delivery (COD).</span>
             </div>
 
             <div className="payment-action-buttons">
@@ -488,8 +514,9 @@ const CheckoutPage = () => {
                 onClick={() => handleRetryPayment(paymentFailureData.orderId)}
                 loading={isRetryingPayment}
                 id="retry-payment-button"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                🔄 Retry Razorpay Payment
+                <RefreshCw size={15} strokeWidth={1.75} /> Retry Razorpay Payment
               </Button>
               <Button
                 variant="teal"
@@ -497,8 +524,9 @@ const CheckoutPage = () => {
                 onClick={() => handleSwitchToCOD(paymentFailureData.orderId)}
                 loading={isSwitchingToCOD}
                 id="switch-cod-button"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                💵 Switch to Cash on Delivery (COD)
+                <Banknote size={15} strokeWidth={1.75} /> Switch to Cash on Delivery (COD)
               </Button>
               <Link to={`/orders/${paymentFailureData.orderId}`}>
                 <Button variant="outline" size="md">
@@ -530,7 +558,9 @@ const CheckoutPage = () => {
       <div className="checkout-page confirmation-view" id="order-confirmation-screen">
         <div className="container">
           <div className="order-confirmation-card">
-            <div className="confirmation-badge-icon">{isRazorpay ? '✅' : '📦'}</div>
+            <div className="confirmation-badge-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              {isRazorpay ? <CheckCircle2 size={44} strokeWidth={1.75} color="#10b981" /> : <Package size={44} strokeWidth={1.75} color="#0d9488" />}
+            </div>
             <h1 className="confirmation-title">
               {isRazorpay ? 'Payment Verified & Order Confirmed!' : 'Order Placed (Cash on Delivery)'}
             </h1>
@@ -540,7 +570,9 @@ const CheckoutPage = () => {
 
             {/* Payment & Security Assurance Banner */}
             <div className={`payment-assurance-banner ${isRazorpay ? 'paid' : 'cod'}`}>
-              <div className="assurance-icon">{isRazorpay ? '🔒' : '💵'}</div>
+              <div className="assurance-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isRazorpay ? <Lock size={20} strokeWidth={1.75} /> : <Banknote size={20} strokeWidth={1.75} />}
+              </div>
               <div className="assurance-text">
                 {isRazorpay ? (
                   <>
@@ -560,15 +592,23 @@ const CheckoutPage = () => {
               {/* Payment Safe Metadata */}
               <div className="conf-row">
                 <span className="conf-label">Payment Method:</span>
-                <span className="conf-val">
-                  {isRazorpay ? '💳 Razorpay Sandbox / Demo Gateway' : '💵 Cash on Delivery (COD)'}
+                <span className="conf-val" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  {isRazorpay ? (
+                    <><CreditCard size={15} strokeWidth={1.75} /> Razorpay Sandbox / Demo Gateway</>
+                  ) : (
+                    <><Banknote size={15} strokeWidth={1.75} /> Cash on Delivery (COD)</>
+                  )}
                 </span>
               </div>
 
               <div className="conf-row">
                 <span className="conf-label">Payment Status:</span>
-                <span className={`conf-val ${isRazorpay ? 'status-pill-paid' : 'status-pill-cod'}`}>
-                  {isRazorpay ? '✓ CAPTURED & PAID' : '⏳ PENDING COD COLLECTION'}
+                <span className={`conf-val ${isRazorpay ? 'status-pill-paid' : 'status-pill-cod'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  {isRazorpay ? (
+                    <><Check size={13} strokeWidth={2.5} /> CAPTURED & PAID</>
+                  ) : (
+                    <><Clock size={13} strokeWidth={2} /> PENDING COD COLLECTION</>
+                  )}
                 </span>
               </div>
 
@@ -622,8 +662,11 @@ const CheckoutPage = () => {
             </div>
 
             {/* Safe metadata notice */}
-            <div className="safe-metadata-notice">
-              🛡️ <strong>Zero Credential Storage Guarantee:</strong> PartSphere never stores card numbers, CVVs, or bank credentials. Only safe transaction IDs and gateway references are retained.
+            <div className="safe-metadata-notice" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <ShieldCheck size={18} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong>Zero Credential Storage Guarantee:</strong> PartNexa never stores card numbers, CVVs, or bank credentials. Only safe transaction IDs and gateway references are retained.
+              </div>
             </div>
 
             <div className="confirmation-actions">
@@ -663,7 +706,9 @@ const CheckoutPage = () => {
         {/* Difficult Parts Notice Banner */}
         {hasDifficultParts && (
           <div className="difficult-alert-card" id="difm-requirement-alert">
-            <div className="difficult-alert-icon">⚠️</div>
+            <div className="difficult-alert-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={20} strokeWidth={1.75} />
+            </div>
             <div className="difficult-alert-content">
               <div className="difficult-alert-title">
                 Professional Fitment Required for Difficult Parts
@@ -673,8 +718,8 @@ const CheckoutPage = () => {
               </p>
               <div className="difficult-chips-list">
                 {difficultItems.map((di) => (
-                  <span key={di.productId} className="difficult-chip">
-                    🔧 {di.productName} ({di.difficulty} Installation)
+                  <span key={di.productId} className="difficult-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Wrench size={12} strokeWidth={1.75} /> {di.productName} ({di.difficulty} Installation)
                   </span>
                 ))}
               </div>
@@ -717,7 +762,9 @@ const CheckoutPage = () => {
                         <div className="address-city">
                           {addr.city}, {addr.state} - <strong>{addr.pincode}</strong>
                         </div>
-                        <div className="address-phone">📞 {addr.phone}</div>
+                        <div className="address-phone" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Phone size={12} strokeWidth={1.75} /> {addr.phone}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -850,8 +897,8 @@ const CheckoutPage = () => {
                       <code>Installation Fee (₹{pricing.installationFee || 250}) + Home Visit Surcharge (₹0)</code>
                     </div>
                     {difmOption === 'SHOP_INSTALLATION' && (
-                      <div className="difm-subdetails">
-                        🗺️ Interactive map & location-based garage picker active below
+                      <div className="difm-subdetails" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <MapPin size={13} strokeWidth={1.75} /> Interactive map & location-based garage picker active below
                       </div>
                     )}
                   </div>
@@ -884,8 +931,8 @@ const CheckoutPage = () => {
                       <code>Installation Fee (₹{pricing.installationFee || 0}) + Home Visit Surcharge (₹{pricing.homeVisitSurcharge || 0})</code>
                     </div>
                     {difmOption === 'HOME_INSTALLATION' && (
-                      <div className="difm-subdetails">
-                        📍 Distance to nearest hub: <strong>{distanceKm} km</strong> (~{durationMinutes} mins away)
+                      <div className="difm-subdetails" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <MapPin size={13} strokeWidth={1.75} /> Distance to nearest hub: <strong>{distanceKm} km</strong> (~{durationMinutes} mins away)
                       </div>
                     )}
                   </div>
@@ -976,14 +1023,24 @@ const CheckoutPage = () => {
                         <div className="workshop-info">
                           <div className="workshop-name-row">
                             <h4 className="workshop-name">{shop.name}</h4>
-                            {shop.isVerified && <span className="verified-badge">✓ Verified Hub</span>}
+                            {shop.isVerified && (
+                              <span className="verified-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Check size={12} strokeWidth={2} /> Verified Hub
+                              </span>
+                            )}
                           </div>
                           <div className="workshop-address">{shop.address}</div>
-                          <div className="workshop-hours">🕒 {shop.operatingHours} · 📞 {shop.phone}</div>
+                          <div className="workshop-hours" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={12} strokeWidth={1.75} /> {shop.operatingHours}</span>
+                            <span>·</span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Phone size={12} strokeWidth={1.75} /> {shop.phone}</span>
+                          </div>
                         </div>
 
                         <div className="workshop-metrics">
-                          <div className="workshop-rating">★ {shop.rating}</div>
+                          <div className="workshop-rating" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Star size={12} strokeWidth={2} fill="currentColor" /> {shop.rating}
+                          </div>
                           <div className="workshop-distance" id={`shop-dist-${shop.id}`}>
                             {shop.distanceKm} km away
                           </div>
@@ -1021,7 +1078,9 @@ const CheckoutPage = () => {
                   id="payment-razorpay"
                 >
                   <div className="payment-method-left">
-                    <span className="payment-method-icon">💳</span>
+                    <span className="payment-method-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <CreditCard size={20} strokeWidth={1.75} />
+                    </span>
                     <div>
                       <div className="payment-method-name">Razorpay Sandbox / Demo Gateway</div>
                       <div className="payment-method-sub">
@@ -1038,7 +1097,9 @@ const CheckoutPage = () => {
                   id="payment-cod"
                 >
                   <div className="payment-method-left">
-                    <span className="payment-method-icon">💵</span>
+                    <span className="payment-method-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Banknote size={20} strokeWidth={1.75} />
+                    </span>
                     <div>
                       <div className="payment-method-name">Cash on Delivery (COD)</div>
                       <div className="payment-method-sub">
@@ -1066,8 +1127,8 @@ const CheckoutPage = () => {
             <div className="checkout-summary-card">
               <div className="summary-card-header">
                 <h3 className="summary-heading">Pricing Summary</h3>
-                <span className="backend-verified-pill" title="Calculated strictly on the backend">
-                  🔒 Backend Authoritative
+                <span className="backend-verified-pill" title="Calculated strictly on the backend" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Lock size={12} strokeWidth={1.75} /> Backend Authoritative
                 </span>
               </div>
 
@@ -1117,8 +1178,8 @@ const CheckoutPage = () => {
                   )}
                 </div>
                 {appliedCoupon && (
-                  <div className="applied-coupon-tag">
-                    🏷️ Coupon <strong>{appliedCoupon}</strong> active
+                  <div className="applied-coupon-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Tag size={13} strokeWidth={1.75} /> Coupon <strong>{appliedCoupon}</strong> active
                   </div>
                 )}
               </form>
@@ -1200,18 +1261,38 @@ const CheckoutPage = () => {
 
               {/* DIFM Active Summary Badge */}
               <div className="difm-status-pill">
-                {difmOption === 'SHOP_INSTALLATION' && '🏬 Option A: Mechanical Shop Installation'}
-                {difmOption === 'HOME_INSTALLATION' && '🏡 Option B: Doorstep Mechanic Visit'}
-                {difmOption === 'NO_INSTALLATION' && '📦 Option C: Parts Only (No Installation)'}
+                {difmOption === 'SHOP_INSTALLATION' && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Store size={14} strokeWidth={1.75} /> Option A: Mechanical Shop Installation
+                  </span>
+                )}
+                {difmOption === 'HOME_INSTALLATION' && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Home size={14} strokeWidth={1.75} /> Option B: Doorstep Mechanic Visit
+                  </span>
+                )}
+                {difmOption === 'NO_INSTALLATION' && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Package size={14} strokeWidth={1.75} /> Option C: Parts Only (No Installation)
+                  </span>
+                )}
               </div>
 
               {/* Selected Installation Shop Summary */}
               {difmOption === 'SHOP_INSTALLATION' && selectedShopObj && (
                 <div className="selected-shop-summary-card" id="summary-selected-shop-card">
-                  <div className="summary-shop-title">🔧 Selected Installation Garage:</div>
+                  <div className="summary-shop-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Wrench size={14} strokeWidth={1.75} /> Selected Installation Garage:
+                  </div>
                   <div className="summary-shop-name">{selectedShopObj.name}</div>
-                  <div className="summary-shop-meta">
-                    📍 {selectedShopObj.distanceKm ? `${selectedShopObj.distanceKm} km away` : (selectedShopObj.city || 'Partner Workshop')} · ★ {selectedShopObj.rating || 4.8}
+                  <div className="summary-shop-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <MapPin size={12} strokeWidth={1.75} /> {selectedShopObj.distanceKm ? `${selectedShopObj.distanceKm} km away` : (selectedShopObj.city || 'Partner Workshop')}
+                    </span>
+                    <span>·</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      <Star size={12} strokeWidth={2} fill="currentColor" /> {selectedShopObj.rating || 4.8}
+                    </span>
                   </div>
                 </div>
               )}
@@ -1232,9 +1313,15 @@ const CheckoutPage = () => {
               </Button>
 
               <div className="checkout-trust-footer">
-                <span>🛡️ Anti-tamper backend price validation</span>
-                <span>🔒 256-bit encrypted checkout</span>
-                <span>⚙️ PartNexa 100% Fitment Guarantee</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <ShieldCheck size={13} strokeWidth={1.75} /> Anti-tamper backend price validation
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <Lock size={13} strokeWidth={1.75} /> 256-bit encrypted checkout
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckCircle2 size={13} strokeWidth={1.75} /> PartNexa 100% Fitment Guarantee
+                </span>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import deliveryService from '../services/deliveryService';
 import toast from 'react-hot-toast';
+import { Search, Inbox, CheckCircle2, MapPin, Navigation } from 'lucide-react';
 
 export const UsedPartsListPage = () => {
   const [usedPartJobs, setUsedPartJobs] = useState([]);
@@ -26,7 +27,9 @@ export const UsedPartsListPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Search size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
+        </div>
         <div>Loading doorstep used-part pickup tasks...</div>
       </div>
     );
@@ -46,7 +49,9 @@ export const UsedPartsListPage = () => {
 
       {usedPartJobs.length === 0 ? (
         <div className="delivery-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>✨</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <Inbox size={36} strokeWidth={1.75} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
           <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>No Used-Part Pickups Assigned</div>
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
             When customers submit used spare parts for sale, pickup assignments will appear here.
@@ -91,8 +96,8 @@ export const UsedPartsListPage = () => {
                   Expected Seller Valuation: <strong>₹{job.items?.[0]?.expectedPrice || 2600}</strong> • Distance: ~{job.distanceKm || 11.5} km
                 </div>
                 {job.conditionGrade && (
-                  <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-emerald)' }}>
-                    ✓ Verified Condition: Grade {job.conditionGrade} ({job.verificationResult})
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-emerald)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle2 size={14} strokeWidth={2} /> Verified Condition: Grade {job.conditionGrade} ({job.verificationResult})
                   </div>
                 )}
               </div>
@@ -100,8 +105,8 @@ export const UsedPartsListPage = () => {
               {/* Pickup vs Hub Drop */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                 <div style={{ padding: '0.75rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase' }}>
-                    📍 Seller Doorstep Pickup
+                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <MapPin size={13} strokeWidth={1.75} /> Seller Doorstep Pickup
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{job.pickupLocation?.name}</div>
                   <div style={{ fontSize: '0.775rem', color: 'var(--color-text-muted)' }}>{job.pickupLocation?.address}</div>
@@ -109,8 +114,8 @@ export const UsedPartsListPage = () => {
                 </div>
 
                 <div style={{ padding: '0.75rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase' }}>
-                    🎯 Mechanical Hub Drop Destination
+                  <div style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--color-emerald)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Navigation size={13} strokeWidth={1.75} /> Mechanical Hub Drop Destination
                   </div>
                   <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{job.dropLocation?.name}</div>
                   <div style={{ fontSize: '0.775rem', color: 'var(--color-text-muted)' }}>{job.dropLocation?.address}</div>

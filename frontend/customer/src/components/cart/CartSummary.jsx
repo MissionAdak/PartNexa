@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui';
+import { Sparkles, Truck, Check, ShieldCheck, Zap, RotateCcw } from 'lucide-react';
 import './CartSummary.css';
 
 /**
@@ -58,7 +59,9 @@ export const CartSummary = ({
       {/* Free Shipping Progress Indicator */}
       <div className={`cart-free-delivery-bar ${isFreeDelivery ? 'is-unlocked' : ''}`}>
         <div className="delivery-bar-header">
-          <span className="delivery-bar-icon">{isFreeDelivery ? '🎉' : '🚚'}</span>
+          <span className="delivery-bar-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            {isFreeDelivery ? <Sparkles size={16} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> : <Truck size={16} strokeWidth={1.75} />}
+          </span>
           <span className="delivery-bar-text">
             {isFreeDelivery ? (
               <strong>You've unlocked FREE Delivery!</strong>
@@ -189,7 +192,7 @@ export const CartSummary = ({
                 disabled={couponApplied || !localCouponInput.trim() || disabled}
                 id="apply-coupon-btn"
               >
-                {couponApplied ? '✓ Applied' : 'Apply'}
+                {couponApplied ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Check size={14} strokeWidth={2.0} /> Applied</span> : 'Apply'}
               </Button>
             </div>
           </form>
@@ -213,21 +216,21 @@ export const CartSummary = ({
         {/* Trust Guarantees */}
         <div className="cart-trust-strip">
           <div className="trust-strip-item">
-            <span className="trust-icon">🛡️</span>
+            <ShieldCheck size={18} strokeWidth={1.75} className="trust-icon" style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
             <div className="trust-text">
               <strong>100% Genuine Parts</strong>
               <small>Direct from OEM / verified hubs</small>
             </div>
           </div>
           <div className="trust-strip-item">
-            <span className="trust-icon">⚡</span>
+            <Zap size={18} strokeWidth={1.75} className="trust-icon" style={{ color: '#F59E0B', flexShrink: 0 }} />
             <div className="trust-text">
               <strong>Express Doorstep Delivery</strong>
               <small>Live tracking on all dispatches</small>
             </div>
           </div>
           <div className="trust-strip-item">
-            <span className="trust-icon">🔄</span>
+            <RotateCcw size={18} strokeWidth={1.75} className="trust-icon" style={{ color: '#3B82F6', flexShrink: 0 }} />
             <div className="trust-text">
               <strong>10-Day Free Return Policy</strong>
               <small>Hassle-free guarantee if fitment fails</small>

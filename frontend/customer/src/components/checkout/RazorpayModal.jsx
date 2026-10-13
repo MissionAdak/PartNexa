@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Zap, X, Lock, RotateCcw, ShieldCheck, Smartphone, CreditCard, Building, CheckCircle2, XCircle } from 'lucide-react';
 import './RazorpayModal.css';
 
 /**
@@ -211,7 +212,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
         <div className="rzp-header">
           <div className="rzp-header-top">
             <div className="rzp-brand-info">
-              <span className="rzp-logo-badge">⚡ Razorpay</span>
+              <span className="rzp-logo-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Zap size={14} strokeWidth={1.75} /> Razorpay
+              </span>
               <span className="rzp-demomode-tag">DEMO PAYMENT MODE</span>
               <span className="rzp-testmode-tag">SANDBOX</span>
             </div>
@@ -221,8 +224,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                 onClick={handleCancel}
                 id="rzp-close-button"
                 aria-label="Close"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ✕
+                <X size={18} strokeWidth={1.75} />
               </button>
             )}
           </div>
@@ -269,8 +273,8 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
               <div className={`rzp-anim-progress-fill stage-${processingStage}`} />
             </div>
 
-            <div className="rzp-anim-security-badge">
-              <span className="rzp-lock-icon">🔒</span>
+            <div className="rzp-anim-security-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={14} strokeWidth={1.75} className="rzp-lock-icon" />
               <span>256-Bit End-to-End Cryptographic Handshake · Please do not close</span>
             </div>
           </div>
@@ -316,8 +320,8 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
               </div>
               <div className="rzp-receipt-row">
                 <span className="rzp-receipt-label">Method</span>
-                <span className="rzp-receipt-pill">
-                  {activeTab === 'upi' ? '📱 UPI / QR' : activeTab === 'card' ? '💳 Card' : '🏦 NetBanking'} · 🟢 SUCCESS
+                <span className="rzp-receipt-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  {activeTab === 'upi' ? 'UPI / QR' : activeTab === 'card' ? 'Card' : 'NetBanking'} · <CheckCircle2 size={13} strokeWidth={2.0} color="#10B981" /> SUCCESS
                 </span>
               </div>
             </div>
@@ -362,8 +366,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                 className="rzp-btn rzp-btn-success"
                 onClick={() => setAnimState('idle')}
                 id="rzp-retry-decline-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                🔄 Try Again with Valid Method
+                <RotateCcw size={15} strokeWidth={1.75} /> Try Again with Valid Method
               </button>
               <button
                 type="button"
@@ -383,8 +388,8 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
         {animState === 'idle' && (
           <>
             {/* Demo Mode Notice Banner */}
-            <div className="rzp-demo-banner">
-              <span className="rzp-demo-banner-icon">🛡️</span>
+            <div className="rzp-demo-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} strokeWidth={1.75} className="rzp-demo-banner-icon" style={{ flexShrink: 0 }} />
               <div className="rzp-demo-banner-text">
                 <strong>DEMO PAYMENT MODE:</strong> Real cryptographic HMAC verification runs on the backend. No actual bank funds are deducted.
               </div>
@@ -397,22 +402,25 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                   className={`rzp-tab ${activeTab === 'upi' ? 'active' : ''}`}
                   onClick={() => setActiveTab('upi')}
                   id="rzp-tab-upi"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                 >
-                  📱 UPI / QR
+                  <Smartphone size={15} strokeWidth={1.75} /> UPI / QR
                 </button>
                 <button
                   className={`rzp-tab ${activeTab === 'card' ? 'active' : ''}`}
                   onClick={() => setActiveTab('card')}
                   id="rzp-tab-card"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                 >
-                  💳 Cards (Demo)
+                  <CreditCard size={15} strokeWidth={1.75} /> Cards (Demo)
                 </button>
                 <button
                   className={`rzp-tab ${activeTab === 'netbanking' ? 'active' : ''}`}
                   onClick={() => setActiveTab('netbanking')}
                   id="rzp-tab-netbanking"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                 >
-                  🏦 Net Banking
+                  <Building size={15} strokeWidth={1.75} /> Net Banking
                 </button>
               </div>
 
@@ -458,7 +466,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                         onClick={() => setTestCardPreset('success')}
                         id="rzp-card-success-preset"
                       >
-                        <div className="preset-card-title">✅ Test Success Card</div>
+                        <div className="preset-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CheckCircle2 size={14} strokeWidth={2.0} color="#10B981" /> Test Success Card
+                        </div>
                         <div className="preset-card-num">4111 1111 1111 1111</div>
                         <div className="preset-card-sub">Simulates immediate 3D-Secure success</div>
                       </div>
@@ -467,15 +477,18 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                         onClick={() => setTestCardPreset('decline')}
                         id="rzp-card-decline-preset"
                       >
-                        <div className="preset-card-title">❌ Test Decline Card</div>
+                        <div className="preset-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <XCircle size={14} strokeWidth={2.0} color="#EF4444" /> Test Decline Card
+                        </div>
                         <div className="preset-card-num">4000 0000 0000 0002</div>
                         <div className="preset-card-sub">Simulates bank decline / failure</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rzp-notice-safe">
-                    🛡️ <strong>Sandbox Safety:</strong> Zero raw card numbers are stored or transmitted.
+                  <div className="rzp-notice-safe" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={14} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                    <span><strong>Sandbox Safety:</strong> Zero raw card numbers are stored or transmitted.</span>
                   </div>
                 </div>
               )}
@@ -485,10 +498,10 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                 <div className="rzp-tab-content">
                   <label className="rzp-label">Popular Simulated Banks:</label>
                   <div className="rzp-bank-grid">
-                    <div className="rzp-bank-pill active">🏦 HDFC Bank</div>
-                    <div className="rzp-bank-pill">🏦 ICICI Bank</div>
-                    <div className="rzp-bank-pill">🏦 State Bank of India</div>
-                    <div className="rzp-bank-pill">🏦 Axis Bank</div>
+                    <div className="rzp-bank-pill active" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Building size={13} strokeWidth={1.75} /> HDFC Bank</div>
+                    <div className="rzp-bank-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Building size={13} strokeWidth={1.75} /> ICICI Bank</div>
+                    <div className="rzp-bank-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Building size={13} strokeWidth={1.75} /> State Bank of India</div>
+                    <div className="rzp-bank-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Building size={13} strokeWidth={1.75} /> Axis Bank</div>
                   </div>
                 </div>
               )}
@@ -502,8 +515,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                   className="rzp-btn rzp-btn-success"
                   onClick={handleSimulateSuccess}
                   id="rzp-simulate-success-btn"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  🟢 Pay ₹{Number(displayAmount || 0).toLocaleString('en-IN')} (Simulate Success)
+                  <CheckCircle2 size={16} strokeWidth={2.0} /> Pay ₹{Number(displayAmount || 0).toLocaleString('en-IN')} (Simulate Success)
                 </button>
 
                 <div className="rzp-secondary-actions">
@@ -512,16 +526,18 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                     className="rzp-btn rzp-btn-danger"
                     onClick={handleSimulateDecline}
                     id="rzp-simulate-decline-btn"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    🔴 Simulate Bank Decline / Failure
+                    <XCircle size={16} strokeWidth={2.0} /> Simulate Bank Decline / Failure
                   </button>
                   <button
                     type="button"
                     className="rzp-btn rzp-btn-cancel"
                     onClick={handleCancel}
                     id="rzp-simulate-cancel-btn"
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    ✕ Cancel Payment
+                    <X size={15} strokeWidth={1.75} /> Cancel Payment
                   </button>
                 </div>
               </div>
@@ -529,7 +545,9 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
 
             {/* Footer info */}
             <div className="rzp-footer">
-              <span>🔒 256-Bit Razorpay Sandbox Encryption</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <Lock size={12} strokeWidth={1.75} /> 256-Bit Razorpay Sandbox Encryption
+              </span>
               <span>·</span>
               <span>Customer: {customer?.name || 'Customer'}</span>
             </div>

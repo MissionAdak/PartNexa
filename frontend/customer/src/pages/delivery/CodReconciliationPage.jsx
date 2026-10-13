@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import deliveryService from '../../services/deliveryService';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import toast from 'react-hot-toast';
+import { Banknote, Package, Check, Building2, History } from 'lucide-react';
 
 export const CodReconciliationPage = () => {
   const { partner, refreshProfile } = useDeliveryAuth();
@@ -64,7 +65,9 @@ export const CodReconciliationPage = () => {
   if (loading) {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💵</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Banknote size={44} strokeWidth={1.75} style={{ color: '#EA580C' }} />
+        </div>
         <div>Loading COD Cash reconciliation records...</div>
       </div>
     );
@@ -128,13 +131,13 @@ export const CodReconciliationPage = () => {
 
       {/* Table: Unreconciled Deliveries with Cash Collected */}
       <div className="delivery-card" style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem' }}>
-          📦 Orders with Collected COD Cash ({unreconciledJobs.length})
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <Package size={18} strokeWidth={1.75} /> Orders with Collected COD Cash ({unreconciledJobs.length})
         </h2>
 
         {unreconciledJobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
-            ✓ All collected COD funds have been reconciled and cleared with finance.
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+            <Check size={16} strokeWidth={2} style={{ color: 'var(--color-emerald)' }} /> All collected COD funds have been reconciled and cleared with finance.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -179,8 +182,8 @@ export const CodReconciliationPage = () => {
 
       {/* Deposit Action Form */}
       <div id="deposit-section" className="delivery-card" style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.35rem' }}>
-          🏦 Deposit Cash & Hub Reconciliation Settlement
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <Building2 size={18} strokeWidth={1.75} /> Deposit Cash & Hub Reconciliation Settlement
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
           Submit physical cash to the designated logistics hub finance officer to generate a digital clearance receipt.
@@ -209,7 +212,7 @@ export const CodReconciliationPage = () => {
                 onChange={(e) => setDepositMethod(e.target.value)}
               >
                 <option value="CASH_AT_HUB">Cash Handover at Hub Desk</option>
-                <option value="UPI_TO_FINANCE_DESK">Instant UPI to PartSphere Treasury</option>
+                <option value="UPI_TO_FINANCE_DESK">Instant UPI to PartNexa Treasury</option>
                 <option value="NEFT_TRANSFER">Bank Transfer / NEFT</option>
               </select>
             </div>
@@ -239,8 +242,8 @@ export const CodReconciliationPage = () => {
 
       {/* Historical Settlement Ledger */}
       <div className="delivery-card">
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem' }}>
-          📜 Reconciliation Settlement History ({reconciliations.length})
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <History size={18} strokeWidth={1.75} /> Reconciliation Settlement History ({reconciliations.length})
         </h2>
 
         {reconciliations.length === 0 ? (

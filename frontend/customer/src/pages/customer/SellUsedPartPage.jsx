@@ -1,4 +1,31 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Recycle,
+  FileEdit,
+  ClipboardList,
+  ShoppingCart,
+  Car,
+  Wrench,
+  MapPin,
+  Check,
+  Star,
+  Phone,
+  Store,
+  Truck,
+  Zap,
+  Camera,
+  AlertTriangle,
+  X,
+  Lock,
+  ShieldCheck,
+  Leaf,
+  RefreshCw,
+  Package,
+  Hash,
+  CheckCircle2,
+  XCircle,
+  Search,
+} from 'lucide-react';
 import { useVehicle } from '../../contexts/VehicleContext';
 import { usedPartsService } from '../../services';
 import { Button, Modal } from '../../components/ui';
@@ -183,7 +210,7 @@ const SellUsedPartPage = () => {
   }, [exploreSearch, exploreCategory]);
 
   useEffect(() => {
-    document.title = 'Sell Used Parts & Salvage | PartSphere Circular Marketplace';
+    document.title = 'Sell Used Parts & Salvage | PartNexa Circular Marketplace';
     fetchPartnerGarages();
     fetchMyListings();
     fetchExploreListings();
@@ -443,8 +470,8 @@ const SellUsedPartPage = () => {
       {/* Hero Banner */}
       <section className="sell-hero">
         <div className="container">
-          <div className="sell-hero-badge">
-            <span className="badge-icon">♻️</span> PartSphere Circular Marketplace
+          <div className="sell-hero-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <span className="badge-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><Recycle size={14} strokeWidth={1.75} /></span> PartNexa Circular Marketplace
           </div>
           <h1 className="sell-hero-title">Sell Your Genuine Used Auto Parts</h1>
           <p className="sell-hero-desc">
@@ -458,23 +485,26 @@ const SellUsedPartPage = () => {
               className={`nav-tab-btn ${activeTab === 'sell' ? 'active' : ''}`}
               onClick={() => setActiveTab('sell')}
               id="tab-sell-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              📝 Sell a Part
+              <FileEdit size={16} strokeWidth={1.75} /> Sell a Part
             </button>
             <button
               className={`nav-tab-btn ${activeTab === 'my-listings' ? 'active' : ''}`}
               onClick={() => setActiveTab('my-listings')}
               id="tab-my-listings-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              📋 My Listings & Payouts
+              <ClipboardList size={16} strokeWidth={1.75} /> My Listings & Payouts
               {myListings.length > 0 && <span className="tab-counter-badge">{myListings.length}</span>}
             </button>
             <button
               className={`nav-tab-btn ${activeTab === 'explore' ? 'active' : ''}`}
               onClick={() => setActiveTab('explore')}
               id="tab-explore-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🛒 Verified Parts Marketplace
+              <ShoppingCart size={16} strokeWidth={1.75} /> Verified Parts Marketplace
             </button>
           </div>
         </div>
@@ -545,8 +575,9 @@ const SellUsedPartPage = () => {
                                   vehicleId: v.id,
                                 })
                               }
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             >
-                              🚗 {v.make} {v.model}
+                              <Car size={14} strokeWidth={1.75} /> {v.make} {v.model}
                             </button>
                           ))}
                         </div>
@@ -667,19 +698,35 @@ const SellUsedPartPage = () => {
                                 onClick={() => setFormData({ ...formData, assignedShopId: garage.id })}
                               >
                                 <div className="garage-card-top">
-                                  <div className="garage-avatar">🔧</div>
+                                  <div className="garage-avatar"><Wrench size={18} strokeWidth={1.75} /></div>
                                   <div className="garage-meta-info">
                                     <h4 className="garage-name">{garage.shopName}</h4>
-                                    <div className="garage-address">📍 {garage.address}, {garage.city || 'Hub'}</div>
+                                    <div className="garage-address" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <MapPin size={13} strokeWidth={1.75} /> {garage.address}, {garage.city || 'Hub'}
+                                    </div>
                                   </div>
                                   <div className="garage-radio-indicator">
-                                    {isSelected ? '✓ Selected' : 'Choose'}
+                                    {isSelected ? (
+                                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        <Check size={14} strokeWidth={2} /> Selected
+                                      </span>
+                                    ) : 'Choose'}
                                   </div>
                                 </div>
                                 <div className="garage-badges-row">
-                                  <span className="garage-verified-pill">⭐ Verified Partner</span>
-                                  {garage.rating && <span className="garage-rating-pill">⭐ {garage.rating}</span>}
-                                  {garage.phone && <span className="garage-phone-pill">📞 {garage.phone}</span>}
+                                  <span className="garage-verified-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <Star size={12} strokeWidth={2} fill="currentColor" /> Verified Partner
+                                  </span>
+                                  {garage.rating && (
+                                    <span className="garage-rating-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <Star size={12} strokeWidth={2} fill="currentColor" /> {garage.rating}
+                                    </span>
+                                  )}
+                                  {garage.phone && (
+                                    <span className="garage-phone-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <Phone size={12} strokeWidth={1.75} /> {garage.phone}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -702,7 +749,9 @@ const SellUsedPartPage = () => {
                             onChange={() => setFormData({ ...formData, handoverMethod: 'DROPOFF' })}
                             style={{ display: 'none' }}
                           />
-                          <span className="handover-icon">🏪</span>
+                          <span className="handover-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Store size={22} strokeWidth={1.75} />
+                          </span>
                           <div>
                             <strong>Drop Off at Garage</strong>
                             <div className="handover-sub">Deliver directly to selected workshop for same-day inspection</div>
@@ -718,7 +767,9 @@ const SellUsedPartPage = () => {
                             onChange={() => setFormData({ ...formData, handoverMethod: 'PICKUP' })}
                             style={{ display: 'none' }}
                           />
-                          <span className="handover-icon">🚚</span>
+                          <span className="handover-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Truck size={22} strokeWidth={1.75} />
+                          </span>
                           <div>
                             <strong>Request Pickup to Garage</strong>
                             <div className="handover-sub">PartNexa courier collects component and transfers it to the garage</div>
@@ -754,8 +805,8 @@ const SellUsedPartPage = () => {
 
                     {/* Live Valuation Card */}
                     <div className="live-valuation-card">
-                      <div className="valuation-card-header">
-                        <span className="val-icon">⚡</span>
+                      <div className="valuation-card-header" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="val-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><Zap size={16} strokeWidth={2} /></span>
                         <span className="val-title">Instant Valuation Estimate</span>
                       </div>
                       <div className="val-amount">
@@ -798,7 +849,9 @@ const SellUsedPartPage = () => {
                     className="photo-dropzone"
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
                   >
-                    <div className="dropzone-icon">📷</div>
+                    <div className="dropzone-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Camera size={36} strokeWidth={1.5} />
+                    </div>
                     <div className="dropzone-main-text">
                       {isUploading ? 'Uploading photos securely...' : 'Click or drop part photos here'}
                     </div>
@@ -808,7 +861,11 @@ const SellUsedPartPage = () => {
                     </div>
                   </div>
 
-                  {uploadError && <div className="upload-error-banner">⚠️ {uploadError}</div>}
+                  {uploadError && (
+                    <div className="upload-error-banner" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={16} strokeWidth={1.75} /> {uploadError}
+                    </div>
+                  )}
 
                   {/* Thumbnail Gallery */}
                   {formData.images.length > 0 && (
@@ -829,8 +886,9 @@ const SellUsedPartPage = () => {
                             className="thumb-remove-btn"
                             onClick={() => handleRemovePhoto(idx)}
                             title="Remove photo"
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            ✕
+                            <X size={14} strokeWidth={2} />
                           </button>
                           <div className="thumb-index-tag">Photo {idx + 1}</div>
                         </div>
@@ -916,9 +974,12 @@ const SellUsedPartPage = () => {
                   >
                     Submit Listing for Doorstep Verification
                   </Button>
-                  <p className="submission-disclaimer">
-                    🔒 PartSphere verifies authenticity and condition grade upon physical technician inspection.
-                    Payment is dispatched directly to your payout account once approved.
+                  <p className="submission-disclaimer" style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                    <Lock size={15} strokeWidth={1.75} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <span>
+                      PartNexa verifies authenticity and condition grade upon physical technician inspection.
+                      Payment is dispatched directly to your payout account once approved.
+                    </span>
                   </p>
                 </div>
               </form>
@@ -1005,18 +1066,20 @@ const SellUsedPartPage = () => {
 
               {/* Trust & Guarantee Card */}
               <div className="sidebar-card trust-card">
-                <div className="trust-icon">🛡️</div>
+                <div className="trust-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ShieldCheck size={28} strokeWidth={1.75} />
+                </div>
                 <h4>Zero Hassle, Guaranteed Payout</h4>
                 <p>
-                  No haggling with random buyers or meeting strangers. PartSphere technicians handle testing, packaging,
+                  No haggling with random buyers or meeting strangers. PartNexa technicians handle testing, packaging,
                   and fulfillment while you get paid directly to your bank account.
                 </p>
               </div>
 
               {/* Circular Sustainability Impact */}
               <div className="sidebar-card eco-card">
-                <div className="eco-header">
-                  <span className="eco-icon">🌱</span>
+                <div className="eco-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="eco-icon" style={{ display: 'inline-flex', alignItems: 'center' }}><Leaf size={20} strokeWidth={1.75} /></span>
                   <h4>Environmental Footprint</h4>
                 </div>
                 <p>
@@ -1085,8 +1148,14 @@ const SellUsedPartPage = () => {
                 ))}
               </div>
 
-              <Button variant="outline" size="sm" onClick={fetchMyListings} loading={loadingMyListings}>
-                🔄 Refresh
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchMyListings}
+                loading={loadingMyListings}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RefreshCw size={14} strokeWidth={1.75} /> Refresh
               </Button>
             </div>
 
@@ -1098,7 +1167,9 @@ const SellUsedPartPage = () => {
               </div>
             ) : filteredMyListings.length === 0 ? (
               <div className="empty-listings-box">
-                <div className="empty-icon">📦</div>
+                <div className="empty-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Package size={40} strokeWidth={1.5} />
+                </div>
                 <h3>No Listings Found</h3>
                 <p>
                   {statusFilter !== 'ALL'
@@ -1160,9 +1231,17 @@ const SellUsedPartPage = () => {
                         <div className="listing-details-box">
                           <h4 className="listing-title">{listing.title}</h4>
                           <div className="listing-meta-row">
-                            <span className="meta-item">🚗 {listing.vehicleModel}</span>
-                            {listing.partNumber && <span className="meta-item">🔢 PN: {listing.partNumber}</span>}
-                            <span className="meta-item">📍 {listing.location}</span>
+                            <span className="meta-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Car size={13} strokeWidth={1.75} /> {listing.vehicleModel}
+                            </span>
+                            {listing.partNumber && (
+                              <span className="meta-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Hash size={13} strokeWidth={1.75} /> PN: {listing.partNumber}
+                              </span>
+                            )}
+                            <span className="meta-item" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <MapPin size={13} strokeWidth={1.75} /> {listing.location}
+                            </span>
                           </div>
 
                           <div className="listing-pricing-row">
@@ -1206,8 +1285,10 @@ const SellUsedPartPage = () => {
                           </div>
 
                           {/* Assigned Garage & Handover Info */}
-                          <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            🏪 Assigned Workshop: <strong>{listing.assignedShop?.shopName || listing.intake?.shop?.shopName || 'Partner Garage'}</strong>
+                          <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Store size={14} strokeWidth={1.75} /> Assigned Workshop:
+                            </span> <strong>{listing.assignedShop?.shopName || listing.intake?.shop?.shopName || 'Partner Garage'}</strong>
                             {listing.handoverMethod && <span> • Handover: {listing.handoverMethod === 'DROPOFF' ? 'Drop-Off at Garage' : 'Courier Pickup'}</span>}
                           </div>
                         </div>
@@ -1218,7 +1299,9 @@ const SellUsedPartPage = () => {
                         <div className="customer-offer-card">
                           <div className="offer-card-header">
                             <div className="offer-title-wrap">
-                              <h4>🔧 Garage Technical Inspection Complete</h4>
+                              <h4 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Wrench size={16} strokeWidth={1.75} /> Garage Technical Inspection Complete
+                              </h4>
                               <div className="offer-garage-name">
                                 Inspected by: <strong>{listing.assignedShop?.shopName || listing.intake.shop?.shopName || 'PartNexa Partner Garage'}</strong>
                                 {listing.intake.inspectorName && <span> • Technician: {listing.intake.inspectorName}</span>}
@@ -1292,12 +1375,12 @@ const SellUsedPartPage = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                                style={{ color: '#ef4444', borderColor: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                 onClick={() => handleOfferDecision(listing.id, 'DECLINED')}
                                 loading={respondingOfferId === listing.id}
                                 id={`decline-offer-btn-${listing.id}`}
                               >
-                                ✕ Decline Offer
+                                <X size={14} strokeWidth={2} /> Decline Offer
                               </Button>
                               <Button
                                 variant="teal"
@@ -1305,17 +1388,20 @@ const SellUsedPartPage = () => {
                                 onClick={() => handleOfferDecision(listing.id, 'ACCEPTED')}
                                 loading={respondingOfferId === listing.id}
                                 id={`accept-offer-btn-${listing.id}`}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                               >
-                                ✓ Accept Offer (₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')})
+                                <Check size={14} strokeWidth={2} /> Accept Offer (₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')})
                               </Button>
                             </div>
                           ) : listing.intake.customerOfferStatus === 'ACCEPTED' || ['PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(listing.status) ? (
-                            <div className="offer-accepted-banner">
-                              ✓ You accepted this offer of ₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')}. Payout record created & component published on Marketplace as <strong>USED_VERIFIED</strong>!
+                            <div className="offer-accepted-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <CheckCircle2 size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+                              <span>You accepted this offer of ₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')}. Payout record created & component published on Marketplace as <strong>USED_VERIFIED</strong>!</span>
                             </div>
                           ) : (
-                            <div className="offer-declined-banner">
-                              ✕ You declined this offer. The component will be prepared for collection or return handover at {listing.assignedShop?.shopName || 'the workshop'}.
+                            <div className="offer-declined-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <XCircle size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+                              <span>You declined this offer. The component will be prepared for collection or return handover at {listing.assignedShop?.shopName || 'the workshop'}.</span>
                             </div>
                           )}
                         </div>
@@ -1331,8 +1417,9 @@ const SellUsedPartPage = () => {
                             setIsTrackerOpen(true);
                           }}
                           id={`track-flow-btn-${listing.id}`}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         >
-                          🔍 Track Circular Flow
+                          <Search size={14} strokeWidth={1.75} /> Track Circular Flow
                         </Button>
 
                         {canCancel && (
@@ -1395,7 +1482,9 @@ const SellUsedPartPage = () => {
               </div>
             ) : exploreListings.length === 0 ? (
               <div className="empty-listings-box">
-                <div className="empty-icon">🔍</div>
+                <div className="empty-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Search size={40} strokeWidth={1.5} />
+                </div>
                 <h3>No Verified Used Parts Found</h3>
                 <p>Try clearing your search query or choosing a different category filter.</p>
               </div>
@@ -1423,7 +1512,9 @@ const SellUsedPartPage = () => {
                               'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600&auto=format&fit=crop&q=80';
                           }}
                         />
-                        <div className="verified-badge-tag">🛡️ Verified by PartNexa Partner Garage</div>
+                        <div className="verified-badge-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <ShieldCheck size={12} strokeWidth={2} /> Verified by PartNexa Partner Garage
+                        </div>
                         <div className="condition-grade-tag">
                           Grade {item.conditionGrade || item.intake?.overallGrade || 'A'}
                         </div>
@@ -1434,19 +1525,23 @@ const SellUsedPartPage = () => {
                           USED_VERIFIED • {item.condition?.replace(/_/g, ' ') || 'EXCELLENT'}
                         </span>
                         <h4 className="catalog-title">{item.title}</h4>
-                        <div className="catalog-fitment">🚗 Compatible with: {item.vehicleModel || item.compatibility}</div>
-                        {item.partNumber && <div className="catalog-pn">PN: {item.partNumber}</div>}
-                        <div className="catalog-location">
-                          📍 Inspected at: {item.assignedShop?.shopName || item.intake?.shop?.shopName || item.location || 'Partner Workshop Hub'}
+                        <div className="catalog-fitment" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Car size={13} strokeWidth={1.75} /> Compatible with: {item.vehicleModel || item.compatibility}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: '#0d9488', margin: '4px 0', fontWeight: 600 }}>
-                          ✓ 100% Bench & Safety Tested • Mounting points intact
+                        {item.partNumber && <div className="catalog-pn">PN: {item.partNumber}</div>}
+                        <div className="catalog-location" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <MapPin size={13} strokeWidth={1.75} /> Inspected at: {item.assignedShop?.shopName || item.intake?.shop?.shopName || item.location || 'Partner Workshop Hub'}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#0d9488', margin: '4px 0', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Check size={13} strokeWidth={2.5} /> 100% Bench & Safety Tested • Mounting points intact
                         </div>
 
                         <div className="catalog-footer">
                           <div className="catalog-price-wrap">
                             <span className="catalog-price">₹{Number(price).toLocaleString('en-IN')}</span>
-                            <span className="guarantee-text">🛡️ 30-Day PartNexa Quality Warranty</span>
+                            <span className="guarantee-text" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <ShieldCheck size={12} strokeWidth={1.75} /> 30-Day PartNexa Quality Warranty
+                            </span>
                           </div>
                           <Button
                             variant="teal"
@@ -1483,7 +1578,9 @@ const SellUsedPartPage = () => {
               <div>
                 <h3 className="modal-part-title">{selectedListing.title}</h3>
                 <div className="modal-part-meta">
-                  <span>🚗 {selectedListing.vehicleModel}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Car size={13} strokeWidth={1.75} /> {selectedListing.vehicleModel}
+                  </span>
                   <span>ID: {selectedListing.id}</span>
                   {selectedListing.partNumber && <span>PN: {selectedListing.partNumber}</span>}
                 </div>
@@ -1610,9 +1707,9 @@ const SellUsedPartPage = () => {
                 return (
                   <div key={item.step} className={`timeline-node ${state}`}>
                     <div className="node-indicator">
-                      {state === 'completed' && '✓'}
+                      {state === 'completed' && <Check size={14} strokeWidth={2.5} />}
                       {state === 'current' && '●'}
-                      {state === 'rejected' && '✕'}
+                      {state === 'rejected' && <X size={14} strokeWidth={2.5} />}
                       {state === 'pending' && item.step}
                     </div>
                     <div className="node-body">
@@ -1629,10 +1726,12 @@ const SellUsedPartPage = () => {
 
             {/* Crucial Note on Physical Verification Integrity */}
             <div className="modal-integrity-notice">
-              <span className="notice-icon">🛡️</span>
+              <span className="notice-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <ShieldCheck size={20} strokeWidth={1.75} />
+              </span>
               <p>
                 <strong>Integrity Policy:</strong> Physical verification and condition grading are exclusively
-                performed by certified PartSphere workshop technicians upon doorstep pickup. No simulated verification
+                performed by certified PartNexa workshop technicians upon doorstep pickup. No simulated verification
                 can be triggered from the customer UI.
               </p>
             </div>

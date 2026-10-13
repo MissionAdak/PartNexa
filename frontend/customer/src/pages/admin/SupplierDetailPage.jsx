@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import procurementService from '../../services/procurementService';
 import ProcurementCartDrawer from '../../components/admin/procurement/ProcurementCartDrawer';
 import SupplierLogo from '../../components/admin/procurement/SupplierLogo';
+import { Check, MapPin, ShoppingCart } from 'lucide-react';
 
 export default function SupplierDetailPage() {
   const { id } = useParams();
@@ -135,9 +136,12 @@ export default function SupplierDetailPage() {
                     color: 'var(--color-success)',
                     padding: '0.2rem 0.6rem',
                     borderRadius: 'var(--radius-full)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
                   }}
                 >
-                  ✓ {supplier.verificationStatus || 'VERIFIED'}
+                  <Check size={12} strokeWidth={2.0} /> {supplier.verificationStatus || 'VERIFIED'}
                 </span>
                 <span
                   style={{
@@ -153,8 +157,8 @@ export default function SupplierDetailPage() {
                 </span>
               </div>
 
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                📍 {supplier.address || 'Industrial Hub'}, {supplier.city}, {supplier.state} • Type: <strong>{supplier.supplierType}</strong>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={13} strokeWidth={1.75} /> {supplier.address || 'Industrial Hub'}, {supplier.city}, {supplier.state} • Type: <strong>{supplier.supplierType}</strong>
               </div>
             </div>
           </div>
@@ -175,7 +179,7 @@ export default function SupplierDetailPage() {
               gap: '0.4rem',
             }}
           >
-            🛒 View Cart ({cartData?.itemCount || 0})
+            <ShoppingCart size={16} strokeWidth={1.75} /> View Cart ({cartData?.itemCount || 0})
           </button>
         </div>
 

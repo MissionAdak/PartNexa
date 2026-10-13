@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PartNexaLogo from '../../components/common/PartNexaLogo';
 import './AuthPages.css';
 
 const LoginPage = () => {
@@ -25,7 +27,7 @@ const LoginPage = () => {
 
     try {
       const user = await login(form);
-      toast.success(`Welcome back, ${user.firstName}! 👋`);
+      toast.success(`Welcome back, ${user.firstName}!`);
       navigate('/');
     } catch (err) {
       const data = err.response?.data;
@@ -50,9 +52,13 @@ const LoginPage = () => {
 
       <div className="auth-card card-glass animate-scale-in">
         <div className="auth-header">
-          <Link to="/" className="auth-logo">
-            Part<span className="text-primary">Nexa</span>
-          </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.85rem' }}>
+            <PartNexaLogo
+              variant="stacked"
+              size="lg"
+              linkTo="/customer"
+            />
+          </div>
           <h1 className="auth-title">Welcome Back</h1>
           <p className="auth-subtitle">Log in to your PartNexa account</p>
         </div>
@@ -98,7 +104,7 @@ const LoginPage = () => {
                 aria-label={showPass ? 'Hide password' : 'Show password'}
                 id="login-toggle-password"
               >
-                {showPass ? '🙈' : '👁️'}
+                {showPass ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
               </button>
             </div>
             {errors.password && <p className="form-error">{errors.password}</p>}
@@ -120,8 +126,9 @@ const LoginPage = () => {
               className="btn btn-ghost btn-sm"
               onClick={() => setForm({ email: 'demo@partsphere.in', password: 'Demo@1234' })}
               id="fill-demo-creds-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              ⚡ Click to Fill Demo Customer Credentials
+              <Zap size={14} strokeWidth={1.75} /> Click to Fill Demo Customer Credentials
             </button>
           </div>
         </form>

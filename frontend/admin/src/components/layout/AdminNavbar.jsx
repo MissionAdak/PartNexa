@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
+import { Sun, Moon, LogOut } from 'lucide-react';
 
 export default function AdminNavbar() {
   const { user, logout, theme, toggleTheme } = useAdminAuth();
@@ -58,7 +59,15 @@ export default function AdminNavbar() {
           }}
           title="Toggle Light / Dark Mode"
         >
-          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+          {theme === 'dark' ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Sun size={14} strokeWidth={1.75} /> Light
+            </span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Moon size={14} strokeWidth={1.75} /> Dark
+            </span>
+          )}
         </button>
 
         {/* User Pill */}
@@ -111,9 +120,12 @@ export default function AdminNavbar() {
             fontWeight: 600,
             border: '1px solid rgba(239, 68, 68, 0.2)',
             transition: 'all 0.2s',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
           }}
         >
-          Sign Out
+          <LogOut size={14} strokeWidth={1.75} /> Sign Out
         </button>
       </div>
     </header>
