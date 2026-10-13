@@ -101,8 +101,21 @@ export const MyTripsPage = () => {
                   <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>
                     {trip.orderNumber || trip.id}
                   </span>
-                  <span className={`delivery-badge ${trip.type === 'USED_PART_PICKUP' ? 'badge-usedpart' : 'badge-transit'}`}>
-                    {trip.type}
+                  <span
+                    className={`delivery-badge ${
+                      trip.type === 'RETURN_PICKUP'
+                        ? 'badge-return'
+                        : trip.type === 'USED_PART_PICKUP'
+                        ? 'badge-usedpart'
+                        : 'badge-transit'
+                    }`}
+                    style={
+                      trip.type === 'RETURN_PICKUP'
+                        ? { backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5' }
+                        : undefined
+                    }
+                  >
+                    {trip.type === 'RETURN_PICKUP' ? '↩️ RETURN PICKUP' : trip.type}
                   </span>
                   <span
                     className={`delivery-badge ${
@@ -150,7 +163,7 @@ export const MyTripsPage = () => {
                       onClick={() => handleUpdateStatus(trip.id, 'PICKED_UP')}
                       className="btn btn-primary btn-sm"
                     >
-                      📦 Confirm Picked Up
+                      {trip.type === 'RETURN_PICKUP' ? '📦 Confirm Doorstep Pickup' : '📦 Confirm Picked Up'}
                     </button>
                   )}
 
@@ -168,7 +181,7 @@ export const MyTripsPage = () => {
                       onClick={() => handleUpdateStatus(trip.id, 'DELIVERED')}
                       className="btn btn-emerald btn-sm"
                     >
-                      🏁 Confirm Delivered
+                      {trip.type === 'RETURN_PICKUP' ? '🏢 Confirm Drop at Inspection Hub' : '🏁 Confirm Delivered'}
                     </button>
                   )}
 

@@ -3578,8 +3578,22 @@ class InMemoryStore {
       this.deliveryAssignments[idx] = { ...this.deliveryAssignments[idx], ...data, updatedAt: new Date() };
       const updatedAssignment = this.deliveryAssignments[idx];
 
-      // Real-time synchronization to linked Order and Customer Tracking
-      if (updatedAssignment.orderId && data.status) {
+      // Real-time synchronization to linked Order or ReturnRequest
+      if (updatedAssignment.type === 'RETURN_PICKUP' || updatedAssignment.returnRequestId) {
+        const retReqId = updatedAssignment.returnRequestId;
+        const retIdx = this.returnRequests.findIndex((r) => r.id === retReqId || (updatedAssignment.orderId && r.orderId === updatedAssignment.orderId));
+        if (retIdx !== -1) {
+          if (data.status === 'PICKED_UP') {
+            this.returnRequests[retIdx].status = 'PICKED_UP';
+            this.returnRequests[retIdx].pickupAt = new Date();
+            this.returnRequests[retIdx].updatedAt = new Date();
+          } else if (data.status === 'DELIVERED') {
+            this.returnRequests[retIdx].status = 'RECEIVED';
+            this.returnRequests[retIdx].receivedAt = new Date();
+            this.returnRequests[retIdx].updatedAt = new Date();
+          }
+        }
+      } else if (updatedAssignment.orderId && data.status) {
         const orderIdx = this.orders.findIndex((o) => o.id === updatedAssignment.orderId);
         if (orderIdx !== -1) {
           if (data.status === 'PICKED_UP' || data.status === 'IN_TRANSIT') {
@@ -3594,6 +3608,7 @@ class InMemoryStore {
             });
           } else if (data.status === 'DELIVERED') {
             this.orders[orderIdx].status = 'DELIVERED';
+            this.orders[orderIdx].deliveredAt = new Date();
             if (this.orders[orderIdx].paymentMethod === 'CASH_ON_DELIVERY') {
               this.orders[orderIdx].paymentStatus = 'PAID';
             }
@@ -3865,6 +3880,8 @@ class InMemoryStore {
       difmRequest,
       tracking,
       statusHistory: [],
+      returnRequests: this.returnRequests.filter((r) => r.orderId === order.id),
+      deliveredAt: order.deliveredAt || (order.status === 'DELIVERED' ? (order.updatedAt || new Date()) : null),
     };
   }
 
@@ -5504,6 +5521,139 @@ class InMemoryStore {
         this.notifications = this.notifications.filter((n) => n.userId !== where.userId);
       }
       return { count: 1 };
+    },
+  };
+  public stockMovements: any[] = [];
+
+  public stockMovement = {
+    create: async ({ data }: { data: any }) => {
+      const record = {
+        id: 'sm-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        inventoryId: data.inventoryId,
+        type: data.type || 'RETURN',
+        quantity: Number(data.quantity || 1),
+        previousQty: Number(data.previousQty || 0),
+        newQty: Number(data.newQty || 0),
+        reason: data.reason || null,
+        referenceType: data.referenceType || 'RETURN',
+        referenceId: data.referenceId || null,
+        createdAt: new Date(),
+      };
+      this.stockMovements.push(record);
+      return record;
+    },
+    findMany: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.stockMovements];
+      if (where?.inventoryId) list = list.filter((m) => m.inventoryId === where.inventoryId);
+      if (where?.type) list = list.filter((m) => m.type === where.type);
+      if (where?.referenceId) list = list.filter((m) => m.referenceId === where.referenceId);
+      return list;
+    },
+  };
+
+  public returnRequests: any[] = [];
+
+  public returnRequest = {
+    create: async ({ data }: { data: any }) => {
+      const id = data.id || 'ret-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+      const newRet = {
+        id,
+        orderId: data.orderId,
+        orderItemId: data.orderItemId,
+        userId: data.userId,
+        quantity: Math.max(1, Number(data.quantity || 1)),
+        reason: data.reason,
+        details: data.details || null,
+        photos: Array.isArray(data.photos) ? data.photos : [],
+        status: data.status || 'REQUESTED',
+        refundAmount: Number(data.refundAmount || 0),
+        requestedAt: data.requestedAt || new Date(),
+        approvedAt: data.approvedAt || null,
+        pickupAt: data.pickupAt || null,
+        receivedAt: data.receivedAt || null,
+        inspectedAt: data.inspectedAt || null,
+        refundedAt: data.refundedAt || null,
+        rejectionReason: data.rejectionReason || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.returnRequests.unshift(newRet);
+      return newRet;
+    },
+    findMany: async ({ where, orderBy, include }: { where?: any; orderBy?: any; include?: any } = {}) => {
+      let list = [...this.returnRequests];
+      if (where?.userId) list = list.filter((r) => r.userId === where.userId);
+      if (where?.orderId) list = list.filter((r) => r.orderId === where.orderId);
+      if (where?.orderItemId) list = list.filter((r) => r.orderItemId === where.orderItemId);
+      if (where?.status) {
+        if (typeof where.status === 'string') list = list.filter((r) => r.status === where.status);
+        else if (where.status.in && Array.isArray(where.status.in)) list = list.filter((r) => where.status.in.includes(r.status));
+      }
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return list.map((r) => {
+        const order = this.orders.find((o) => o.id === r.orderId);
+        const orderItem = this.orderItems.find((oi) => oi.id === r.orderItemId);
+        const user = this.users.find((u) => u.id === r.userId);
+        const product = orderItem ? initialProducts.find((p) => p.id === orderItem.productId) : null;
+        return {
+          ...r,
+          order: order ? this.populateOrder(order) : null,
+          orderItem: orderItem ? { ...orderItem, product: product ? this.populateProduct(product) : null } : null,
+          user: user ? { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+        };
+      });
+    },
+    findUnique: async ({ where, include }: { where: { id: string }; include?: any }) => {
+      const r = this.returnRequests.find((item) => item.id === where.id);
+      if (!r) return null;
+      const order = this.orders.find((o) => o.id === r.orderId);
+      const orderItem = this.orderItems.find((oi) => oi.id === r.orderItemId);
+      const user = this.users.find((u) => u.id === r.userId);
+      const product = orderItem ? initialProducts.find((p) => p.id === orderItem.productId) : null;
+      return {
+        ...r,
+        order: order ? this.populateOrder(order) : null,
+        orderItem: orderItem ? { ...orderItem, product: product ? this.populateProduct(product) : null } : null,
+        user: user ? { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+      };
+    },
+    findFirst: async ({ where, include }: { where: any; include?: any }) => {
+      const r = this.returnRequests.find((item) => {
+        if (where?.id && item.id !== where.id) return false;
+        if (where?.orderId && item.orderId !== where.orderId) return false;
+        if (where?.orderItemId && item.orderItemId !== where.orderItemId) return false;
+        if (where?.userId && item.userId !== where.userId) return false;
+        if (where?.status) {
+          if (typeof where.status === 'string' && item.status !== where.status) return false;
+          if (where.status.in && Array.isArray(where.status.in) && !where.status.in.includes(item.status)) return false;
+        }
+        return true;
+      });
+      if (!r) return null;
+      const order = this.orders.find((o) => o.id === r.orderId);
+      const orderItem = this.orderItems.find((oi) => oi.id === r.orderItemId);
+      const user = this.users.find((u) => u.id === r.userId);
+      const product = orderItem ? initialProducts.find((p) => p.id === orderItem.productId) : null;
+      return {
+        ...r,
+        order: order ? this.populateOrder(order) : null,
+        orderItem: orderItem ? { ...orderItem, product: product ? this.populateProduct(product) : null } : null,
+        user: user ? { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+      };
+    },
+    update: async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = this.returnRequests.findIndex((r) => r.id === where.id);
+      if (idx === -1) return null;
+      this.returnRequests[idx] = { ...this.returnRequests[idx], ...data, updatedAt: new Date() };
+      return this.returnRequests[idx];
+    },
+    count: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.returnRequests];
+      if (where?.orderId) list = list.filter((r) => r.orderId === where.orderId);
+      if (where?.orderItemId) list = list.filter((r) => r.orderItemId === where.orderItemId);
+      if (where?.userId) list = list.filter((r) => r.userId === where.userId);
+      if (where?.status) list = list.filter((r) => r.status === where.status);
+      return list.length;
     },
   };
 

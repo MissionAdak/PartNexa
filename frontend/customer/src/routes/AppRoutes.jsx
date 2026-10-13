@@ -68,6 +68,7 @@ import DeliveriesOversightPage from '../pages/admin/DeliveriesOversightPage';
 import CustomerCareHubPage from '../pages/admin/CustomerCareHubPage';
 import ProcurementDashboardPage from '../pages/admin/ProcurementDashboardPage';
 import SupplierDetailPage from '../pages/admin/SupplierDetailPage';
+import ReturnsManagementPage from '../pages/admin/ReturnsManagementPage';
 
 export const AppRoutes = () => {
   return (
@@ -271,6 +272,7 @@ export const AppRoutes = () => {
         <Route path="procurement" element={<ProcurementDashboardPage />} />
         <Route path="procurement/suppliers/:id" element={<SupplierDetailPage />} />
         <Route path="orders" element={<OrdersManagementPage />} />
+        <Route path="returns" element={<ReturnsManagementPage />} />
         <Route path="customers" element={<CustomersPage />} />
         <Route path="shops" element={<ShopsManagementPage />} />
         <Route path="delivery-partners" element={<DeliveryPartnersPage />} />

@@ -108,4 +108,5 @@ export { default as shopService } from './shopService';
 export { default as deliveryService } from './deliveryService';
 export { default as adminService } from './adminService';
 export { default as notificationsService } from './notificationsService';
+export { default as returnsService } from './returnsService';
 

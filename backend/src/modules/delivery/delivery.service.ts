@@ -496,12 +496,18 @@ export const formatDeliveryAssignment = (assignment: any) => {
   const isCod = order?.paymentMethod === 'CASH_ON_DELIVERY';
   const totalAmount = Number(order?.total || 0);
 
+  const isReturn =
+    assignment.type === 'RETURN_PICKUP' ||
+    Boolean(assignment.returnRequestId) ||
+    assignment.notes?.includes('[RETURN_PICKUP]');
+
   // Derive type
-  const type =
-    assignment.type ||
-    (assignment.usedPartListingId || assignment.notes?.includes('Used-Part') || assignment.notes?.includes('USED_PART')
-      ? 'USED_PART_PICKUP'
-      : 'CUSTOMER_DELIVERY');
+  const type = isReturn
+    ? 'RETURN_PICKUP'
+    : assignment.type ||
+      (assignment.usedPartListingId || assignment.notes?.includes('Used-Part') || assignment.notes?.includes('USED_PART')
+        ? 'USED_PART_PICKUP'
+        : 'CUSTOMER_DELIVERY');
 
   // Derive order number
   const orderNumber =
@@ -511,31 +517,49 @@ export const formatDeliveryAssignment = (assignment: any) => {
     `ORD-${assignment.id.slice(0, 8).toUpperCase()}`;
 
   // Derive Pickup Location
-  const pickupLocation = assignment.pickupLocation || {
-    name: shop?.name || 'PartNexa Central Logistics Hub',
-    address:
-      shop?.addressLine1 || shop?.address
-        ? `${shop.addressLine1 || shop.address}, ${shop.city || 'Bengaluru'}`
-        : 'Indiranagar 100ft Rd, HAL 2nd Stage, Bengaluru, Karnataka 560038',
-    contactPerson: shop?.ownerName || shop?.name || 'Hub Dispatch Manager',
-    phone: shop?.phone || '+91 98765 43210',
-    lat: shop?.latitude || 12.9716,
-    lng: shop?.longitude || 77.6412,
-  };
+  const pickupLocation = isReturn
+    ? (assignment.pickupLocation || {
+        name: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Doorstep (Return)'),
+        address: address ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}` : 'Customer Pickup Address',
+        contactPerson: address?.fullName || 'Customer',
+        phone: address?.phone || order?.user?.phone || '+91 91234 56789',
+        lat: address?.latitude || 12.9352,
+        lng: address?.longitude || 77.6245,
+      })
+    : (assignment.pickupLocation || {
+        name: shop?.name || 'PartNexa Central Logistics Hub',
+        address:
+          shop?.addressLine1 || shop?.address
+            ? `${shop.addressLine1 || shop.address}, ${shop.city || 'Bengaluru'}`
+            : 'Indiranagar 100ft Rd, HAL 2nd Stage, Bengaluru, Karnataka 560038',
+        contactPerson: shop?.ownerName || shop?.name || 'Hub Dispatch Manager',
+        phone: shop?.phone || '+91 98765 43210',
+        lat: shop?.latitude || 12.9716,
+        lng: shop?.longitude || 77.6412,
+      });
 
   // Derive Drop Destination
-  const dropLocation = assignment.dropLocation || {
-    name:
-      address?.fullName ||
-      (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Drop Point'),
-    address: address
-      ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}`
-      : 'Customer Delivery Address',
-    contactPerson: address?.fullName || 'Customer',
-    phone: address?.phone || order?.user?.phone || '+91 91234 56789',
-    lat: 12.9352,
-    lng: 77.6245,
-  };
+  const dropLocation = isReturn
+    ? (assignment.dropLocation || {
+        name: 'PartNexa Central Quality Inspection Hub',
+        address: 'Indiranagar 100ft Rd, Central Logistics Hub, Bengaluru, Karnataka 560038',
+        contactPerson: 'Returns Quality Officer',
+        phone: '+91 98765 00000',
+        lat: 12.9716,
+        lng: 77.6412,
+      })
+    : (assignment.dropLocation || {
+        name:
+          address?.fullName ||
+          (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Drop Point'),
+        address: address
+          ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}`
+          : 'Customer Delivery Address',
+        contactPerson: address?.fullName || 'Customer',
+        phone: address?.phone || order?.user?.phone || '+91 91234 56789',
+        lat: 12.9352,
+        lng: 77.6245,
+      });
 
   // Derive COD collection status
   const codAmountToCollect = isCod ? totalAmount : 0;
@@ -873,8 +897,77 @@ export const updateJobStatus = async (
     data: updatePayload,
   });
 
-  // Real-time status update to Customer Order using valid enums
-  if (assignment.orderId) {
+  // Check if this is a Reverse Return Pickup
+  const isReturnJob =
+    assignment.type === 'RETURN_PICKUP' ||
+    Boolean(assignment.returnRequestId) ||
+    assignment.notes?.includes('[RETURN_PICKUP]');
+
+  if (isReturnJob) {
+    const returnReqId = assignment.returnRequestId;
+    const returnReq = await prisma.returnRequest.findFirst({
+      where: returnReqId ? { id: returnReqId } : { orderId: assignment.orderId },
+      include: { order: true, orderItem: { include: { product: true } } },
+    });
+
+    if (returnReq) {
+      if (status === 'PICKED_UP') {
+        await prisma.returnRequest.update({
+          where: { id: returnReq.id },
+          data: { status: 'PICKED_UP', pickupAt: new Date() },
+        });
+
+        await prisma.orderTracking.create({
+          data: {
+            orderId: returnReq.orderId,
+            status: OrderStatus.RETURN_REQUESTED,
+            message: `Return item (${returnReq.orderItem?.product?.name || 'Spare part'}) picked up from customer. En route to hub.`,
+          },
+        });
+
+        await createNotification({
+          userId: returnReq.userId,
+          title: 'Return Item Picked Up',
+          body: `Our delivery partner has picked up your returned spare part for Order #${returnReq.order?.orderNumber}. It is on its way to our inspection warehouse.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: `/customer/orders/${returnReq.orderId}`,
+            orderId: returnReq.orderId,
+            returnRequestId: returnReq.id,
+            type: 'PICKED_UP',
+          },
+        });
+      } else if (status === 'DELIVERED') {
+        await prisma.returnRequest.update({
+          where: { id: returnReq.id },
+          data: { status: 'RECEIVED', receivedAt: new Date() },
+        });
+
+        await prisma.orderTracking.create({
+          data: {
+            orderId: returnReq.orderId,
+            status: OrderStatus.RETURN_REQUESTED,
+            message: `Return item safely received at PartNexa Central Inspection Hub. Queued for quality evaluation.`,
+          },
+        });
+
+        await createNotification({
+          userId: returnReq.userId,
+          title: 'Return Item Received at Hub',
+          body: `Your returned spare part for Order #${returnReq.order?.orderNumber} has arrived at our warehouse and is queued for quality inspection.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: `/customer/orders/${returnReq.orderId}`,
+            orderId: returnReq.orderId,
+            returnRequestId: returnReq.id,
+            type: 'ITEM_RECEIVED',
+          },
+        });
+      }
+    }
+  } else if (assignment.orderId) {
     if (status === 'DELIVERED') {
       const order = await prisma.order.findUnique({ where: { id: assignment.orderId } });
       const isCod = order?.paymentMethod === 'CASH_ON_DELIVERY';
@@ -882,6 +975,7 @@ export const updateJobStatus = async (
         where: { id: assignment.orderId },
         data: {
           status: OrderStatus.DELIVERED,
+          deliveredAt: new Date(),
           ...(isCod && { paymentStatus: PaymentStatus.CAPTURED }),
         },
       });

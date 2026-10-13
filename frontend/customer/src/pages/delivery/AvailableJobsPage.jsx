@@ -57,19 +57,24 @@ export const AvailableJobsPage = () => {
             Available Delivery Jobs ({filteredJobs.length})
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-            Unassigned orders and doorstep used-part pickups ready for dispatch.
+            Unassigned dispatches, doorstep return pickups, and used-part pickups ready for fleet claim.
           </p>
         </div>
 
         {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {['ALL', 'CUSTOMER_DELIVERY', 'USED_PART_PICKUP'].map((type) => (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {[
+            { key: 'ALL', label: 'All Jobs' },
+            { key: 'CUSTOMER_DELIVERY', label: 'Package Deliveries' },
+            { key: 'RETURN_PICKUP', label: '↩️ Return Pickups' },
+            { key: 'USED_PART_PICKUP', label: 'Used-Part Pickups' },
+          ].map((item) => (
             <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`btn btn-sm ${filterType === type ? 'btn-primary' : 'btn-secondary'}`}
+              key={item.key}
+              onClick={() => setFilterType(item.key)}
+              className={`btn btn-sm ${filterType === item.key ? 'btn-primary' : 'btn-secondary'}`}
             >
-              {type === 'ALL' ? 'All Jobs' : type === 'CUSTOMER_DELIVERY' ? 'Package Deliveries' : 'Used-Part Pickups'}
+              {item.label}
             </button>
           ))}
         </div>
@@ -93,7 +98,13 @@ export const AvailableJobsPage = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                borderLeft: `5px solid ${job.type === 'USED_PART_PICKUP' ? '#9333EA' : 'var(--color-primary)'}`,
+                borderLeft: `5px solid ${
+                  job.type === 'RETURN_PICKUP'
+                    ? '#EF4444'
+                    : job.type === 'USED_PART_PICKUP'
+                    ? '#9333EA'
+                    : 'var(--color-primary)'
+                }`,
               }}
             >
               <div>
@@ -103,10 +114,25 @@ export const AvailableJobsPage = () => {
                       {job.orderNumber || job.id}
                     </span>
                     <span
-                      className={`delivery-badge ${job.type === 'USED_PART_PICKUP' ? 'badge-usedpart' : 'badge-assigned'}`}
-                      style={{ marginLeft: '0.5rem' }}
+                      className={`delivery-badge ${
+                        job.type === 'RETURN_PICKUP'
+                          ? 'badge-return'
+                          : job.type === 'USED_PART_PICKUP'
+                          ? 'badge-usedpart'
+                          : 'badge-assigned'
+                      }`}
+                      style={{
+                        marginLeft: '0.5rem',
+                        ...(job.type === 'RETURN_PICKUP'
+                          ? { backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5' }
+                          : {}),
+                      }}
                     >
-                      {job.type === 'USED_PART_PICKUP' ? 'USED PART' : 'ORDER'}
+                      {job.type === 'RETURN_PICKUP'
+                        ? '↩️ RETURN PICKUP'
+                        : job.type === 'USED_PART_PICKUP'
+                        ? 'USED PART'
+                        : 'ORDER'}
                     </span>
                   </div>
                   <span className="delivery-badge badge-delivered" style={{ fontSize: '0.85rem', fontWeight: 800 }}>

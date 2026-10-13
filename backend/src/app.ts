@@ -28,6 +28,7 @@ import adminRoutes from './modules/admin/admin.routes';
 import inventoryRoutes from './modules/inventory/inventory.routes';
 import procurementRoutes from './modules/procurement/procurement.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
+import { returnsRouter, adminReturnsRouter } from './modules/returns/returns.routes';
 
 const app = express();
 
@@ -130,6 +131,8 @@ app.use('/api/admin/procurement', procurementRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/returns', returnsRouter);
+app.use('/api/admin/returns', adminReturnsRouter);
 
 // ============================================================
 // Error Handling

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ordersService, paymentsService } from '../services';
+import { ordersService, paymentsService, returnsService } from '../services';
 import { Button, Badge, Skeleton, EmptyState } from '../components/ui';
 import RazorpayModal from '../components/checkout/RazorpayModal';
 import toast from 'react-hot-toast';
@@ -17,6 +17,49 @@ const OrderDetailPage = () => {
   const [activePaymentSession, setActivePaymentSession] = useState(null);
   const [isRetryingPayment, setIsRetryingPayment] = useState(false);
   const [isSwitchingToCOD, setIsSwitchingToCOD] = useState(false);
+
+  // Return Request Modal States
+  const [returnModalItem, setReturnModalItem] = useState(null);
+  const [returnQty, setReturnQty] = useState(1);
+  const [returnReason, setReturnReason] = useState('WRONG_PART');
+  const [returnDetails, setReturnDetails] = useState('');
+  const [returnPhotoUrl, setReturnPhotoUrl] = useState('');
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+  const [viewingReturnRecord, setViewingReturnRecord] = useState(null);
+
+  const handleOpenReturnModal = (item) => {
+    setReturnModalItem(item);
+    setReturnQty(1);
+    setReturnReason('WRONG_PART');
+    setReturnDetails('');
+    setReturnPhotoUrl('');
+  };
+
+  const handleSubmitReturn = async (e) => {
+    e.preventDefault();
+    if (!returnModalItem || !order) return;
+    try {
+      setIsSubmittingReturn(true);
+      await returnsService.createReturn({
+        orderId: order.id,
+        orderItemId: returnModalItem.id,
+        quantity: returnQty,
+        reason: returnReason,
+        details: returnDetails,
+        photos: returnPhotoUrl ? [returnPhotoUrl] : [],
+      });
+      toast.success('Return request submitted! Our team will review it shortly.');
+      setReturnModalItem(null);
+      setReturnQty(1);
+      setReturnDetails('');
+      setReturnPhotoUrl('');
+      await fetchOrderDetail();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit return request.');
+    } finally {
+      setIsSubmittingReturn(false);
+    }
+  };
 
   useEffect(() => {
     document.title = `Order #${id} | PartNexa`;
@@ -281,42 +324,82 @@ const OrderDetailPage = () => {
                   const totalPrice = Number(item.totalPrice || (unitPrice * item.quantity));
                   const imgUrl = item.product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1600790142055-619df03207e6?w=200';
 
+                  // Item return eligibility logic
+                  const isItemDelivered = order.status === 'DELIVERED';
+                  const activeReturn = (order.returnRequests || []).find(
+                    (r) => r.orderItemId === item.id && !['REJECTED', 'CANCELLED'].includes(r.status)
+                  );
+                  const anyReturn = (order.returnRequests || []).find((r) => r.orderItemId === item.id);
+                  const itemElig = item.returnEligibility || {};
+                  const isEligible = isItemDelivered && itemElig.eligible && !activeReturn;
+                  const isWindowEnded = isItemDelivered && !itemElig.isWithinWindow && !activeReturn;
+
                   return (
                     <div
                       key={item.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        paddingBottom: '16px',
-                        borderBottom: '1px solid var(--border-color)',
-                        gap: '16px',
-                      }}
+                      className="order-item-row"
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div className="order-item-main">
                         <img
                           src={imgUrl}
                           alt=""
-                          style={{
-                            width: '64px',
-                            height: '64px',
-                            borderRadius: '8px',
-                            objectFit: 'cover',
-                            background: 'var(--bg-tertiary)',
-                          }}
+                          className="order-item-img"
                         />
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div className="order-item-info">
+                          <div className="order-item-name">
                             {item.product?.name || 'Automotive Component'}
                           </div>
                           <div className="text-xs text-muted" style={{ marginTop: '2px' }}>
                             Qty: {item.quantity} × ₹{unitPrice.toLocaleString('en-IN')}
+                            {item.product?.partNumber && ` · Part #${item.product.partNumber}`}
                           </div>
+
+                          {/* ELIGIBILITY & RETURN STATUS STRIP */}
+                          {isItemDelivered && (
+                            <div className="item-return-status-strip">
+                              {activeReturn ? (
+                                <span className={`return-badge return-badge-${activeReturn.status.toLowerCase()}`}>
+                                  🔄 Return: {activeReturn.status.replace(/_/g, ' ')}
+                                </span>
+                              ) : isEligible ? (
+                                <span className="return-window-tag eligible">
+                                  🛡️ {itemElig.message || 'Return available'}
+                                </span>
+                              ) : isWindowEnded ? (
+                                <span className="return-window-tag expired">
+                                  ⌛ Return window ended
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                        ₹{totalPrice.toLocaleString('en-IN')}
+                      <div className="order-item-action-col">
+                        <div className="order-item-price">
+                          ₹{totalPrice.toLocaleString('en-IN')}
+                        </div>
+
+                        {/* RETURN BUTTON: Appears ONLY when order is DELIVERED, within window, and not already in return */}
+                        {isItemDelivered && isEligible && (
+                          <button
+                            type="button"
+                            className="btn-return-action"
+                            onClick={() => handleOpenReturnModal(item)}
+                          >
+                            ↩️ Return Item
+                          </button>
+                        )}
+
+                        {anyReturn && (
+                          <button
+                            type="button"
+                            className="btn-return-details"
+                            onClick={() => setViewingReturnRecord(anyReturn)}
+                          >
+                            View Return Details
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -536,6 +619,253 @@ const OrderDetailPage = () => {
         onFailure={handlePaymentFailure}
         onCancel={handlePaymentCancel}
       />
+
+      {/* Return Request Modal */}
+      {returnModalItem && (
+        <div className="modal-backdrop" onClick={() => !isSubmittingReturn && setReturnModalItem(null)}>
+          <div className="return-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.6rem' }}>↩️</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Request Spare-Part Return</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Order #{order.orderNumber}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setReturnModalItem(null)}
+                disabled={isSubmittingReturn}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReturn} className="return-modal-form">
+              {/* Item Info Box */}
+              <div className="return-item-preview">
+                <img
+                  src={returnModalItem.product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1600790142055-619df03207e6?w=200'}
+                  alt=""
+                  style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    {returnModalItem.product?.name || 'Selected Spare Part'}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Unit Price: ₹{Number(returnModalItem.unitPrice || returnModalItem.priceSnapshot || 0).toLocaleString('en-IN')} · Ordered Qty: {returnModalItem.quantity}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="return-form-group">
+                <label>Quantity to Return</label>
+                <select
+                  value={returnQty}
+                  onChange={(e) => setReturnQty(Number(e.target.value))}
+                  className="return-form-select"
+                >
+                  {Array.from({ length: returnModalItem.quantity }, (_, i) => i + 1).map((q) => (
+                    <option key={q} value={q}>
+                      {q} {q === 1 ? 'unit' : 'units'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Reason Selector */}
+              <div className="return-form-group">
+                <label>Reason for Return *</label>
+                <select
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="return-form-select"
+                  required
+                >
+                  <option value="WRONG_PART">Wrong Part</option>
+                  <option value="COMPATIBILITY_ISSUE">Compatibility Issue</option>
+                  <option value="DAMAGED_PRODUCT">Damaged Product</option>
+                  <option value="DEFECTIVE_PART">Defective Part</option>
+                  <option value="DIFFERENT_FROM_DESCRIPTION">Different From Description</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              {/* Explanation Textarea */}
+              <div className="return-form-group">
+                <label>Explanation / Defect Details</label>
+                <textarea
+                  value={returnDetails}
+                  onChange={(e) => setReturnDetails(e.target.value)}
+                  placeholder="Please describe why this item is being returned (fitment mismatch, broken clip, leakage, etc.)..."
+                  rows={3}
+                  className="return-form-textarea"
+                />
+              </div>
+
+              {/* Optional Photo URL */}
+              <div className="return-form-group">
+                <label>Optional Photo Proof URL</label>
+                <input
+                  type="url"
+                  value={returnPhotoUrl}
+                  onChange={(e) => setReturnPhotoUrl(e.target.value)}
+                  placeholder="https://images.example.com/part-photo.jpg"
+                  className="return-form-input"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Clear photos of product label, serial number, and packaging speed up inspection approval.
+                </span>
+              </div>
+
+              {/* Pickup Address */}
+              <div className="return-form-group">
+                <label>Doorstep Pickup Address</label>
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {order.address?.fullName || 'Customer Doorstep'} · {order.address?.phone || ''}
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)' }}>
+                    {order.address?.line1 || ''}, {order.address?.city || ''} - {order.address?.pincode || ''}
+                  </div>
+                </div>
+              </div>
+
+              {/* Refund Info Summary Box */}
+              <div className="return-summary-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Authoritative Refund Amount:</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.15rem', color: '#0D9488' }}>
+                    ₹{(Number(returnModalItem.unitPrice || returnModalItem.priceSnapshot || 0) * returnQty).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(13, 148, 136, 0.2)', paddingTop: '8px' }}>
+                  Refund Method: <strong>{order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Direct Bank/UPI or Wallet' : 'Original Razorpay source account'}</strong>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  * Refund is processed immediately after the reverse pickup partner delivers the part to our hub and quality inspection passes.
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="modal-footer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setReturnModalItem(null)}
+                  disabled={isSubmittingReturn}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={isSubmittingReturn}
+                >
+                  Submit Return Request
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Return Details Modal */}
+      {viewingReturnRecord && (
+        <div className="modal-backdrop" onClick={() => setViewingReturnRecord(null)}>
+          <div className="return-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.4rem' }}>📋</span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Return Request Details</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setViewingReturnRecord(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Return ID:</span>
+                <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{viewingReturnRecord.id}</strong>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Current Status:</span>
+                <span className={`return-badge return-badge-${viewingReturnRecord.status.toLowerCase()}`}>
+                  {viewingReturnRecord.status.replace(/_/g, ' ')}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Refund Amount:</span>
+                <strong style={{ fontSize: '1.1rem', color: '#0D9488' }}>
+                  ₹{Number(viewingReturnRecord.refundAmount || 0).toLocaleString('en-IN')}
+                </strong>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Quantity:</span>
+                <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{viewingReturnRecord.quantity} unit(s)</strong>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Reason:</span>
+                <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{viewingReturnRecord.reason.replace(/_/g, ' ')}</strong>
+              </div>
+
+              {viewingReturnRecord.details && (
+                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Customer Explanation:</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>{viewingReturnRecord.details}</div>
+                </div>
+              )}
+
+              {viewingReturnRecord.rejectionReason && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: 700, color: '#EF4444', marginBottom: '4px' }}>Rejection Reason:</div>
+                  <div style={{ color: 'var(--text-primary)' }}>{viewingReturnRecord.rejectionReason}</div>
+                </div>
+              )}
+
+              {/* Status Timeline Progress */}
+              <div style={{ marginTop: '10px', padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Return Lifecycle Tracking:</div>
+                <div>• Requested on: {viewingReturnRecord.requestedAt ? new Date(viewingReturnRecord.requestedAt).toLocaleString() : 'N/A'}</div>
+                {viewingReturnRecord.approvedAt && <div>• Approved on: {new Date(viewingReturnRecord.approvedAt).toLocaleString()}</div>}
+                {viewingReturnRecord.pickupAt && <div>• Picked up on: {new Date(viewingReturnRecord.pickupAt).toLocaleString()}</div>}
+                {viewingReturnRecord.receivedAt && <div>• Received at hub: {new Date(viewingReturnRecord.receivedAt).toLocaleString()}</div>}
+                {viewingReturnRecord.inspectedAt && <div>• Inspected on: {new Date(viewingReturnRecord.inspectedAt).toLocaleString()}</div>}
+                {viewingReturnRecord.refundedAt && <div style={{ color: '#0D9488', fontWeight: 700 }}>• Refund completed on: {new Date(viewingReturnRecord.refundedAt).toLocaleString()}</div>}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <Button variant="primary" size="sm" onClick={() => setViewingReturnRecord(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ const navItems = [
   { path: '/admin', label: 'Overview Dashboard', icon: '📊', end: true },
   { path: '/admin/procurement', label: 'Bulk Procurement', icon: '🏭' },
   { path: '/admin/orders', label: 'Orders & DIFM', icon: '📑' },
+  { path: '/admin/returns', label: 'Returns & Refunds', icon: '↩️' },
   { path: '/admin/customers', label: 'Customers', icon: '👥' },
   { path: '/admin/shops', label: 'Mechanical Workshops', icon: '🔧' },
   { path: '/admin/delivery-partners', label: 'Delivery Fleet & KYC', icon: '🛵' },

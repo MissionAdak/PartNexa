@@ -11,6 +11,7 @@ import {
 } from './difmEngine';
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
 import { propagateOrderConfirmed } from './orderPropagation.service';
+import { getReturnWindowDays } from '../returns/returns.service';
 
 export const listCustomerOrders = async (userId: string) => {
   return prisma.order.findMany({
@@ -111,13 +112,84 @@ export const getOrderById = async (userId: string, orderId: string) => {
         statusHistory: {
           orderBy: { createdAt: 'asc' },
         },
+        returnRequests: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
   }
 
   if (!order) throw AppError.notFound('Order not found.');
+
+  // Resolve deliveredAt
+  let deliveredAt: Date | null = order.deliveredAt ? new Date(order.deliveredAt) : null;
+  if (!deliveredAt) {
+    const deliveredAssign = order.deliveryAssignments?.find((a: any) => a.deliveredAt);
+    if (deliveredAssign?.deliveredAt) {
+      deliveredAt = new Date(deliveredAssign.deliveredAt);
+    } else {
+      const deliveredTrack = order.tracking?.find((t: any) => t.status === 'DELIVERED');
+      if (deliveredTrack?.createdAt) {
+        deliveredAt = new Date(deliveredTrack.createdAt);
+      } else if (order.status === 'DELIVERED') {
+        deliveredAt = order.updatedAt ? new Date(order.updatedAt) : new Date();
+      }
+    }
+  }
+
+  const returnWindowDays = getReturnWindowDays();
+  const isDelivered = order.status === 'DELIVERED';
+  const expiresAt = deliveredAt ? new Date(deliveredAt.getTime() + returnWindowDays * 86400000) : null;
+  const isWithinWindow = Boolean(isDelivered && expiresAt && new Date() <= expiresAt);
+
+  const formatter = new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const items = (order.items || []).map((it: any) => {
+    const existingReturn = (order.returnRequests || []).find(
+      (r: any) => r.orderItemId === it.id && !['REJECTED', 'CANCELLED'].includes(r.status)
+    );
+    const eligible = isDelivered && isWithinWindow && !existingReturn;
+    let message = '';
+    if (!isDelivered) {
+      message = 'Return available after delivery';
+    } else if (existingReturn) {
+      message = `Return ${existingReturn.status.toLowerCase().replace(/_/g, ' ')}`;
+    } else if (!isWithinWindow) {
+      message = 'Return window ended';
+    } else if (expiresAt) {
+      message = `Return available until ${formatter.format(expiresAt)}`;
+    }
+
+    return {
+      ...it,
+      returnEligibility: {
+        eligible,
+        isDelivered,
+        isWithinWindow,
+        returnWindowDays,
+        deliveredAt,
+        expiresAt,
+        existingReturn: existingReturn || null,
+        message,
+      },
+    };
+  });
+
   return {
     ...order,
+    deliveredAt,
+    items,
+    returnEligibility: {
+      isDelivered,
+      isWithinWindow,
+      returnWindowDays,
+      deliveredAt,
+      expiresAt,
+    },
     pricing: {
       partSubtotal: Number(order.subtotal),
       deliveryFee: Number(order.deliveryFee),

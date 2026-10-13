@@ -110,6 +110,34 @@ enum DeliveryAssignmentStatus {
   REJECTED
 }
 
+enum DeliveryAssignmentType {
+  OUTBOUND
+  RETURN_PICKUP
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  PICKUP_ASSIGNED
+  PICKED_UP
+  RECEIVED
+  INSPECTION_PASSED
+  INSPECTION_FAILED
+  REFUND_APPROVED
+  REFUNDED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnReason {
+  WRONG_PART
+  COMPATIBILITY_ISSUE
+  DAMAGED_PRODUCT
+  DEFECTIVE_PART
+  DIFFERENT_FROM_DESCRIPTION
+  OTHER
+}
+
 enum KYCStatus {
   NOT_SUBMITTED
   PENDING
@@ -253,6 +281,7 @@ model User {
   supplier        Supplier?
   procurementCart ProcurementCart?
   createdPurchaseOrders PurchaseOrder[] @relation("AdminCreatedPOs")
+  returnRequests  ReturnRequest[]
   serviceAppointments   ServiceAppointment[]
 
   @@index([role, status])
@@ -701,6 +730,7 @@ model Order {
   // DIFM Selection
   difmType            DIFMType?     @default(NO_INSTALLATION)
 
+  deliveredAt         DateTime?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
@@ -712,6 +742,7 @@ model Order {
   difmRequest         DIFMRequest?
   deliveryAssignments DeliveryAssignment[]
   commissionLedgers   CommissionLedger[]
+  returnRequests      ReturnRequest[]
 
   @@index([userId, status])
   @@index([orderNumber])
@@ -731,6 +762,8 @@ model OrderItem {
   unitPrice  Decimal  @db.Decimal(10, 2)
   totalPrice Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
+
+  returnRequests ReturnRequest[]
 
   @@index([orderId])
   @@index([shopId])
@@ -764,6 +797,40 @@ model OrderTracking {
 
   @@index([orderId, createdAt])
   @@map("order_tracking")
+}
+
+model ReturnRequest {
+  id              String        @id @default(uuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItemId     String
+  orderItem       OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quantity        Int           @default(1)
+  reason          ReturnReason
+  details         String?
+  photos          String[]      @default([])
+  status          ReturnStatus  @default(REQUESTED)
+  refundAmount    Decimal       @db.Decimal(10, 2)
+  requestedAt     DateTime      @default(now())
+  approvedAt      DateTime?
+  pickupAt        DateTime?
+  receivedAt      DateTime?
+  inspectedAt     DateTime?
+  refundedAt      DateTime?
+  rejectionReason String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  deliveryAssignments DeliveryAssignment[]
+
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([userId])
+  @@index([status])
+  @@map("return_requests")
 }
 
 // ============================================================
@@ -1009,9 +1076,12 @@ model DeliveryAssignment {
   id                String                   @id @default(uuid())
   orderId           String
   order             Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  deliveryPartnerId String
-  deliveryPartner   DeliveryPartner          @relation(fields: [deliveryPartnerId], references: [id], onDelete: Restrict)
+  deliveryPartnerId String?
+  deliveryPartner   DeliveryPartner?         @relation(fields: [deliveryPartnerId], references: [id], onDelete: Restrict)
   status            DeliveryAssignmentStatus @default(ASSIGNED)
+  type              DeliveryAssignmentType   @default(OUTBOUND)
+  returnRequestId   String?
+  returnRequest     ReturnRequest?           @relation(fields: [returnRequestId], references: [id], onDelete: SetNull)
   assignedAt        DateTime                 @default(now())
   acceptedAt        DateTime?
   pickedUpAt        DateTime?
