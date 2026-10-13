@@ -55,7 +55,7 @@ router.put('/profile', authenticate, async (req: AuthenticatedRequest, res: Resp
 });
 
 // Online / Offline Duty Status Toggle
-router.put('/duty', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const handleDutyToggle = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { isOnline } = req.body;
     const updated = await deliveryService.toggleDutyStatus(req.user!.id, isOnline);
@@ -63,7 +63,9 @@ router.put('/duty', authenticate, async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     next(error);
   }
-});
+};
+router.put('/duty', authenticate, handleDutyToggle);
+router.patch('/duty', authenticate, handleDutyToggle);
 
 // ============================================================================
 // KYC MANAGEMENT & VERIFICATION

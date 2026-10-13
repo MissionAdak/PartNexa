@@ -269,28 +269,39 @@ export class InventorySyncEngine {
   /**
    * Ingest a verified used-part into refurbished inventory
    */
-  static async recordUsedPartIntake(listingId: string, targetShopId: string = 'shop-1') {
-    const listing = await prisma.usedPartListing.findUnique({ where: { id: listingId } });
+  static async recordUsedPartIntake(listingId: string, targetShopId?: string) {
+    const listing = await prisma.usedPartListing.findUnique({
+      where: { id: listingId },
+      include: { verification: true, payout: true },
+    });
     if (!listing) return null;
 
-    // Find linked or matching catalog product, or fallback to central refurbished catalog product
-    let targetProductId = listing.productId;
-    if (!targetProductId) {
-      // Look for a product matching the listing title or brand
-      const matchedProd = await prisma.product.findFirst({
+    // Resolve valid shop
+    let shop = targetShopId ? await prisma.shop.findUnique({ where: { id: targetShopId } }) : null;
+    if (!shop) {
+      shop = await prisma.shop.findFirst();
+    }
+    if (!shop) return null;
+    const resolvedShopId = shop.id;
+
+    // Resolve valid product
+    let product = listing.productId ? await prisma.product.findUnique({ where: { id: listing.productId } }) : null;
+    if (!product) {
+      product = await prisma.product.findFirst({
         where: {
-          OR: [
-            { name: { contains: listing.title, mode: 'insensitive' } },
-            { partNumber: listing.partNumber || 'NONE' },
-          ],
+          name: { contains: listing.title.split(' ')[0], mode: 'insensitive' },
         },
       });
-      targetProductId = matchedProd?.id || 'prod-bosch-spark';
     }
+    if (!product) {
+      product = await prisma.product.findFirst();
+    }
+    if (!product) return null;
+    const resolvedProductId = product.id;
 
     // Find existing inventory in workshop or create intake row
     let inv = await prisma.inventory.findFirst({
-      where: { productId: targetProductId, shopId: targetShopId },
+      where: { productId: resolvedProductId, shopId: resolvedShopId },
     });
 
     let previousQty = 0;
@@ -311,10 +322,10 @@ export class InventorySyncEngine {
     } else {
       inv = await prisma.inventory.create({
         data: {
-          productId: targetProductId,
-          shopId: targetShopId,
+          productId: resolvedProductId,
+          shopId: resolvedShopId,
           quantity: 1,
-          sellingPrice: Number(listing.finalValuation || listing.askingPrice || 999),
+          sellingPrice: Number(listing.resalePrice || listing.askingPrice || 999),
           isAvailable: true,
           availabilityStatus: 'LOW_STOCK',
         },
@@ -323,25 +334,25 @@ export class InventorySyncEngine {
 
     await this.logEvent({
       eventType: 'USED_PART_VERIFIED_INTAKE',
-      productId: targetProductId,
-      shopId: targetShopId,
+      productId: resolvedProductId,
+      shopId: resolvedShopId,
       previousQty,
       newQty,
       delta: 1,
-      reason: `Verified Used Part Intake: "${listing.title}" (Grade: ${listing.conditionGrade || 'Passed'})`,
+      reason: `Verified Used Part Intake: "${listing.title}" (Rating: ${listing.verification?.conditionRating ? `${listing.verification.conditionRating}/10` : 'Verified'})`,
       referenceId: listing.id,
       actor: 'USED_PARTS_INSPECTOR',
       metadata: {
-        conditionGrade: listing.conditionGrade,
-        valuation: listing.finalValuation,
+        conditionRating: listing.verification?.conditionRating,
+        valuation: Number(listing.resalePrice || listing.askingPrice || 999),
       },
     });
 
     return {
       listingId: listing.id,
       inventoryId: inv.id,
-      productId: targetProductId,
-      shopId: targetShopId,
+      productId: resolvedProductId,
+      shopId: resolvedShopId,
       stockIncrementedTo: newQty,
     };
   }

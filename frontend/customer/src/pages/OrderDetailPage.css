@@ -15,19 +15,19 @@
 .order-detail-title-wrap h1 {
   font-size: 1.8rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 
 .order-detail-title-wrap p {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
-/* Tracking Stepper */
+/* Tracking Stepper Card */
 .tracking-stepper-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 32px 24px;
   margin-bottom: 32px;
@@ -40,23 +40,23 @@
   justify-content: space-between;
   margin-bottom: 28px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .stepper-header-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .stepper-eta {
   font-size: 0.9rem;
-  color: var(--color-teal-600);
+  color: var(--color-teal);
   font-weight: 600;
 }
 
 [data-theme="dark"] .stepper-eta {
-  color: var(--color-teal-400);
+  color: var(--color-teal-light);
 }
 
 .stepper-track {
@@ -69,11 +69,11 @@
 .stepper-track::before {
   content: '';
   position: absolute;
-  top: 18px;
+  top: 20px;
   left: 30px;
   right: 30px;
   height: 4px;
-  background: var(--border-color);
+  background: var(--color-border-strong);
   z-index: 1;
 }
 
@@ -88,48 +88,56 @@
 }
 
 .stepper-dot {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: var(--bg-surface);
-  border: 3px solid var(--border-color);
-  color: var(--text-muted);
+  background: var(--color-bg-card);
+  border: 3px solid var(--color-border-strong);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin-bottom: 10px;
   transition: all var(--transition-fast);
 }
 
 .stepper-step.completed .stepper-dot {
-  background: var(--color-primary-500);
-  border-color: var(--color-primary-500);
-  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
 }
 
 .stepper-step.active .stepper-dot {
-  background: var(--color-teal-500);
-  border-color: var(--color-teal-500);
-  color: #fff;
-  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2);
+  background: var(--color-teal);
+  border-color: var(--color-teal);
+  color: #FFFFFF;
+  box-shadow: 0 0 0 4px var(--color-teal-glow), 0 2px 8px rgba(13, 148, 136, 0.35);
+}
+
+.stepper-step.danger .stepper-dot {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: #FFFFFF;
 }
 
 .stepper-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .stepper-step.completed .stepper-label,
 .stepper-step.active .stepper-label {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 
 .stepper-time {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   margin-top: 2px;
 }
 
@@ -170,18 +178,77 @@
 
 .order-items-card,
 .order-side-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 24px;
   margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .card-title-bordered {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   margin-bottom: 18px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Status Pills */
+.status-pill-paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #ECFDF5;
+  color: #047857;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #A7F3D0;
+}
+
+[data-theme="dark"] .status-pill-paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.status-pill-cod {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #FFFBEB;
+  color: #B45309;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #FDE68A;
+}
+
+[data-theme="dark"] .status-pill-cod {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.status-pill-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #FEF2F2;
+  color: #B91C1C;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #FECACA;
+}
+
+[data-theme="dark"] .status-pill-pending {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
 }

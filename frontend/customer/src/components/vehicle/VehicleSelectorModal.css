@@ -1142,4 +1142,355 @@
   .vsm-actions-bar button {
     width: 100%;
   }
+
+  .vsm-garage-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .vsm-garage-actions-col {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .vsm-garage-actions-col button {
+    width: 100%;
+  }
+
+  .vsm-garage-footer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
 }
+
+/* ==========================================================================
+   VSM MY GARAGE VIEW (Active Vehicle Switcher)
+   ========================================================================== */
+.vsm-garage-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vsm-garage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.vsm-garage-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg, 14px);
+  border: 1px solid var(--border-color, rgba(15, 23, 42, 0.12));
+  background: var(--bg-card, #FFFFFF);
+  transition: all var(--transition-fast, 150ms ease);
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.vsm-garage-card:hover {
+  border-color: var(--color-primary, #0284C7);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.vsm-garage-card.is-active {
+  border-color: var(--color-primary, #0284C7);
+  background: rgba(2, 132, 199, 0.04);
+  box-shadow: 0 0 0 1.5px var(--color-primary, #0284C7), 0 4px 18px rgba(2, 132, 199, 0.12);
+}
+
+[data-theme="dark"] .vsm-garage-card {
+  background: #151f32;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .vsm-garage-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .vsm-garage-card.is-active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 0 1.5px #38bdf8, 0 4px 20px rgba(56, 189, 248, 0.2);
+}
+
+.vsm-garage-card-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.vsm-garage-logo-col {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md, 10px);
+  background: var(--bg-tertiary, #F1F5F9);
+  border: 1px solid var(--border-color, rgba(15, 23, 42, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .vsm-garage-logo-col {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.vsm-garage-type-icon {
+  font-size: 1.6rem;
+}
+
+.vsm-garage-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.vsm-garage-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vsm-garage-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary, #0F172A);
+  margin: 0;
+}
+
+[data-theme="dark"] .vsm-garage-title {
+  color: #F8FAFC;
+}
+
+.vsm-garage-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vsm-badge-active {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--color-primary, #0284C7);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+}
+
+[data-theme="dark"] .vsm-badge-active {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.vsm-badge-primary {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] .vsm-badge-primary {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.vsm-garage-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.825rem;
+  color: var(--text-muted, #64748B);
+}
+
+.vsm-garage-spec {
+  color: var(--text-secondary, #475569);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .vsm-garage-spec {
+  color: #94a3b8;
+}
+
+.vsm-garage-fuel-tag {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-tertiary, #e2e8f0);
+  color: var(--text-secondary, #475569);
+}
+
+[data-theme="dark"] .vsm-garage-fuel-tag {
+  background: #24324d;
+  color: #cbd5e1;
+}
+
+.vsm-garage-reg-wrap {
+  margin-top: 2px;
+}
+
+.vsm-garage-reg-plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1.5px solid #0f172a;
+  border-radius: 4px;
+  padding: 1px 7px 1px 4px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #0f172a;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .vsm-garage-reg-plate {
+  background: #0f172a;
+  border-color: #94a3b8;
+  color: #f8fafc;
+}
+
+.reg-ind-flag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #0284c7;
+  padding-right: 3px;
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .reg-ind-flag {
+  border-right-color: rgba(255, 255, 255, 0.2);
+  color: #38bdf8;
+}
+
+.vsm-garage-actions-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vsm-active-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: rgba(2, 132, 199, 0.12);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-primary, #0284C7);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .vsm-active-indicator {
+  background: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+}
+
+.vsm-switch-btn {
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-md, 8px);
+}
+
+.vsm-make-primary-btn {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748B);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+}
+
+.vsm-make-primary-btn:hover {
+  color: var(--color-primary, #0284C7);
+}
+
+[data-theme="dark"] .vsm-make-primary-btn:hover {
+  color: #38bdf8;
+}
+
+.vsm-garage-divider {
+  height: 1px;
+  background: var(--border-color, rgba(15, 23, 42, 0.1));
+  margin: 4px 0;
+}
+
+[data-theme="dark"] .vsm-garage-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vsm-garage-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.vsm-add-another-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.vsm-manage-garage-link {
+  font-size: 0.85rem;
+  color: var(--color-primary, #0284C7);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.vsm-manage-garage-link:hover {
+  text-decoration: underline;
+}
+
+[data-theme="dark"] .vsm-manage-garage-link {
+  color: #38bdf8;
+}
+
+.vsm-back-to-garage-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary, #0284C7);
+}
+
+[data-theme="dark"] .vsm-back-to-garage-btn {
+  color: #38bdf8;
+}
+

@@ -15,16 +15,20 @@ export const VehicleCompatibilityBar = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeVehicleDetails, setActiveVehicleDetails] = useState(null);
 
-  // Resolve details of active selectedVariantId
+  // Resolve details of active selectedVariantId or activeVehicle
   useEffect(() => {
-    if (!selectedVariantId) {
+    const targetVariantId = selectedVariantId || activeVehicle?.variantId || activeVehicle?.variant?.id;
+    if (!targetVariantId && !activeVehicle) {
       setActiveVehicleDetails(null);
       return;
     }
 
     // 1. Check in user garage vehicles first
     const garageMatch = (Array.isArray(vehicles) ? vehicles : []).find(
-      (v) => v.variantId === selectedVariantId || v.variant?.id === selectedVariantId
+      (v) =>
+        v.variantId === targetVariantId ||
+        v.variant?.id === targetVariantId ||
+        (activeVehicle && v.id === activeVehicle.id)
     );
     if (garageMatch && garageMatch.variant) {
       setActiveVehicleDetails({
@@ -42,17 +46,17 @@ export const VehicleCompatibilityBar = ({
     }
 
     // 2. Check in activeVehicle context
-    if (activeVehicle && (activeVehicle.variantId === selectedVariantId || activeVehicle.variant?.id === selectedVariantId)) {
+    if (activeVehicle && activeVehicle.variant) {
       setActiveVehicleDetails({
-        make: activeVehicle.variant?.model?.make?.name,
-        makeId: activeVehicle.variant?.model?.make?.id,
-        model: activeVehicle.variant?.model?.name,
-        variant: activeVehicle.variant?.name,
-        year: activeVehicle.variant?.year,
-        fuelType: activeVehicle.variant?.fuelType,
-        isGarage: Boolean(activeVehicle.isPrimary || activeVehicle.nickname),
+        make: activeVehicle.variant.model?.make?.name,
+        makeId: activeVehicle.variant.model?.make?.id,
+        model: activeVehicle.variant.model?.name,
+        variant: activeVehicle.variant.name,
+        year: activeVehicle.variant.year,
+        fuelType: activeVehicle.variant.fuelType,
+        isGarage: Boolean(activeVehicle.isPrimary || activeVehicle.nickname || activeVehicle.userId),
         nickname: activeVehicle.nickname,
-        type: activeVehicle.variant?.model?.type || activeVehicle.variant?.model?.make?.type,
+        type: activeVehicle.variant.model?.type || activeVehicle.variant.model?.make?.type,
       });
       return;
     }

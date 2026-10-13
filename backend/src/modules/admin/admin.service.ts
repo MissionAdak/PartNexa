@@ -1,6 +1,7 @@
 import prisma from '../../config/prisma';
 import config from '../../config/env';
 import AppError from '../../utils/AppError';
+import { UsedPartStatus, PayoutStatus, PaymentStatus, TicketStatus } from '@prisma/client';
 import * as deliveryService from '../delivery/delivery.service';
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
 
@@ -378,8 +379,8 @@ export const updateOrderStatus = async (id: string, status: string, notes?: stri
   const updated = await prisma.order.update({
     where: { id },
     data: {
-      status,
-      ...(status === 'DELIVERED' && { paymentStatus: 'PAID' }),
+      status: status as any,
+      ...(status === 'DELIVERED' && { paymentStatus: 'CAPTURED' as any }),
       updatedAt: new Date(),
     },
   });
@@ -388,7 +389,7 @@ export const updateOrderStatus = async (id: string, status: string, notes?: stri
     await prisma.orderTracking.create({
       data: {
         orderId: id,
-        status,
+        status: status as any,
         message: notes || `Order status updated to ${status} by Platform Administrator.`,
       },
     });
@@ -403,10 +404,12 @@ export const updateOrderPaymentStatus = async (id: string, paymentStatus: string
     throw AppError.notFound('Order not found.');
   }
 
+  const normalizedStatus = paymentStatus === 'PAID' ? 'CAPTURED' : paymentStatus;
+
   const updated = await prisma.order.update({
     where: { id },
     data: {
-      paymentStatus,
+      paymentStatus: normalizedStatus as any,
       updatedAt: new Date(),
     },
   });
@@ -416,7 +419,7 @@ export const updateOrderPaymentStatus = async (id: string, paymentStatus: string
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
-        status: paymentStatus,
+        status: normalizedStatus as any,
         updatedAt: new Date(),
       },
     });
@@ -519,6 +522,40 @@ export const assignOrderDifm = async (id: string, shopId: string, status = 'SCHE
 // 3. OPERATIONS: CUSTOMER MANAGEMENT
 // ============================================================================
 
+export interface CleanCustomerVehicleDto {
+  id: string;
+  nickname: string | null;
+  registrationNumber: string | null;
+  regNumber: string | null;
+  isPrimary: boolean;
+  make: string;
+  model: string;
+  year: number | null;
+  variant: string;
+  fuelType: string | null;
+  vehicleType: string | null;
+}
+
+export const mapCustomerVehicleToDto = (v: any): CleanCustomerVehicleDto => {
+  const variant = v?.variant;
+  const model = variant?.model;
+  const make = model?.make;
+
+  return {
+    id: v.id,
+    nickname: v.nickname || null,
+    registrationNumber: v.regNumber || null,
+    regNumber: v.regNumber || null,
+    isPrimary: Boolean(v.isPrimary),
+    make: make?.name || 'Unknown Make',
+    model: model?.name || 'Unknown Model',
+    year: variant?.year ? Number(variant.year) : null,
+    variant: variant?.name || 'Standard',
+    fuelType: variant?.fuelType || null,
+    vehicleType: make?.type || model?.type || 'CAR',
+  };
+};
+
 export const listCustomers = async (filters: { search?: string; status?: string } = {}) => {
   const where: any = { role: 'CUSTOMER' };
   if (filters.status && filters.status !== 'ALL') {
@@ -536,14 +573,28 @@ export const listCustomers = async (filters: { search?: string; status?: string 
   const users = await prisma.user.findMany({
     where,
     include: {
-      customerVehicles: true,
+      customerVehicles: {
+        include: {
+          variant: {
+            include: {
+              model: {
+                include: {
+                  make: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      },
       orders: true,
     },
     orderBy: { createdAt: 'desc' },
   });
 
   return users.map((u: any) => {
-    const vehicles = u.customerVehicles || [];
+    const rawVehicles = u.customerVehicles || [];
+    const vehicles = rawVehicles.map(mapCustomerVehicleToDto);
     const orders = u.orders || [];
     const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || o.total || 0), 0);
     return {
@@ -555,7 +606,7 @@ export const listCustomers = async (filters: { search?: string; status?: string 
       phone: u.phone,
       status: u.status || 'ACTIVE',
       vehicleCount: vehicles.length,
-      vehicles: vehicles.slice(0, 3),
+      vehicles,
       orderCount: orders.length,
       totalSpent,
       createdAt: u.createdAt,
@@ -567,7 +618,20 @@ export const getCustomerById = async (id: string) => {
   const user = await prisma.user.findFirst({
     where: { id, role: 'CUSTOMER' },
     include: {
-      customerVehicles: true,
+      customerVehicles: {
+        include: {
+          variant: {
+            include: {
+              model: {
+                include: {
+                  make: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      },
       orders: { include: { items: true } },
       addresses: true,
     },
@@ -579,10 +643,14 @@ export const getCustomerById = async (id: string) => {
     0
   );
 
+  const cleanVehicles = (user.customerVehicles || []).map(mapCustomerVehicleToDto);
+
   return {
     ...user,
     fullName: `${user.firstName} ${user.lastName}`.trim(),
     totalSpent,
+    vehicles: cleanVehicles,
+    customerVehicles: cleanVehicles,
   };
 };
 
@@ -667,7 +735,6 @@ export const verifyShop = async (
     data: {
       verificationStatus: data.status,
       isVerified: data.status === 'VERIFIED',
-      adminNotes: data.notes || null,
       updatedAt: new Date(),
     },
   });
@@ -849,11 +916,52 @@ export const listProducts = async (filters: { search?: string; categoryId?: stri
   });
 };
 
+const generateSlug = (text: string) =>
+  (text || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || `item-${Date.now()}`;
+
 export const createProduct = async (data: any) => {
   if (!data.name || !data.basePrice) {
     throw AppError.badRequest('Product name and basePrice are required.');
   }
-  return prisma.product.create({ data });
+
+  // If already exists by partNumber or name, return it
+  if (data.partNumber) {
+    const existing = await prisma.product.findFirst({
+      where: { partNumber: data.partNumber },
+    });
+    if (existing) return existing;
+  }
+  const existingByName = await prisma.product.findFirst({
+    where: { name: { equals: data.name, mode: 'insensitive' } },
+  });
+  if (existingByName) return existingByName;
+
+  let categoryId = data.categoryId;
+  if (!categoryId) {
+    const defaultCat = await prisma.category.findFirst();
+    if (defaultCat) {
+      categoryId = defaultCat.id;
+    }
+  }
+
+  const slug = data.slug || `${generateSlug(data.name)}-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+  const sku = data.sku || `SKU-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+
+  const { requiresDIFM, icon, ...rest } = data;
+
+  return prisma.product.create({
+    data: {
+      ...rest,
+      categoryId,
+      slug,
+      sku,
+      condition: data.condition === 'NEW' ? 'GENUINE_NEW' : (data.condition || 'GENUINE_NEW'),
+    },
+  });
 };
 
 export const updateProduct = async (id: string, data: any) => {
@@ -874,7 +982,19 @@ export const listCategories = async () => {
 
 export const createCategory = async (data: any) => {
   if (!data.name) throw AppError.badRequest('Category name is required.');
-  return prisma.category.create({ data });
+  const existing = await prisma.category.findFirst({
+    where: { name: { equals: data.name, mode: 'insensitive' } },
+  });
+  if (existing) return existing;
+
+  const slug = data.slug || `${generateSlug(data.name)}-${Math.floor(100 + Math.random() * 900)}`;
+  const { icon, ...rest } = data;
+  return prisma.category.create({
+    data: {
+      ...rest,
+      slug,
+    },
+  });
 };
 
 export const listBrands = async () => {
@@ -883,7 +1003,18 @@ export const listBrands = async () => {
 
 export const createBrand = async (data: any) => {
   if (!data.name) throw AppError.badRequest('Brand name is required.');
-  return prisma.brand.create({ data });
+  const existing = await prisma.brand.findFirst({
+    where: { name: { equals: data.name, mode: 'insensitive' } },
+  });
+  if (existing) return existing;
+
+  const slug = data.slug || `${generateSlug(data.name)}-${Math.floor(100 + Math.random() * 900)}`;
+  return prisma.brand.create({
+    data: {
+      ...data,
+      slug,
+    },
+  });
 };
 
 export const listInventory = async (lowStockOnly = false) => {
@@ -1017,76 +1148,222 @@ export const updateSubscriptionPlan = async (id: string, data: any) => {
 // 8. OPERATIONS: USED PARTS OVERSIGHT
 // ============================================================================
 
+export const formatAdminUsedPart = (item: any) => {
+  if (!item) return item;
+  const askingPriceNum = Number(item.askingPrice || 0);
+  const resalePriceNum = item.resalePrice ? Number(item.resalePrice) : null;
+  const payoutAmountNum = item.payout?.amount
+    ? Number(item.payout.amount)
+    : (resalePriceNum ? Math.round(resalePriceNum * 0.9) : Math.round(askingPriceNum * 0.9));
+
+  let verificationStatus = 'PENDING';
+  if (item.status === UsedPartStatus.VERIFIED || item.status === UsedPartStatus.LISTED || item.status === UsedPartStatus.SOLD) {
+    verificationStatus = 'VERIFIED';
+  } else if (item.status === UsedPartStatus.REJECTED) {
+    verificationStatus = 'REJECTED';
+  }
+
+  let displayStatus = item.status;
+  if (item.status === UsedPartStatus.LISTED) {
+    displayStatus = 'VALUED';
+  } else if (item.status === UsedPartStatus.PENDING_VERIFICATION) {
+    displayStatus = 'PENDING';
+  }
+
+  return {
+    ...item,
+    askingPrice: askingPriceNum,
+    resalePrice: resalePriceNum,
+    status: displayStatus,
+    rawStatus: item.status,
+    verificationStatus,
+    verificationNotes: item.verification?.notes || null,
+    finalValuation: resalePriceNum || askingPriceNum,
+    valuationAmount: resalePriceNum || askingPriceNum,
+    payoutAmount: payoutAmountNum,
+    payoutStatus: item.payout?.status || 'PENDING',
+    payoutTransactionRef: item.payout?.transactionRef || null,
+    adminNotes: item.verification?.notes || null,
+    rejectionReason: item.verification?.rejectionReason || null,
+  };
+};
+
 export const listUsedParts = async (filters: { status?: string } = {}) => {
-  return prisma.usedPartListing.findMany({
-    where: filters.status && filters.status !== 'ALL' ? { status: filters.status } : {},
-    include: { seller: true },
+  const where: any = {};
+  if (filters.status && filters.status !== 'ALL') {
+    const s = filters.status.toUpperCase();
+    if (s === 'PENDING' || s === 'SUBMITTED' || s === 'PENDING_VERIFICATION') {
+      where.status = UsedPartStatus.PENDING_VERIFICATION;
+    } else if (s === 'VERIFIED' || s === 'APPROVED') {
+      where.status = { in: [UsedPartStatus.VERIFIED, UsedPartStatus.LISTED] };
+    } else if (s === 'VALUED' || s === 'LISTED') {
+      where.status = UsedPartStatus.LISTED;
+    } else if (s === 'SOLD') {
+      where.status = UsedPartStatus.SOLD;
+    } else if (s === 'REJECTED' || s === 'CANCELLED') {
+      where.status = UsedPartStatus.REJECTED;
+    } else {
+      where.status = filters.status;
+    }
+  }
+
+  const items = await prisma.usedPartListing.findMany({
+    where,
+    include: {
+      seller: true,
+      verification: true,
+      payout: true,
+    },
     orderBy: { createdAt: 'desc' },
   });
+
+  return items.map(formatAdminUsedPart);
 };
 
 export const getUsedPartById = async (id: string) => {
   const item = await prisma.usedPartListing.findUnique({
     where: { id },
-    include: { seller: true },
+    include: {
+      seller: true,
+      verification: true,
+      payout: true,
+    },
   });
   if (!item) throw AppError.notFound('Used part listing not found.');
-  return item;
+  return formatAdminUsedPart(item);
 };
 
 export const verifyUsedPart = async (id: string, status: string, notes?: string) => {
-  const existing = await prisma.usedPartListing.findUnique({ where: { id } });
+  const existing = await prisma.usedPartListing.findUnique({
+    where: { id },
+    include: { verification: true },
+  });
   if (!existing) throw AppError.notFound('Used part listing not found.');
 
-  const updated = await prisma.usedPartListing.update({
+  const isApproved = status === 'VERIFIED' || status === 'APPROVED';
+  const newStatus = isApproved ? UsedPartStatus.VERIFIED : UsedPartStatus.REJECTED;
+
+  const updatedListing = await prisma.usedPartListing.update({
     where: { id },
     data: {
-      status,
-      verificationStatus: status === 'VERIFIED' ? 'VERIFIED' : 'REJECTED',
-      verificationNotes: notes || existing.verificationNotes,
+      status: newStatus,
       updatedAt: new Date(),
+    },
+    include: { seller: true, verification: true, payout: true },
+  });
+
+  const verification = await prisma.usedPartVerification.upsert({
+    where: { listingId: id },
+    create: {
+      listingId: id,
+      notes: notes || 'Verified by PartSphere administrator.',
+      approvedAt: isApproved ? new Date() : null,
+      rejectedAt: !isApproved ? new Date() : null,
+      rejectionReason: !isApproved ? (notes || 'Rejected during administrative review.') : null,
+    },
+    update: {
+      notes: notes || existing.verification?.notes || 'Updated by administrator.',
+      approvedAt: isApproved ? new Date() : null,
+      rejectedAt: !isApproved ? new Date() : null,
+      rejectionReason: !isApproved ? (notes || 'Rejected during administrative review.') : null,
     },
   });
 
-  if (status === 'VERIFIED') {
+  if (isApproved) {
     await InventorySyncEngine.recordUsedPartIntake(id);
   }
 
-  return updated;
+  return formatAdminUsedPart({ ...updatedListing, verification });
 };
 
 export const valueUsedPart = async (id: string, valuationAmount: number, notes?: string) => {
-  const existing = await prisma.usedPartListing.findUnique({ where: { id } });
+  const existing = await prisma.usedPartListing.findUnique({
+    where: { id },
+    include: { verification: true, payout: true, seller: true },
+  });
   if (!existing) throw AppError.notFound('Used part listing not found.');
 
   const amt = Number(valuationAmount);
-  return prisma.usedPartListing.update({
+  const payoutAmt = Math.round(amt * 0.9); // 90% payout to seller
+
+  const updatedListing = await prisma.usedPartListing.update({
     where: { id },
     data: {
-      status: 'VALUED',
-      finalValuation: amt,
-      valuationAmount: amt,
-      payoutAmount: Math.round(amt * 0.9), // 90% payout to seller
-      adminNotes: notes || 'Valuation completed by PartSphere executive inspection.',
+      resalePrice: amt,
+      status: UsedPartStatus.LISTED,
       updatedAt: new Date(),
     },
+    include: { seller: true, verification: true, payout: true },
   });
+
+  const verification = await prisma.usedPartVerification.upsert({
+    where: { listingId: id },
+    create: {
+      listingId: id,
+      notes: notes || `Valuation recorded at ₹${amt}. Part listed on marketplace.`,
+      approvedAt: new Date(),
+    },
+    update: {
+      notes: notes || `Valuation updated to ₹${amt}. Part listed on marketplace.`,
+      approvedAt: new Date(),
+    },
+  });
+
+  const payout = await prisma.usedPartPayout.upsert({
+    where: { listingId: id },
+    create: {
+      listingId: id,
+      sellerId: existing.sellerId,
+      amount: payoutAmt,
+      status: PayoutStatus.PENDING,
+    },
+    update: {
+      amount: payoutAmt,
+    },
+  });
+
+  return formatAdminUsedPart({ ...updatedListing, verification, payout });
 };
 
 export const payoutUsedPart = async (id: string, payoutReference?: string) => {
-  const existing = await prisma.usedPartListing.findUnique({ where: { id } });
+  const existing = await prisma.usedPartListing.findUnique({
+    where: { id },
+    include: { verification: true, payout: true, seller: true },
+  });
   if (!existing) throw AppError.notFound('Used part listing not found.');
 
-  return prisma.usedPartListing.update({
-    where: { id },
-    data: {
-      status: 'SOLD',
-      payoutStatus: 'PAID',
-      payoutTransactionRef: payoutReference || 'PAYOUT-REF-' + Date.now(),
-      isSold: true,
-      updatedAt: new Date(),
+  const ref = payoutReference || 'PAYOUT-REF-' + Date.now();
+  const payoutAmount = existing.payout?.amount || (existing.resalePrice ? Math.round(Number(existing.resalePrice) * 0.9) : Math.round(Number(existing.askingPrice) * 0.9));
+
+  const payout = await prisma.usedPartPayout.upsert({
+    where: { listingId: id },
+    create: {
+      listingId: id,
+      sellerId: existing.sellerId,
+      amount: payoutAmount,
+      status: PayoutStatus.PAID,
+      transactionRef: ref,
+      processedAt: new Date(),
+    },
+    update: {
+      status: PayoutStatus.PAID,
+      transactionRef: ref,
+      processedAt: new Date(),
     },
   });
+
+  const updatedListing = await prisma.usedPartListing.update({
+    where: { id },
+    data: {
+      status: UsedPartStatus.SOLD,
+      isSold: true,
+      soldAt: new Date(),
+      updatedAt: new Date(),
+    },
+    include: { seller: true, verification: true },
+  });
+
+  return formatAdminUsedPart({ ...updatedListing, payout });
 };
 
 // ============================================================================
@@ -1133,6 +1410,11 @@ export const reassignDelivery = async (id: string, deliveryPartnerId: string) =>
 // 10. CUSTOMER CARE HUB: UNIFIED TICKETING SYSTEM
 // ============================================================================
 
+const formatUserName = (u: any) =>
+  [u?.firstName, u?.lastName].filter(Boolean).join(' ') || 'Customer';
+const formatAdminName = (a: any) =>
+  [a?.firstName, a?.lastName].filter(Boolean).join(' ') || null;
+
 export const listTickets = async (filters: {
   role?: string;
   status?: string;
@@ -1140,51 +1422,91 @@ export const listTickets = async (filters: {
   search?: string;
 } = {}) => {
   const where: any = {};
-  if (filters.role && filters.role !== 'ALL') where.userRole = filters.role;
+  if (filters.role && filters.role !== 'ALL') {
+    where.user = { role: filters.role };
+  }
   if (filters.status && filters.status !== 'ALL') where.status = filters.status;
   if (filters.priority && filters.priority !== 'ALL') where.priority = filters.priority;
   if (filters.search) {
     where.OR = [
       { ticketNumber: { contains: filters.search, mode: 'insensitive' } },
       { subject: { contains: filters.search, mode: 'insensitive' } },
-      { userName: { contains: filters.search, mode: 'insensitive' } },
-      { userEmail: { contains: filters.search, mode: 'insensitive' } },
+      { user: { firstName: { contains: filters.search, mode: 'insensitive' } } },
+      { user: { lastName: { contains: filters.search, mode: 'insensitive' } } },
+      { user: { email: { contains: filters.search, mode: 'insensitive' } } },
     ];
   }
 
-  return prisma.supportTicket.findMany({
+  const tickets = await prisma.supportTicket.findMany({
     where,
-    include: { messages: true },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true } },
+      assignedAdmin: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
+
+  return tickets.map((t) => ({
+    ...t,
+    userName: formatUserName(t.user),
+    userEmail: t.user?.email || '',
+    userPhone: t.user?.phone || '',
+    userRole: t.user?.role || 'CUSTOMER',
+    assignedAdminName: formatAdminName(t.assignedAdmin),
+  }));
 };
 
 export const getTicketById = async (id: string) => {
   const ticket = await prisma.supportTicket.findUnique({
     where: { id },
-    include: { messages: true },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true } },
+      assignedAdmin: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
   });
   if (!ticket) {
     throw AppError.notFound('Support ticket not found.');
   }
-  return ticket;
+  return {
+    ...ticket,
+    userName: formatUserName(ticket.user),
+    userEmail: ticket.user?.email || '',
+    userPhone: ticket.user?.phone || '',
+    userRole: ticket.user?.role || 'CUSTOMER',
+    assignedAdminName: formatAdminName(ticket.assignedAdmin),
+  };
 };
 
-export const assignTicket = async (id: string, adminId: string, adminName: string) => {
+export const assignTicket = async (id: string, adminId: string, adminName?: string) => {
   const existing = await prisma.supportTicket.findUnique({ where: { id } });
   if (!existing) {
     throw AppError.notFound('Support ticket not found.');
   }
 
-  return prisma.supportTicket.update({
+  const updated = await prisma.supportTicket.update({
     where: { id },
     data: {
       assignedAdminId: adminId,
-      assignedAdminName: adminName,
       ...(existing.status === 'OPEN' ? { status: 'IN_PROGRESS' } : {}),
       updatedAt: new Date(),
     },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true } },
+      assignedAdmin: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
   });
+
+  return {
+    ...updated,
+    userName: formatUserName(updated.user),
+    userEmail: updated.user?.email || '',
+    userPhone: updated.user?.phone || '',
+    userRole: updated.user?.role || 'CUSTOMER',
+    assignedAdminName: formatAdminName(updated.assignedAdmin) || adminName || null,
+  };
 };
 
 export const addTicketMessage = async (
@@ -1202,30 +1524,52 @@ export const addTicketMessage = async (
     data: {
       ticketId: id,
       senderId: adminId,
-      senderName: adminName,
-      senderRole: 'ADMIN',
-      message,
+      isAdmin: true,
+      body: message,
     },
   });
 
   return getTicketById(id);
 };
 
-export const resolveTicket = async (id: string, resolutionNotes: string) => {
+export const resolveTicket = async (id: string, resolutionNotes?: string) => {
   const existing = await prisma.supportTicket.findUnique({ where: { id } });
   if (!existing) {
     throw AppError.notFound('Support ticket not found.');
   }
 
-  return prisma.supportTicket.update({
+  if (resolutionNotes) {
+    await prisma.ticketMessage.create({
+      data: {
+        ticketId: id,
+        senderId: existing.assignedAdminId || existing.userId,
+        isAdmin: true,
+        body: `Resolution: ${resolutionNotes}`,
+      },
+    });
+  }
+
+  const updated = await prisma.supportTicket.update({
     where: { id },
     data: {
       status: 'RESOLVED',
-      resolutionNotes,
-      resolvedAt: new Date(),
       updatedAt: new Date(),
     },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true } },
+      assignedAdmin: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
   });
+
+  return {
+    ...updated,
+    userName: formatUserName(updated.user),
+    userEmail: updated.user?.email || '',
+    userPhone: updated.user?.phone || '',
+    userRole: updated.user?.role || 'CUSTOMER',
+    assignedAdminName: formatAdminName(updated.assignedAdmin),
+  };
 };
 
 export const closeTicket = async (id: string) => {
@@ -1234,11 +1578,25 @@ export const closeTicket = async (id: string) => {
     throw AppError.notFound('Support ticket not found.');
   }
 
-  return prisma.supportTicket.update({
+  const updated = await prisma.supportTicket.update({
     where: { id },
     data: {
       status: 'CLOSED',
       updatedAt: new Date(),
     },
+    include: {
+      messages: { orderBy: { createdAt: 'asc' } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, role: true } },
+      assignedAdmin: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
   });
+
+  return {
+    ...updated,
+    userName: formatUserName(updated.user),
+    userEmail: updated.user?.email || '',
+    userPhone: updated.user?.phone || '',
+    userRole: updated.user?.role || 'CUSTOMER',
+    assignedAdminName: formatAdminName(updated.assignedAdmin),
+  };
 };

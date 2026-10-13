@@ -103,39 +103,51 @@ export class HaversineDistanceProvider implements IDistanceProvider {
 // Active distance provider (can be swapped in production for Google Maps / Mapbox)
 export const activeDistanceProvider: IDistanceProvider = new HaversineDistanceProvider();
 
+export const MAX_HOME_VISIT_RADIUS_KM = 35.0; // Maximum local doorstep service radius
+export const MAX_HOME_VISIT_SURCHARGE = 499; // Maximum reasonable home visit surcharge cap in Rupees
+
 /**
  * Calculates Home Visit Surcharge based on road distance:
  * - Base surcharge up to 3km: ₹99
  * - Beyond 3km: ₹99 + ₹20/km
+ * - Maximum distance clamped to local radius (35km) and surcharge capped at ₹499
+ * This strictly prevents inter-city distances from generating multi-thousand rupee surcharges.
  */
 export function calculateHomeVisitSurcharge(distanceKm: number): number {
   const baseSurcharge = 99;
   const thresholdKm = 3.0;
   const perKmRate = 20;
 
-  if (distanceKm <= thresholdKm) {
+  const effectiveDistance = Math.min(Math.max(0, distanceKm), MAX_HOME_VISIT_RADIUS_KM);
+
+  if (effectiveDistance <= thresholdKm) {
     return baseSurcharge;
   }
 
-  const extraDistance = distanceKm - thresholdKm;
-  return Math.round(baseSurcharge + extraDistance * perKmRate);
+  const extraDistance = effectiveDistance - thresholdKm;
+  const calculated = Math.round(baseSurcharge + extraDistance * perKmRate);
+  return Math.min(calculated, MAX_HOME_VISIT_SURCHARGE);
 }
 
 /**
- * Resolves the unit price for a cart item safely with fallbacks.
- * Prevents NaN, null, and 0 when product has a price.
+ * Authoritative Canonical Unit Price Resolver.
+ * Canonical Rule:
+ * 1. CartItem.priceSnapshot (authoritative unit price locked at cart addition from inventory sellingPrice)
+ * 2. Explicit item.unitPrice / item.sellingPrice
+ * 3. Inventory sellingPrice (if loaded on item relation)
+ * 4. Product sellingPrice / basePrice / lowestPrice fallback
+ * NEVER use product.mrp as a selling unit price! MRP is strictly for discount reference.
  */
 export function resolveItemUnitPrice(it: any): number {
   if (!it) return 0;
   const candidates = [
     it.priceSnapshot,
     it.unitPrice,
-    it.price,
     it.sellingPrice,
+    it.inventory?.sellingPrice,
     it.product?.sellingPrice,
     it.product?.basePrice,
     it.product?.lowestPrice,
-    it.product?.mrp,
   ];
   for (const c of candidates) {
     if (c !== undefined && c !== null) {

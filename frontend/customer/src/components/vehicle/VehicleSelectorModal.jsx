@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { vehiclesService } from '../../services';
 import { useVehicles } from '../../contexts/VehicleContext';
 import { BrandLogo } from './BrandLogos';
@@ -22,7 +23,16 @@ export const VehicleSelectorModal = ({
   initialVariantId = null,
   title = 'Select Vehicle for Part Fitment',
 }) => {
-  const { vehicles, addVehicle, selectVehicleForFitment } = useVehicles();
+  const {
+    vehicles,
+    activeVehicle,
+    addVehicle,
+    switchActiveVehicle,
+    setPrimaryVehicle,
+  } = useVehicles();
+
+  // Mode: 'garage' (switch existing saved vehicles) or 'wizard' (add/select vehicle)
+  const [viewMode, setViewMode] = useState(() => (vehicles && vehicles.length > 0 ? 'garage' : 'wizard'));
 
   const [step, setStep] = useState(1);
   const [vehicleType, setVehicleType] = useState(initialType);
@@ -67,24 +77,27 @@ export const VehicleSelectorModal = ({
       };
       window.addEventListener('keydown', handleKeyDown);
 
+      // Default to garage view if customer has saved vehicles, otherwise wizard
+      if (vehicles && vehicles.length > 0) {
+        setViewMode('garage');
+      } else {
+        setViewMode('wizard');
+      }
+
       setBrandSearch('');
       setModelSearch('');
-      if (initialVariantId) {
-        // If an initial variant is specified, we can remain at step 1 or load its cascade
-      } else {
-        setStep(1);
-      }
+      setStep(1);
 
       return () => {
         document.body.style.overflow = prevOverflow;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen, initialVariantId, onClose]);
+  }, [isOpen, vehicles, onClose]);
 
-  // Fetch makes whenever vehicleType changes or step 2 is active
+  // Fetch makes whenever vehicleType changes or step 2 is active in wizard
   useEffect(() => {
-    if (isOpen && (step === 1 || step === 2)) {
+    if (isOpen && viewMode === 'wizard' && (step === 1 || step === 2)) {
       setLoadingMakes(true);
       vehiclesService
         .getMakes(vehicleType)
@@ -99,7 +112,36 @@ export const VehicleSelectorModal = ({
         })
         .finally(() => setLoadingMakes(false));
     }
-  }, [vehicleType, isOpen, step]);
+  }, [vehicleType, isOpen, step, viewMode]);
+
+  // Switch active vehicle from garage
+  const handleSwitchVehicle = (vehicle) => {
+    if (switchActiveVehicle) {
+      switchActiveVehicle(vehicle);
+    }
+    if (onSelect) {
+      onSelect({
+        variantId: vehicle.variantId || vehicle.variant?.id,
+        variant: vehicle.variant,
+        model: vehicle.variant?.model,
+        make: vehicle.variant?.model?.make,
+        nickname: vehicle.nickname,
+        regNumber: vehicle.regNumber,
+      });
+    }
+    onClose();
+  };
+
+  // Set database primary vehicle (keeps active vehicle selection intact)
+  const handleMakePrimary = async (vehicleId) => {
+    try {
+      if (setPrimaryVehicle) {
+        await setPrimaryVehicle(vehicleId);
+      }
+    } catch {
+      // toast is handled in context
+    }
+  };
 
   // Load models when make is selected
   const handleSelectMake = async (make) => {
@@ -177,7 +219,7 @@ export const VehicleSelectorModal = ({
     }
   };
 
-  // Quick select a recently selected vehicle or garage vehicle
+  // Quick select a recently selected vehicle
   const handleQuickSelectRecent = (recent) => {
     const varId = recent.variantId || recent.variant?.id;
     const makeObj = { name: recent.makeName || recent.variant?.model?.make?.name, type: recent.type };
@@ -188,17 +230,19 @@ export const VehicleSelectorModal = ({
     setSelectedModel(modelObj);
     setSelectedVariant(variantObj);
 
+    const payload = {
+      variantId: varId,
+      variant: variantObj,
+      model: modelObj,
+      make: makeObj,
+    };
+
     if (onSelect) {
-      onSelect({
-        variantId: varId,
-        variant: variantObj,
-        model: modelObj,
-        make: makeObj,
-      });
+      onSelect(payload);
     }
 
-    if (selectVehicleForFitment) {
-      selectVehicleForFitment({
+    if (switchActiveVehicle) {
+      switchActiveVehicle({
         id: `fitment_${varId}`,
         variantId: varId,
         variant: {
@@ -226,7 +270,7 @@ export const VehicleSelectorModal = ({
         variantId: selectedVariant.id,
         nickname: nickname.trim() || `${selectedMake.name} ${selectedModel.name}`,
         regNumber: regNumber.trim().toUpperCase(),
-        isPrimary: true,
+        isPrimary: false, // New vehicle is set active without forcing primary
         variant: {
           ...selectedVariant,
           model: {
@@ -241,36 +285,39 @@ export const VehicleSelectorModal = ({
       // Save to recents
       saveVehicleToRecents(payload);
 
+      let createdVehicle = null;
       // Save to user garage if requested
       if (saveToGarage && addVehicle) {
         try {
-          await addVehicle({
+          createdVehicle = await addVehicle({
             variantId: selectedVariant.id,
             nickname: payload.nickname,
             regNumber: payload.regNumber,
-            isPrimary: true,
+            isPrimary: vehicles && vehicles.length === 0, // First vehicle is primary by default
           });
-        } catch (err) {
-          // Handled inside context or guest fallback
+        } catch {
+          // Handled inside context
         }
       }
 
       // Apply active fitment filter
-      if (selectVehicleForFitment) {
-        selectVehicleForFitment({
-          id: `fitment_${selectedVariant.id}`,
-          variantId: selectedVariant.id,
-          nickname: payload.nickname,
-          regNumber: payload.regNumber,
-          variant: payload.variant,
-        });
+      const activeTarget = createdVehicle || {
+        id: `fitment_${selectedVariant.id}`,
+        variantId: selectedVariant.id,
+        nickname: payload.nickname,
+        regNumber: payload.regNumber,
+        variant: payload.variant,
+      };
+
+      if (switchActiveVehicle) {
+        switchActiveVehicle(activeTarget);
       }
 
       if (onSelect) {
         onSelect(payload);
       }
 
-      toast.success(`Fitment active for ${selectedMake.name} ${selectedModel.name} ${selectedVariant.name}!`);
+      toast.success(`Fitment active for ${selectedMake.name} ${selectedModel.name}!`);
       onClose();
     } catch (err) {
       console.error('Error confirming vehicle:', err);
@@ -301,573 +348,656 @@ export const VehicleSelectorModal = ({
   const modalNode = (
     <div className="vsm-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="vsm-modal-title">
       <div className="vsm-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="vsm-header">
-          <div className="vsm-header-text">
-            <h2 id="vsm-modal-title" className="vsm-title">{title}</h2>
-            <p className="vsm-subtitle">Guaranteed 100% exact part fitment and maintenance compatibility</p>
-          </div>
-          <button
-            type="button"
-            className="vsm-close-btn"
-            onClick={onClose}
-            aria-label="Close vehicle selector"
-            id="vsm-close-btn"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Breadcrumb / Step Progress Indicator */}
-        <div className="vsm-progress-bar" role="navigation" aria-label="Selection progress">
-          {STEPS.map((s, idx) => {
-            const stepNum = s.id;
-            const isCompleted = step > stepNum;
-            const isActive = step === stepNum;
-            return (
-              <div
-                key={s.id}
-                className={`vsm-step-node ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                onClick={() => {
-                  if (isCompleted) setStep(stepNum);
-                }}
-                role="button"
-                tabIndex={isCompleted ? 0 : -1}
-                title={isCompleted ? `Go back to ${s.label}` : s.label}
+        {/* ================================================================= */}
+        {/* 1. MY GARAGE VIEW (When Customer Has Saved Vehicles)               */}
+        {/* ================================================================= */}
+        {viewMode === 'garage' && (
+          <>
+            <div className="vsm-header">
+              <div className="vsm-header-text">
+                <h2 id="vsm-modal-title" className="vsm-title">My Garage</h2>
+                <p className="vsm-subtitle">
+                  Select which vehicle to use for catalog compatibility checks. Your primary vehicle remains your persistent account default.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="vsm-close-btn"
+                onClick={onClose}
+                aria-label="Close vehicle selector"
+                id="vsm-close-btn"
               >
-                <div className="vsm-step-icon">
-                  {isCompleted ? '✓' : stepNum}
-                </div>
-                <div className="vsm-step-info">
-                  <span className="vsm-step-tag">Step {stepNum}</span>
-                  <span className="vsm-step-name">{s.label}</span>
-                </div>
-                {idx < STEPS.length - 1 && <div className="vsm-step-connector" />}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Modal Main Body */}
-        <div className="vsm-body">
-          {/* STEP 1: VEHICLE TYPE */}
-          {step === 1 && (
-            <div className="vsm-step-pane animate-fade-in" id="vsm-step-1">
-              <div className="vsm-pane-header">
-                <h3>Select Vehicle Category</h3>
-                <p>Choose whether you are shopping for a four-wheeler car/SUV or a two-wheeler motorcycle/scooter</p>
-              </div>
-
-              <div className="vsm-type-grid">
-                <div
-                  className={`vsm-type-card ${vehicleType === '4_WHEELER' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setVehicleType('4_WHEELER');
-                    setStep(2);
-                  }}
-                  id="vsm-type-4w-card"
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="vsm-type-icon-wrapper">
-                    <span className="vsm-type-emoji">🚗</span>
-                  </div>
-                  <div className="vsm-type-content">
-                    <h4>4 Wheeler (Cars & SUVs)</h4>
-                    <p>Sedans, Hatchbacks, SUVs, MUVs, Compacts & EVs</p>
-                    <div className="vsm-type-badge">
-                      <span>20 Manufacturers Available</span>
-                    </div>
-                  </div>
-                  <div className="vsm-type-arrow">→</div>
-                </div>
-
-                <div
-                  className={`vsm-type-card ${vehicleType === '2_WHEELER' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setVehicleType('2_WHEELER');
-                    setStep(2);
-                  }}
-                  id="vsm-type-2w-card"
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="vsm-type-icon-wrapper">
-                    <span className="vsm-type-emoji">🏍️</span>
-                  </div>
-                  <div className="vsm-type-content">
-                    <h4>2 Wheeler (Bikes & Scooters)</h4>
-                    <p>Motorcycles, Scooters, Cruisers & Electric 2-Wheelers</p>
-                    <div className="vsm-type-badge">
-                      <span>9 Major Brands Available</span>
-                    </div>
-                  </div>
-                  <div className="vsm-type-arrow">→</div>
-                </div>
-              </div>
-
-              {/* Quick Select from Recently Selected if any */}
-              {recentVehicles.length > 0 && (
-                <div className="vsm-recents-section">
-                  <div className="vsm-recents-title">
-                    <span>⚡ Recently Selected Vehicles:</span>
-                  </div>
-                  <div className="vsm-recents-chips">
-                    {(recentVehicles || []).map((rv) => (
-                      <button
-                        key={rv.id}
-                        type="button"
-                        className="vsm-recent-chip"
-                        onClick={() => handleQuickSelectRecent(rv)}
-                        id={`recent-chip-${rv.variantId}`}
-                      >
-                        <span className="recent-chip-icon">
-                          {rv.type === 'CAR' ? '🚗' : '🏍️'}
-                        </span>
-                        <span className="recent-chip-text">
-                          {rv.year} {rv.makeName} {rv.modelName} ({rv.variantName})
-                        </span>
-                        <span className="recent-chip-action">Use Fitment ↵</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                ✕
+              </button>
             </div>
-          )}
 
-          {/* STEP 2: BRAND / MANUFACTURER */}
-          {step === 2 && (
-            <div className="vsm-step-pane animate-fade-in" id="vsm-step-2">
-              <div className="vsm-pane-header flex-header">
-                <div>
-                  <h3>Select {vehicleType === '4_WHEELER' ? 'Car' : '2-Wheeler'} Manufacturer</h3>
-                  <p>Displaying authentic database-verified brands with live model catalogs</p>
-                </div>
-                <div className="vsm-active-tag">
-                  {vehicleType === '4_WHEELER' ? '🚗 4-Wheeler' : '🏍️ 2-Wheeler'}
-                  <button type="button" className="vsm-tag-change" onClick={() => setStep(1)}>
-                    Change
-                  </button>
-                </div>
-              </div>
-
-              {/* Recently Selected Bar */}
-              {recentVehicles.length > 0 && (
-                <div className="vsm-recents-mini-bar">
-                  <span className="mini-bar-label">⚡ Recent:</span>
-                  <div className="mini-chips-scroll">
-                    {(recentVehicles || []).map((rv) => (
-                      <button
-                        key={rv.id}
-                        type="button"
-                        className="vsm-mini-chip"
-                        onClick={() => handleQuickSelectRecent(rv)}
-                        title="Click to instantly select this vehicle"
-                      >
-                        {rv.makeName} {rv.modelName} ({rv.year})
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Brand Search Bar */}
-              <div className="vsm-search-bar">
-                <span className="vsm-search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search brand (e.g. Maruti, Hyundai, Tata, BMW, Mercedes)..."
-                  className="vsm-search-input"
-                  value={brandSearch}
-                  onChange={(e) => setBrandSearch(e.target.value)}
-                  id="vsm-brand-search-input"
-                  autoFocus
-                />
-                {brandSearch && (
-                  <button
-                    type="button"
-                    className="vsm-search-clear"
-                    onClick={() => setBrandSearch('')}
-                    aria-label="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-                <span className="vsm-search-count">
-                  {filteredMakes.length} {filteredMakes.length === 1 ? 'brand' : 'brands'}
-                </span>
-              </div>
-
-              {/* Brand Grid */}
-              {loadingMakes ? (
-                <div className="vsm-loading-container">
-                  <div className="vsm-spinner" />
-                  <p>Loading vehicle manufacturers...</p>
-                </div>
-              ) : filteredMakes.length === 0 ? (
-                <div className="vsm-empty-state">
-                  <span>🚗</span>
-                  <h4>No manufacturers found for "{brandSearch}"</h4>
-                  <p>Try searching with another name or clear your search query.</p>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm mt-3"
-                    onClick={() => setBrandSearch('')}
-                  >
-                    Clear Filter
-                  </button>
-                </div>
-              ) : (
-                <div className="vsm-brand-grid">
-                  {(filteredMakes || []).map((make) => (
-                    <div
-                      key={make.id}
-                      className={`vsm-brand-card ${selectedMake?.id === make.id ? 'active' : ''}`}
-                      onClick={() => handleSelectMake(make)}
-                      id={`vsm-make-${make.id}`}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="vsm-brand-logo-wrap">
-                        <BrandLogo brandId={make.id} brandName={make.name} size={48} />
-                      </div>
-                      <div className="vsm-brand-details">
-                        <span className="vsm-brand-name">{make.name}</span>
-                        <span className="vsm-brand-model-count">
-                          {make._count?.models || 0} {make._count?.models === 1 ? 'model' : 'models'} available
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 3: MODEL SELECTION */}
-          {step === 3 && (
-            <div className="vsm-step-pane animate-fade-in" id="vsm-step-3">
-              <div className="vsm-pane-header flex-header">
-                <div>
-                  <h3>Select {selectedMake?.name} Model</h3>
-                  <p>Choose the model series from {selectedMake?.name}'s authentic lineup</p>
-                </div>
-                <div className="vsm-selected-crumb">
-                  <BrandLogo brandId={selectedMake?.id} brandName={selectedMake?.name} size={24} />
-                  <span>{selectedMake?.name}</span>
-                  <button type="button" className="vsm-crumb-edit" onClick={() => setStep(2)}>
-                    Change Brand
-                  </button>
-                </div>
-              </div>
-
-              {/* Model Search Bar */}
-              <div className="vsm-search-bar">
-                <span className="vsm-search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder={`Search ${selectedMake?.name} models (e.g. ${selectedMake?.name === 'Maruti Suzuki' ? 'Swift, Baleno, Brezza, Fronx' : 'Model name'})...`}
-                  className="vsm-search-input"
-                  value={modelSearch}
-                  onChange={(e) => setModelSearch(e.target.value)}
-                  id="vsm-model-search-input"
-                  autoFocus
-                />
-                {modelSearch && (
-                  <button
-                    type="button"
-                    className="vsm-search-clear"
-                    onClick={() => setModelSearch('')}
-                    aria-label="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-                <span className="vsm-search-count">
-                  {filteredModels.length} {filteredModels.length === 1 ? 'model' : 'models'}
-                </span>
-              </div>
-
-              {/* Model Grid */}
-              {loadingModels ? (
-                <div className="vsm-loading-container">
-                  <div className="vsm-spinner" />
-                  <p>Loading models for {selectedMake?.name}...</p>
-                </div>
-              ) : filteredModels.length === 0 ? (
-                <div className="vsm-empty-state">
-                  <span>🚘</span>
-                  <h4>No models found matching "{modelSearch}"</h4>
-                  <p>Check the spelling or clear the search filter.</p>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm mt-3"
-                    onClick={() => setModelSearch('')}
-                  >
-                    Clear Filter
-                  </button>
-                </div>
-              ) : (
-                <div className="vsm-model-grid">
-                  {(filteredModels || []).map((model) => (
-                    <div
-                      key={model.id}
-                      className={`vsm-model-card ${selectedModel?.id === model.id ? 'active' : ''}`}
-                      onClick={() => handleSelectModel(model)}
-                      id={`vsm-model-${model.id}`}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="vsm-model-card-top">
-                        <span className="vsm-model-type-tag">
-                          {model.type === 'CAR' ? 'Passenger Car' : 'Two-Wheeler'}
-                        </span>
-                        <span className="vsm-model-variant-count">
-                          {model._count?.variants || 0} Variants
-                        </span>
-                      </div>
-                      <h4 className="vsm-model-name">{model.name}</h4>
-                      <div className="vsm-model-card-footer">
-                        <span>Select Variants →</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 4: VARIANT & YEAR */}
-          {step === 4 && (
-            <div className="vsm-step-pane animate-fade-in" id="vsm-step-4">
-              <div className="vsm-pane-header flex-header">
-                <div>
-                  <h3>Select Year & Variant</h3>
-                  <p>Filter by manufacturing year, powertrain, transmission and trim level</p>
-                </div>
-                <div className="vsm-selected-crumb">
-                  <BrandLogo brandId={selectedMake?.id} brandName={selectedMake?.name} size={24} />
-                  <span>{selectedMake?.name} {selectedModel?.name}</span>
-                  <button type="button" className="vsm-crumb-edit" onClick={() => setStep(3)}>
-                    Change Model
-                  </button>
-                </div>
-              </div>
-
-              {/* Variant Grid */}
-              {loadingVariants ? (
-                <div className="vsm-loading-container">
-                  <div className="vsm-spinner" />
-                  <p>Loading variants for {selectedModel?.name}...</p>
-                </div>
-              ) : variants.length === 0 ? (
-                <div className="vsm-empty-state">
-                  <span>⚙️</span>
-                  <h4>No variants found for this model</h4>
-                  <p>Please select another model or brand.</p>
-                  <button type="button" className="btn btn-secondary btn-sm mt-3" onClick={() => setStep(3)}>
-                    ← Back to Models
-                  </button>
-                </div>
-              ) : (
-                <div className="vsm-variant-grid">
-                  {(variants || []).map((v) => {
-                    const fuelColor =
-                      v.fuelType === 'PETROL'
-                        ? 'fuel-petrol'
-                        : v.fuelType === 'DIESEL'
-                        ? 'fuel-diesel'
-                        : v.fuelType === 'CNG'
-                        ? 'fuel-cng'
-                        : v.fuelType === 'ELECTRIC'
-                        ? 'fuel-electric'
-                        : 'fuel-hybrid';
+            <div className="vsm-body">
+              <div className="vsm-garage-pane">
+                <div className="vsm-garage-list">
+                  {(vehicles || []).map((v) => {
+                    const isAct =
+                      (activeVehicle?.id && activeVehicle.id === v.id) ||
+                      (activeVehicle?.variantId && (activeVehicle.variantId === v.variantId || activeVehicle.variantId === v.variant?.id)) ||
+                      (activeVehicle?.variant?.id && v.variant?.id && activeVehicle.variant.id === v.variant.id);
+                    const isPrim = Boolean(v.isPrimary);
+                    const make = v.variant?.model?.make;
+                    const model = v.variant?.model;
+                    const variant = v.variant;
+                    const makeName = make?.name || '';
+                    const modelName = model?.name || '';
+                    const displayName = v.nickname || `${makeName} ${modelName}`.trim() || 'My Vehicle';
+                    const is2W = make?.type === 'BIKE' || make?.type === 'SCOOTER';
 
                     return (
                       <div
                         key={v.id}
-                        className={`vsm-variant-card ${selectedVariant?.id === v.id ? 'active' : ''}`}
-                        onClick={() => handleSelectVariant(v)}
-                        id={`vsm-variant-${v.id}`}
-                        role="button"
-                        tabIndex={0}
+                        className={`vsm-garage-card ${isAct ? 'is-active' : ''}`}
+                        id={`vsm-garage-card-${v.id}`}
                       >
-                        <div className="vsm-variant-top">
-                          <span className="vsm-variant-year-badge">{v.year}</span>
-                          <span className={`vsm-fuel-pill ${fuelColor}`}>{v.fuelType}</span>
+                        <div className="vsm-garage-card-main">
+                          {/* Brand Logo / Vehicle Icon */}
+                          <div className="vsm-garage-logo-col">
+                            {makeName ? (
+                              <BrandLogo brandName={makeName} size={40} />
+                            ) : (
+                              <span className="vsm-garage-type-icon">{is2W ? '🏍️' : '🚗'}</span>
+                            )}
+                          </div>
+
+                          {/* Vehicle Details */}
+                          <div className="vsm-garage-info-col">
+                            <div className="vsm-garage-title-row">
+                              <h4 className="vsm-garage-title">{displayName}</h4>
+                              <div className="vsm-garage-badges">
+                                {isAct && <span className="vsm-badge-active">✓ ACTIVE</span>}
+                                {isPrim && <span className="vsm-badge-primary">⭐ PRIMARY</span>}
+                              </div>
+                            </div>
+
+                            <div className="vsm-garage-meta-row">
+                              <span className="vsm-garage-spec">
+                                {makeName} {modelName} {variant?.year ? `· ${variant.year}` : ''} {variant?.name ? `· ${variant.name}` : ''}
+                              </span>
+                              {variant?.fuelType && (
+                                <span className="vsm-garage-fuel-tag">{variant.fuelType}</span>
+                              )}
+                            </div>
+
+                            {v.regNumber && (
+                              <div className="vsm-garage-reg-wrap">
+                                <span className="vsm-garage-reg-plate">
+                                  <span className="reg-ind-flag">IND</span>
+                                  <span className="reg-number-text">{v.regNumber}</span>
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <h4 className="vsm-variant-name">{v.name}</h4>
-                        <div className="vsm-variant-specs">
-                          {v.engineCC ? <span>⚙️ {v.engineCC} cc</span> : null}
-                          {v.transmission ? <span>🕹️ {v.transmission}</span> : null}
-                        </div>
-                        <div className="vsm-variant-action">
-                          <span>Confirm Fitment →</span>
+
+                        {/* Action Controls */}
+                        <div className="vsm-garage-actions-col">
+                          {isAct ? (
+                            <div className="vsm-active-indicator">
+                              <span className="vsm-active-check">✓ Active</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm vsm-switch-btn"
+                              onClick={() => handleSwitchVehicle(v)}
+                              id={`switch-vehicle-${v.id}`}
+                            >
+                              Switch
+                            </button>
+                          )}
+
+                          {!isPrim && (
+                            <button
+                              type="button"
+                              className="vsm-make-primary-btn"
+                              onClick={() => handleMakePrimary(v.id)}
+                              id={`make-primary-${v.id}`}
+                              title="Set as persistent account default in database"
+                            >
+                              Make Primary
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* STEP 5: DETAILS & CONFIRMATION */}
-          {step === 5 && (
-            <form onSubmit={handleConfirmVehicle} className="vsm-step-pane animate-fade-in" id="vsm-step-5">
-              <div className="vsm-pane-header">
-                <h3>Fitment Details & Confirmation</h3>
-                <p>Review vehicle specifications and set active fitment for guaranteed OEM compatibility</p>
+                <div className="vsm-garage-divider" />
+
+                <div className="vsm-garage-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary vsm-add-another-btn"
+                    onClick={() => {
+                      setViewMode('wizard');
+                      setStep(1);
+                    }}
+                    id="vsm-add-another-vehicle-btn"
+                  >
+                    <span>➕</span> Add Another Vehicle
+                  </button>
+
+                  <Link
+                    to="/customer/vehicles"
+                    onClick={onClose}
+                    className="vsm-manage-garage-link"
+                    id="vsm-manage-garage-link"
+                  >
+                    Manage My Garage →
+                  </Link>
+                </div>
               </div>
+            </div>
+          </>
+        )}
 
-              {/* Vehicle Hero Summary Card */}
-              <div className="vsm-summary-hero card">
-                <div className="vsm-hero-top">
-                  <div className="vsm-hero-brand">
-                    <BrandLogo brandId={selectedMake?.id} brandName={selectedMake?.name} size={54} />
-                    <div className="vsm-hero-names">
-                      <span className="vsm-hero-make">{selectedMake?.name}</span>
-                      <h3 className="vsm-hero-title">
-                        {selectedModel?.name} ({selectedVariant?.year})
-                      </h3>
-                      <span className="vsm-hero-variant-badge">
-                        Trim: {selectedVariant?.name}
+        {/* ================================================================= */}
+        {/* 2. VEHICLE SELECTION WIZARD (Add Another Vehicle / 5-Step Flow)    */}
+        {/* ================================================================= */}
+        {viewMode === 'wizard' && (
+          <>
+            {/* Header */}
+            <div className="vsm-header">
+              <div className="vsm-header-text">
+                {vehicles && vehicles.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-xs vsm-back-to-garage-btn"
+                    onClick={() => setViewMode('garage')}
+                    style={{ marginBottom: '6px', paddingLeft: 0 }}
+                  >
+                    ← Back to My Garage
+                  </button>
+                )}
+                <h2 id="vsm-modal-title" className="vsm-title">{title}</h2>
+                <p className="vsm-subtitle">Guaranteed 100% exact part fitment and maintenance compatibility</p>
+              </div>
+              <button
+                type="button"
+                className="vsm-close-btn"
+                onClick={onClose}
+                aria-label="Close vehicle selector"
+                id="vsm-close-btn"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Breadcrumb / Step Progress Indicator */}
+            <div className="vsm-progress-bar" role="navigation" aria-label="Selection progress">
+              {STEPS.map((s, idx) => {
+                const stepNum = s.id;
+                const isCompleted = step > stepNum;
+                const isActive = step === stepNum;
+                return (
+                  <div
+                    key={s.id}
+                    className={`vsm-step-node ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                    onClick={() => {
+                      if (isCompleted) setStep(stepNum);
+                    }}
+                    role="button"
+                    tabIndex={isCompleted ? 0 : -1}
+                    title={isCompleted ? `Go back to ${s.label}` : s.label}
+                  >
+                    <div className="vsm-step-icon">
+                      {isCompleted ? '✓' : stepNum}
+                    </div>
+                    <div className="vsm-step-info">
+                      <span className="vsm-step-tag">Step {stepNum}</span>
+                      <span className="vsm-step-name">{s.label}</span>
+                    </div>
+                    {idx < STEPS.length - 1 && <div className="vsm-step-connector" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Wizard Body */}
+            <div className="vsm-body">
+              {/* STEP 1: VEHICLE TYPE */}
+              {step === 1 && (
+                <div className="vsm-step-pane animate-fade-in" id="vsm-step-1">
+                  <div className="vsm-pane-header">
+                    <h3>Select Vehicle Category</h3>
+                    <p>Choose whether you are shopping for a four-wheeler car/SUV or a two-wheeler motorcycle/scooter</p>
+                  </div>
+
+                  <div className="vsm-type-grid">
+                    <div
+                      className={`vsm-type-card ${vehicleType === '4_WHEELER' ? 'selected' : ''}`}
+                      onClick={() => {
+                        setVehicleType('4_WHEELER');
+                        setStep(2);
+                      }}
+                      id="vsm-type-4w-card"
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="vsm-type-icon-wrapper">
+                        <span className="vsm-type-emoji">🚗</span>
+                      </div>
+                      <div className="vsm-type-content">
+                        <h4>4 Wheeler (Cars & SUVs)</h4>
+                        <p>Sedans, Hatchbacks, SUVs, MUVs, Compacts & EVs</p>
+                        <div className="vsm-type-badge">
+                          <span>20 Manufacturers Available</span>
+                        </div>
+                      </div>
+                      <div className="vsm-type-arrow">→</div>
+                    </div>
+
+                    <div
+                      className={`vsm-type-card ${vehicleType === '2_WHEELER' ? 'selected' : ''}`}
+                      onClick={() => {
+                        setVehicleType('2_WHEELER');
+                        setStep(2);
+                      }}
+                      id="vsm-type-2w-card"
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="vsm-type-icon-wrapper">
+                        <span className="vsm-type-emoji">🏍️</span>
+                      </div>
+                      <div className="vsm-type-content">
+                        <h4>2 Wheeler (Bikes & Scooters)</h4>
+                        <p>Motorcycles, Scooters, Cruisers & Electric 2-Wheelers</p>
+                        <div className="vsm-type-badge">
+                          <span>9 Major Brands Available</span>
+                        </div>
+                      </div>
+                      <div className="vsm-type-arrow">→</div>
+                    </div>
+                  </div>
+
+                  {/* Quick Select from Recently Selected */}
+                  {recentVehicles.length > 0 && (
+                    <div className="vsm-recents-section">
+                      <div className="vsm-recents-title">
+                        <span>⚡ Recently Selected Vehicles:</span>
+                      </div>
+                      <div className="vsm-recents-chips">
+                        {(recentVehicles || []).map((rv) => (
+                          <button
+                            key={rv.id}
+                            type="button"
+                            className="vsm-recent-chip"
+                            onClick={() => handleQuickSelectRecent(rv)}
+                            id={`recent-chip-${rv.variantId}`}
+                          >
+                            <span className="recent-chip-icon">
+                              {rv.type === 'CAR' ? '🚗' : '🏍️'}
+                            </span>
+                            <span className="recent-chip-text">
+                              {rv.year} {rv.makeName} {rv.modelName} ({rv.variantName})
+                            </span>
+                            <span className="recent-chip-action">Use Fitment ↵</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* STEP 2: BRAND / MANUFACTURER */}
+              {step === 2 && (
+                <div className="vsm-step-pane animate-fade-in" id="vsm-step-2">
+                  <div className="vsm-pane-header flex-header">
+                    <div>
+                      <h3>Select {vehicleType === '4_WHEELER' ? 'Car' : '2-Wheeler'} Manufacturer</h3>
+                      <p>Displaying authentic database-verified brands with live model catalogs</p>
+                    </div>
+                    <div className="vsm-active-tag">
+                      {vehicleType === '4_WHEELER' ? '🚗 4-Wheeler' : '🏍️ 2-Wheeler'}
+                      <button type="button" className="vsm-tag-change" onClick={() => setStep(1)}>
+                        Change
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Brand Search Bar */}
+                  <div className="vsm-search-bar">
+                    <span className="vsm-search-icon">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search brand (e.g. Maruti, Hyundai, Tata, BMW, Mercedes)..."
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                      id="vsm-brand-search-input"
+                      autoFocus
+                    />
+                    {brandSearch && (
+                      <button type="button" className="vsm-search-clear" onClick={() => setBrandSearch('')}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Brand Grid */}
+                  {loadingMakes ? (
+                    <div className="vsm-loading-grid">
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <div key={i} className="vsm-skeleton-card" />
+                      ))}
+                    </div>
+                  ) : filteredMakes.length > 0 ? (
+                    <div className="vsm-brand-grid">
+                      {filteredMakes.map((make) => (
+                        <div
+                          key={make.id}
+                          className={`vsm-brand-card ${selectedMake?.id === make.id ? 'selected' : ''}`}
+                          onClick={() => handleSelectMake(make)}
+                          id={`make-card-${make.id}`}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <div className="vsm-brand-emblem-wrap">
+                            <BrandLogo brandName={make.name} size={48} />
+                          </div>
+                          <span className="vsm-brand-name">{make.name}</span>
+                          {make._count?.models > 0 && (
+                            <span className="vsm-brand-model-count">{make._count.models} Models</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="vsm-empty-state">
+                      <p>No manufacturers found matching "{brandSearch}"</p>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBrandSearch('')}>
+                        Clear Search
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* STEP 3: MODEL */}
+              {step === 3 && (
+                <div className="vsm-step-pane animate-fade-in" id="vsm-step-3">
+                  <div className="vsm-pane-header flex-header">
+                    <div>
+                      <h3>Select Model</h3>
+                      <p>Pick the precise model line for {selectedMake?.name}</p>
+                    </div>
+                    <div className="vsm-crumbs">
+                      <span className="vsm-selected-crumb" onClick={() => setStep(2)}>
+                        {selectedMake?.name}
                       </span>
                     </div>
                   </div>
-                  <div className="vsm-hero-guarantee">
-                    <span className="guarantee-shield">🛡️</span>
-                    <div>
-                      <strong>100% Fitment Guarantee</strong>
-                      <p>All catalog parts are filtered for this exact vehicle configuration</p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="vsm-hero-specs-row">
-                  <div className="spec-pill">
-                    <span className="spec-label">Year</span>
-                    <span className="spec-val">{selectedVariant?.year}</span>
-                  </div>
-                  <div className="spec-pill">
-                    <span className="spec-label">Fuel Type</span>
-                    <span className="spec-val">{selectedVariant?.fuelType}</span>
-                  </div>
-                  <div className="spec-pill">
-                    <span className="spec-label">Transmission</span>
-                    <span className="spec-val">{selectedVariant?.transmission || 'Standard'}</span>
-                  </div>
-                  {selectedVariant?.engineCC ? (
-                    <div className="spec-pill">
-                      <span className="spec-label">Engine CC</span>
-                      <span className="spec-val">{selectedVariant.engineCC} cc</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Optional Customization Fields */}
-              <div className="vsm-inputs-row">
-                <div className="vsm-input-group">
-                  <label htmlFor="vsm-nickname-input" className="vsm-label">
-                    Vehicle Nickname (Optional)
-                  </label>
-                  <input
-                    id="vsm-nickname-input"
-                    type="text"
-                    className="vsm-input"
-                    placeholder="e.g. My Daily Swift, Office Commuter"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                  />
-                  <span className="vsm-help-text">Display name used in your garage and notifications</span>
-                </div>
-
-                <div className="vsm-input-group">
-                  <label htmlFor="vsm-regnum-input" className="vsm-label">
-                    Registration Number (Optional)
-                  </label>
-                  <div className="vsm-ind-plate-wrap">
-                    <span className="ind-badge">IND</span>
+                  {/* Model Search */}
+                  <div className="vsm-search-bar">
+                    <span className="vsm-search-icon">🔍</span>
                     <input
-                      id="vsm-regnum-input"
                       type="text"
-                      className="vsm-input plate-input"
-                      placeholder="e.g. MH 02 CB 1234"
-                      value={regNumber}
-                      onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
-                      maxLength={14}
+                      placeholder={`Search ${selectedMake?.name || ''} models (e.g. Swift, Nexon, Creta)...`}
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      id="vsm-model-search-input"
+                      autoFocus
                     />
+                    {modelSearch && (
+                      <button type="button" className="vsm-search-clear" onClick={() => setModelSearch('')}>
+                        ✕
+                      </button>
+                    )}
                   </div>
-                  <span className="vsm-help-text">Helps workshops & delivery partners identify your vehicle</span>
+
+                  {/* Model Grid */}
+                  {loadingModels ? (
+                    <div className="vsm-loading-grid">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="vsm-skeleton-card" />
+                      ))}
+                    </div>
+                  ) : filteredModels.length > 0 ? (
+                    <div className="vsm-model-grid">
+                      {filteredModels.map((model) => (
+                        <div
+                          key={model.id}
+                          className={`vsm-model-card ${selectedModel?.id === model.id ? 'selected' : ''}`}
+                          onClick={() => handleSelectModel(model)}
+                          id={`model-card-${model.id}`}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <div className="vsm-model-icon">
+                            {model.type === 'BIKE' || model.type === 'SCOOTER' ? '🏍️' : '🚗'}
+                          </div>
+                          <div className="vsm-model-details">
+                            <span className="vsm-model-name">{model.name}</span>
+                            <span className="vsm-model-sub">
+                              {model._count?.variants ? `${model._count.variants} Variants Available` : 'Available in Catalog'}
+                            </span>
+                          </div>
+                          <span className="vsm-model-arrow">→</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="vsm-empty-state">
+                      <p>No models found matching "{modelSearch}"</p>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setModelSearch('')}>
+                        Clear Search
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Garage Option */}
-              <div className="vsm-checkbox-row">
-                <label className="vsm-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={saveToGarage}
-                    onChange={(e) => setSaveToGarage(e.target.checked)}
-                    id="vsm-save-to-garage-chk"
-                  />
-                  <span>Save this vehicle to <strong>My Garage</strong> for fast 1-click access across PartNexa</span>
-                </label>
-              </div>
+              {/* STEP 4: VARIANT & YEAR */}
+              {step === 4 && (
+                <div className="vsm-step-pane animate-fade-in" id="vsm-step-4">
+                  <div className="vsm-pane-header flex-header">
+                    <div>
+                      <h3>Select Year & Variant</h3>
+                      <p>Engine, fuel type, and year specify exact part compatibility</p>
+                    </div>
+                    <div className="vsm-crumbs">
+                      <span className="vsm-selected-crumb" onClick={() => setStep(2)}>
+                        {selectedMake?.name}
+                      </span>
+                      <span className="vsm-crumb-sep">/</span>
+                      <span className="vsm-selected-crumb" onClick={() => setStep(3)}>
+                        {selectedModel?.name}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Bottom Actions for Step 5 */}
-              <div className="vsm-actions-bar">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setStep(4)}
-                  id="vsm-back-step4-btn"
-                >
-                  ← Back to Variants
-                </button>
+                  {loadingVariants ? (
+                    <div className="vsm-loading-grid">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="vsm-skeleton-card" />
+                      ))}
+                    </div>
+                  ) : variants.length > 0 ? (
+                    <div className="vsm-variant-grid">
+                      {variants.map((v) => (
+                        <div
+                          key={v.id}
+                          className={`vsm-variant-card ${selectedVariant?.id === v.id ? 'selected' : ''}`}
+                          onClick={() => handleSelectVariant(v)}
+                          id={`variant-card-${v.id}`}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <div className="vsm-variant-header">
+                            <span className="vsm-variant-year-badge">{v.year}</span>
+                            {v.fuelType && <span className="vsm-fuel-pill">{v.fuelType}</span>}
+                          </div>
+                          <span className="vsm-variant-title">{v.name}</span>
+                          <span className="vsm-variant-specs">
+                            {v.fuelType ? `${v.fuelType} engine` : 'Standard Engine'} · {v.year} Model
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="vsm-empty-state">
+                      <p>No variants registered for {selectedModel?.name} yet.</p>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => setStep(3)}>
+                        ← Back to Models
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-lg"
-                  disabled={submitting}
-                  id="vsm-confirm-fitment-btn"
-                >
-                  {submitting ? 'Applying Fitment...' : '✓ Set as Active Vehicle & View Parts'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+              {/* STEP 5: DETAILS & CONFIRMATION */}
+              {step === 5 && (
+                <div className="vsm-step-pane animate-fade-in" id="vsm-step-5">
+                  <div className="vsm-pane-header">
+                    <h3>Confirm Vehicle Configuration</h3>
+                    <p>Review vehicle details and save to your garage for instant fitment verification across the store</p>
+                  </div>
 
-        {/* Global Footer Navigation (Steps 1–4) */}
-        {step < 5 && (
-          <div className="vsm-footer">
-            <div className="vsm-footer-left">
-              {step > 1 && (
-                <button
-                  type="button"
-                  className="btn btn-ghost vsm-back-btn"
-                  onClick={() => setStep(step - 1)}
-                  id="vsm-global-back-btn"
-                >
-                  ← Back
-                </button>
+                  <form onSubmit={handleConfirmVehicle} className="vsm-details-form">
+                    {/* Vehicle Hero Summary Card */}
+                    <div className="vsm-summary-hero">
+                      <div className="vsm-hero-top">
+                        <div className="vsm-hero-emblem">
+                          <BrandLogo brandName={selectedMake?.name} size={64} />
+                        </div>
+                        <div className="vsm-hero-headings">
+                          <span className="vsm-hero-brand">{selectedMake?.name}</span>
+                          <h2 className="vsm-hero-model">{selectedModel?.name}</h2>
+                          <div className="vsm-hero-tags">
+                            <span className="vsm-hero-tag">{selectedVariant?.year}</span>
+                            <span className="vsm-hero-tag">{selectedVariant?.name}</span>
+                            {selectedVariant?.fuelType && (
+                              <span className="vsm-hero-tag tag-fuel">{selectedVariant?.fuelType}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="vsm-hero-perks">
+                        <div className="vsm-perk-item">
+                          <span className="vsm-perk-icon">✓</span>
+                          <span>Guaranteed 100% Fitment Match</span>
+                        </div>
+                        <div className="vsm-perk-item">
+                          <span className="vsm-perk-icon">✓</span>
+                          <span>Zero-Risk Return Protection</span>
+                        </div>
+                        <div className="vsm-perk-item">
+                          <span className="vsm-perk-icon">✓</span>
+                          <span>DIFM Service Scheduling Enabled</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="vsm-inputs-row">
+                      <div className="vsm-form-group">
+                        <label htmlFor="vsm-nickname-input" className="vsm-label">
+                          Vehicle Nickname (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          id="vsm-nickname-input"
+                          className="vsm-input"
+                          placeholder={`e.g. My ${selectedModel?.name || 'Car'}`}
+                          value={nickname}
+                          onChange={(e) => setNickname(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="vsm-form-group">
+                        <label htmlFor="vsm-reg-input" className="vsm-label">
+                          Registration / License Plate (Optional)
+                        </label>
+                        <div className="vsm-ind-plate-wrap">
+                          <div className="vsm-ind-tag">
+                            <span className="ind-blue-dot">●</span>
+                            <span className="ind-text">IND</span>
+                          </div>
+                          <input
+                            type="text"
+                            id="vsm-reg-input"
+                            className="vsm-input vsm-plate-input"
+                            placeholder="MH 12 AB 1234"
+                            value={regNumber}
+                            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+                            maxLength={13}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Save to Garage checkbox */}
+                    <label className="vsm-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={saveToGarage}
+                        onChange={(e) => setSaveToGarage(e.target.checked)}
+                        id="vsm-save-to-garage-chk"
+                      />
+                      <span>Save vehicle to My Garage for future quick access</span>
+                    </label>
+
+                    {/* Action buttons */}
+                    <div className="vsm-actions-bar">
+                      <button
+                        type="button"
+                        className="btn btn-secondary vsm-back-btn"
+                        onClick={() => setStep(4)}
+                      >
+                        ← Back
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary vsm-confirm-btn"
+                        disabled={submitting}
+                        id="vsm-confirm-vehicle-btn"
+                      >
+                        {submitting ? 'Setting Vehicle...' : 'Set Active Vehicle & Browse Parts →'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               )}
             </div>
 
-            <div className="vsm-footer-right">
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={onClose}
-                id="vsm-cancel-btn"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+            {/* Global Step Footer (Steps 1-4) */}
+            {step < 5 && (
+              <div className="vsm-modal-footer">
+                <div className="vsm-footer-left">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost vsm-back-btn"
+                      onClick={() => setStep(step - 1)}
+                      id="vsm-global-back-btn"
+                    >
+                      ← Back
+                    </button>
+                  )}
+                </div>
+
+                <div className="vsm-footer-right">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={onClose}
+                    id="vsm-cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

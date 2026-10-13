@@ -253,6 +253,7 @@ model User {
   supplier        Supplier?
   procurementCart ProcurementCart?
   createdPurchaseOrders PurchaseOrder[] @relation("AdminCreatedPOs")
+  serviceAppointments   ServiceAppointment[]
 
   @@index([role, status])
   @@map("users")
@@ -331,7 +332,8 @@ model Address {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders    Order[]
+  orders              Order[]
+  serviceAppointments ServiceAppointment[]
 
   @@index([userId, isDefault])
   @@map("addresses")
@@ -406,8 +408,9 @@ model CustomerVehicle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  serviceRecords VehicleServiceRecord[]
-  reminders      MaintenanceReminder[]
+  serviceRecords      VehicleServiceRecord[]
+  reminders           MaintenanceReminder[]
+  serviceAppointments ServiceAppointment[]
 
   @@index([userId, isPrimary])
   @@map("customer_vehicles")
@@ -810,6 +813,38 @@ model ServiceBooking {
   @@map("service_bookings")
 }
 
+model ServiceAppointment {
+  id                String            @id @default(uuid())
+  customerId        String
+  customer          User              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerVehicleId String?
+  customerVehicle   CustomerVehicle?  @relation(fields: [customerVehicleId], references: [id], onDelete: SetNull)
+  shopId            String?
+  shop              Shop?             @relation(fields: [shopId], references: [id], onDelete: SetNull)
+  serviceCode       String
+  serviceName       String
+  mode              String            @default("DOORSTEP") // "DOORSTEP" | "WORKSHOP"
+  addressId         String?
+  address           Address?          @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  preferredDate     DateTime
+  scheduledDate     DateTime?
+  status            String            @default("PENDING") // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED
+  quotedLaborPrice  Decimal           @default(0) @db.Decimal(10, 2)
+  notes             String?
+  contactName       String?
+  contactPhone      String?
+  vehicleInfo       String?
+  vehicleNumber     String?
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([customerId])
+  @@index([shopId])
+  @@index([status])
+  @@map("service_appointments")
+}
+
 // ============================================================
 // 9. PAYMENTS (Zero raw card storage!)
 // ============================================================
@@ -903,6 +938,7 @@ model Shop {
   shopDeliveries       ShopDelivery[]
   usedPartIntakes      UsedPartIntake[]
   shopTickets          ShopTicket[]
+  serviceAppointments  ServiceAppointment[]
 
   @@index([city, isVerified, isActive])
   @@map("shops")

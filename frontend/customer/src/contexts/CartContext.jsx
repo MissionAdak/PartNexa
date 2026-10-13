@@ -125,7 +125,7 @@ export const CartProvider = ({ children }) => {
     vehicleVariantId = null,
     ignoreCompatibility = false
   ) => {
-    const targetVariantId = vehicleVariantId || activeVehicle?.variantId || null;
+    const targetVariantId = vehicleVariantId || activeVehicle?.variantId || activeVehicle?.variant?.id || null;
 
     if (user) {
       try {

@@ -8,17 +8,17 @@ export default function ReceiveStockModal({ isOpen, onClose, purchaseOrder, onSt
   const [trackingNumber, setTrackingNumber] = useState(`INB-${Date.now().toString().slice(-6)}`);
   const [notes, setNotes] = useState('');
 
-  if (!isOpen || !purchaseOrder) return null;
-
   // Initialize quantities to receive with remaining quantities
   const [receiveQuantities, setReceiveQuantities] = useState(() => {
     const initial = {};
-    purchaseOrder.items?.forEach((item) => {
+    purchaseOrder?.items?.forEach((item) => {
       const remaining = Math.max(0, item.orderedQuantity - item.receivedQuantity);
       initial[item.id] = remaining;
     });
     return initial;
   });
+
+  if (!isOpen || !purchaseOrder) return null;
 
   const handleQtyChange = (itemId, val, maxAllowed) => {
     const parsed = Math.max(0, Math.min(maxAllowed, Number(val)));

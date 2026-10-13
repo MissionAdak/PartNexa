@@ -193,24 +193,98 @@ export default function CustomersPage() {
             <div className="modal-body">
               {selectedCustomer.vehicles && selectedCustomer.vehicles.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  {selectedCustomer.vehicles.map((v, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        padding: '1rem',
-                        borderRadius: 'var(--radius-md)',
-                        backgroundColor: 'var(--bg-tertiary)',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                        {v.customName || `${v.variantId || 'Registered Vehicle'}`}
+                  {selectedCustomer.vehicles.map((v, i) => {
+                    const hasNickname = Boolean(v.nickname && v.nickname.trim());
+                    const makeModel = `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle';
+                    const yearVariantFuel = [
+                      v.year,
+                      v.variant && v.variant !== 'Standard' ? v.variant : null,
+                      v.fuelType,
+                    ]
+                      .filter(Boolean)
+                      .join(' • ');
+
+                    return (
+                      <div
+                        key={v.id || i}
+                        style={{
+                          padding: '1rem',
+                          borderRadius: 'var(--radius-md)',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            marginBottom: '4px',
+                          }}
+                        >
+                          <div>
+                            {hasNickname ? (
+                              <>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                  "{v.nickname}"
+                                </div>
+                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                  {makeModel} {yearVariantFuel ? `• ${yearVariantFuel}` : ''}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                  {makeModel}
+                                </div>
+                                {yearVariantFuel && (
+                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                    {yearVariantFuel}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          {v.isPrimary && (
+                            <span
+                              className="badge badge-primary"
+                              style={{
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                letterSpacing: '0.04em',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                              }}
+                            >
+                              ⭐ PRIMARY
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.82rem',
+                            color: 'var(--text-muted)',
+                            marginTop: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                        >
+                          <span>
+                            Plate:{' '}
+                            <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                              {v.registrationNumber || v.regNumber || 'Not recorded'}
+                            </strong>
+                          </span>
+                          {v.vehicleType && (
+                            <span style={{ color: 'var(--text-muted)' }}>
+                              • Type: {v.vehicleType}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        Plate Number: {v.regNumber || 'Not recorded'} • Primary: {v.isPrimary ? 'Yes' : 'No'}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
+import NotificationBell from '../notifications/NotificationBell';
 
 export const DeliveryNavbar = () => {
   const { user, partner, theme, toggleTheme, toggleDuty, logout } = useDeliveryAuth();
@@ -96,6 +97,9 @@ export const DeliveryNavbar = () => {
 
       {/* Right Actions: Theme, Rider Badge, Logout */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        {/* Real Notification Bell */}
+        <NotificationBell role="delivery" />
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}

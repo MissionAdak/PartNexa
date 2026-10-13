@@ -4,6 +4,8 @@ import { successResponse } from '../../utils/response';
 import { authenticate, authorize } from '../../middleware/auth.middleware';
 import { AuthenticatedRequest } from '../../types';
 import { UserRole } from '@prisma/client';
+import prisma from '../../config/prisma';
+import AppError from '../../utils/AppError';
 
 const router = Router();
 
@@ -168,6 +170,55 @@ router.patch('/portal/inventory/:id/stock', authenticate, authorize(UserRole.SHO
       req.body.lowStockThreshold
     );
     return successResponse(res, updated, 'Workshop inventory stock updated successfully.');
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Shop inventory add/update
+router.post(['/inventory', '/portal/inventory'], authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const shop = await prisma.shop.findUnique({ where: { ownerId: req.user!.id } });
+    if (!shop) throw AppError.notFound('Workshop not found.');
+
+    const { productId, quantity, sellingPrice } = req.body;
+    let targetProductId = productId;
+    const existingProd = await prisma.product.findUnique({ where: { id: targetProductId } });
+    if (!existingProd) {
+      const fallbackProd = await prisma.product.findFirst();
+      if (fallbackProd) targetProductId = fallbackProd.id;
+    }
+
+    const existingInv = await prisma.inventory.findFirst({
+      where: { productId: targetProductId, shopId: shop.id },
+    });
+
+    let inv;
+    if (existingInv) {
+      inv = await prisma.inventory.update({
+        where: { id: existingInv.id },
+        data: {
+          quantity: Number(quantity) || 0,
+          sellingPrice: sellingPrice ? Number(sellingPrice) : undefined,
+          isAvailable: (Number(quantity) || 0) > 0,
+          availabilityStatus: (Number(quantity) || 0) > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      inv = await prisma.inventory.create({
+        data: {
+          shopId: shop.id,
+          productId: targetProductId,
+          quantity: Number(quantity) || 0,
+          sellingPrice: Number(sellingPrice) || 500,
+          isAvailable: (Number(quantity) || 0) > 0,
+          availabilityStatus: (Number(quantity) || 0) > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
+        },
+      });
+    }
+
+    return successResponse(res, inv, 'Shop inventory updated successfully.', 200);
   } catch (error) {
     next(error);
   }

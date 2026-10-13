@@ -2,8 +2,9 @@ import bcrypt from 'bcryptjs';
 import prisma from '../../config/prisma';
 import AppError from '../../utils/AppError';
 import { generateAccessToken } from '../../utils/jwt';
-import { KYCDocumentType, OrderStatus, PaymentStatus, DeliveryAssignmentStatus } from '@prisma/client';
+import { KYCDocumentType, OrderStatus, PaymentStatus, DeliveryAssignmentStatus, UsedPartStatus, PayoutStatus } from '@prisma/client';
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
+import { createNotification } from '../notifications/notifications.service';
 
 // ============================================================================
 // HELPER: RESOLVE PARTNER FROM USER
@@ -320,7 +321,7 @@ export const adminVerifyKyc = async (
   const isApproved = data.status === 'APPROVED';
 
   // Transaction-safe execution updating KYC, documents, User role status, and Partner duty
-  return prisma.$transaction(async (tx) => {
+  const txResult = await prisma.$transaction(async (tx) => {
     // 1. Update KYC container
     const updatedKyc = await tx.kYC.update({
       where: { userId },
@@ -378,6 +379,27 @@ export const adminVerifyKyc = async (
         : null,
     };
   });
+
+  // Notify delivery partner of KYC outcome
+  try {
+    await createNotification({
+      userId,
+      title: isApproved ? 'KYC Approved' : 'KYC Verification Update',
+      body: isApproved
+        ? 'Congratulations! Your delivery partner KYC has been approved. You are now authorized to accept delivery jobs.'
+        : `Your KYC submission was not approved: ${data.rejectionReason || 'Please review your uploaded documents.'}`,
+      channel: 'IN_APP',
+      status: 'DELIVERED',
+      data: {
+        route: '/delivery/profile',
+        type: isApproved ? 'KYC_APPROVED' : 'KYC_REJECTED',
+      },
+    });
+  } catch (err) {
+    console.warn('[DeliveryService] KYC notification warning:', err);
+  }
+
+  return txResult;
 };
 
 // ============================================================================
@@ -878,14 +900,27 @@ export const updateJobStatus = async (
           message: 'Package successfully delivered to customer doorstep by delivery partner.',
         },
       });
-      // Sync Shop Delivery manifest if exists
-      try {
-        await prisma.shopDelivery.updateMany({
-          where: { orderId: assignment.orderId },
-          data: { status: 'DELIVERED', receivedAt: new Date() },
-        });
-      } catch {}
+      // Customer notification for Delivered
+      if (order?.userId) {
+        try {
+          await createNotification({
+            userId: order.userId,
+            title: 'Order Delivered',
+            body: `Your Order #${order.orderNumber} has been delivered successfully. Thank you for shopping with PartNexa!`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: `/customer/orders/${order.id}`,
+              orderId: order.id,
+              type: 'ORDER_DELIVERED',
+            },
+          });
+        } catch (err) {
+          console.warn('[DeliveryService] Delivery notification error:', err);
+        }
+      }
     } else if (status === 'PICKED_UP') {
+      const order = await prisma.order.findUnique({ where: { id: assignment.orderId } });
       await prisma.order.update({
         where: { id: assignment.orderId },
         data: { status: OrderStatus.SHIPPED },
@@ -903,7 +938,24 @@ export const updateJobStatus = async (
           data: { status: 'OUT_FOR_DELIVERY' },
         });
       } catch {}
+      if (order?.userId) {
+        try {
+          await createNotification({
+            userId: order.userId,
+            title: 'Out for Delivery',
+            body: `Your Order #${order.orderNumber} is on the way with our delivery partner.`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: `/customer/orders/${order.id}`,
+              orderId: order.id,
+              type: 'ORDER_OUT_FOR_DELIVERY',
+            },
+          });
+        } catch {}
+      }
     } else if (status === 'IN_TRANSIT') {
+      const order = await prisma.order.findUnique({ where: { id: assignment.orderId } });
       await prisma.order.update({
         where: { id: assignment.orderId },
         data: { status: OrderStatus.OUT_FOR_DELIVERY },
@@ -915,6 +967,22 @@ export const updateJobStatus = async (
           message: 'Package is out for doorstep delivery. Approaching customer destination.',
         },
       });
+      if (order?.userId) {
+        try {
+          await createNotification({
+            userId: order.userId,
+            title: 'Out for Delivery',
+            body: `Your Order #${order.orderNumber} is approaching your location.`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: `/customer/orders/${order.id}`,
+              orderId: order.id,
+              type: 'ORDER_OUT_FOR_DELIVERY',
+            },
+          });
+        } catch {}
+      }
     }
   }
 
@@ -1105,28 +1173,65 @@ export const performUsedPartVerification = async (
 
   // 1. Update Used Part Listing if exists
   if ((rawAssignment as any).usedPartListingId) {
+    const listingId = (rawAssignment as any).usedPartListingId;
     const valuation = Number(data.calculatedValuation || 2400);
     try {
-      await prisma.usedPartListing.update({
-        where: { id: (rawAssignment as any).usedPartListingId },
-        data: {
-          status: isApproved ? 'VALUED' : 'REJECTED',
-          conditionGrade: data.conditionGrade,
-          finalValuation: isApproved ? valuation : null,
-          payoutStatus: isApproved ? 'PAYOUT_PENDING' : 'REJECTED',
-          payoutAmount: isApproved ? valuation : 0,
-        },
+      const listing = await prisma.usedPartListing.findUnique({
+        where: { id: listingId },
+        include: { verification: true, payout: true },
       });
 
-      if (isApproved) {
-        await prisma.usedPartPayout.create({
+      if (listing) {
+        await prisma.usedPartListing.update({
+          where: { id: listingId },
           data: {
-            listingId: (rawAssignment as any).usedPartListingId,
-            sellerId: partner.userId,
-            amount: valuation,
-            status: 'PROCESSING',
+            status: isApproved ? UsedPartStatus.VERIFIED : UsedPartStatus.REJECTED,
+            resalePrice: isApproved ? valuation : null,
+            updatedAt: new Date(),
           },
         });
+
+        const ratingMap: Record<string, number> = {
+          'A+': 10,
+          A: 9,
+          B: 7,
+          C: 5,
+          D: 3,
+        };
+
+        await prisma.usedPartVerification.upsert({
+          where: { listingId },
+          create: {
+            listingId,
+            conditionRating: ratingMap[data.conditionGrade] || 8,
+            notes: data.notes || `Doorstep inspection completed (Grade: ${data.conditionGrade}).`,
+            approvedAt: isApproved ? new Date() : null,
+            rejectedAt: !isApproved ? new Date() : null,
+            rejectionReason: !isApproved ? (data.notes || 'Inspection criteria not met.') : null,
+          },
+          update: {
+            conditionRating: ratingMap[data.conditionGrade] || 8,
+            notes: data.notes || `Doorstep inspection completed (Grade: ${data.conditionGrade}).`,
+            approvedAt: isApproved ? new Date() : null,
+            rejectedAt: !isApproved ? new Date() : null,
+            rejectionReason: !isApproved ? (data.notes || 'Inspection criteria not met.') : null,
+          },
+        });
+
+        if (isApproved) {
+          await prisma.usedPartPayout.upsert({
+            where: { listingId },
+            create: {
+              listingId,
+              sellerId: listing.sellerId,
+              amount: Math.round(valuation * 0.9),
+              status: PayoutStatus.PENDING,
+            },
+            update: {
+              amount: Math.round(valuation * 0.9),
+            },
+          });
+        }
       }
     } catch (upErr) {
       console.warn('Used part listing sync warning:', upErr);

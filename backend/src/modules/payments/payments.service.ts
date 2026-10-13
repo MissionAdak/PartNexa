@@ -97,6 +97,8 @@ export const createRazorpayPaymentOrder = async (userId: string, orderId: string
     currency: 'INR',
     keyId: DEMO_RAZORPAY_KEY_ID,
     isDemoMode,
+    gatewayName: isDemoMode ? 'PartNexa Demo Payment' : 'Razorpay Sandbox',
+    paymentGatewayLabel: isDemoMode ? 'PartNexa Demo Payment' : 'Razorpay Sandbox',
     // demoSecretKey intentionally NOT returned — the secret stays server-side only.
     // The frontend sends the payment result to /api/payments/verify and the backend
     // computes + validates the expected signature authoritatively.
@@ -161,10 +163,7 @@ export const verifyRazorpayPayment = async (
   }
 
   // IDEMPOTENCY GUARD: If already captured, return idempotent success without mutating again
-  if (
-    (payment.status === PaymentStatus.CAPTURED || order.paymentStatus === PaymentStatus.CAPTURED) &&
-    (payment.razorpayPaymentId === razorpayPaymentId || payment.razorpayOrderId === razorpayOrderId)
-  ) {
+  if (payment.status === PaymentStatus.CAPTURED || order.paymentStatus === PaymentStatus.CAPTURED) {
     const refreshedOrder = await prisma.order.findFirst({
       where: { id: order.id },
       include: {
@@ -194,6 +193,15 @@ export const verifyRazorpayPayment = async (
         updatedAt: payment.updatedAt,
       },
     };
+  }
+
+  // ORDER TOTAL == PAYMENT AMOUNT INTEGRITY CHECK
+  const orderTotal = Number(order.total);
+  const paymentAmount = Number(payment.amount);
+  if (Math.abs(orderTotal - paymentAmount) > 0.01) {
+    throw AppError.badRequest(
+      `Payment amount mismatch: Order total is ₹${orderTotal} but payment record is ₹${paymentAmount}.`
+    );
   }
 
   // CRYPTOGRAPHIC SIGNATURE VERIFICATION
@@ -309,7 +317,7 @@ export const verifyRazorpayPayment = async (
         body: `Payment of ₹${Number(order.total).toLocaleString('en-IN')} confirmed for Order #${order.orderNumber}. Your items are being prepared for dispatch.`,
         channel: 'IN_APP',
         status: 'DELIVERED',
-        data: { orderId: order.id, type: 'ORDER_PAYMENT_CAPTURED' },
+        data: { route: `/customer/orders/${order.id}`, orderId: order.id, type: 'ORDER_PAYMENT_CAPTURED' },
       },
     });
   } catch (notifErr) {
@@ -419,7 +427,7 @@ export const recordPaymentFailure = async (
         body: `Payment for Order #${order.orderNumber} was not completed (${errorCode || 'CANCELLED'}). You can retry anytime.`,
         channel: 'IN_APP',
         status: 'DELIVERED',
-        data: { orderId: order.id, type: 'ORDER_PAYMENT_FAILED' },
+        data: { route: `/customer/orders/${order.id}`, orderId: order.id, type: 'ORDER_PAYMENT_FAILED' },
       },
     });
   } catch (notifErr) {

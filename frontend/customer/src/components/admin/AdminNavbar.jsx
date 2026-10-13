@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
+import NotificationBell from '../notifications/NotificationBell';
 
 export default function AdminNavbar() {
   const { user, logout, theme, toggleTheme } = useAdminAuth();
@@ -38,6 +39,9 @@ export default function AdminNavbar() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Real Notification Bell */}
+        <NotificationBell role="admin" />
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}

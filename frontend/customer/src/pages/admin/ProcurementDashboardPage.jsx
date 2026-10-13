@@ -28,7 +28,7 @@ export default function ProcurementDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedSupplier, setSelectedSupplier] = useState('ALL');
   const [selectedBrand, setSelectedBrand] = useState('ALL');
-  const [sortBy, setSortBy] = useState('part_name');
+  const [_sortBy, _setSortBy] = useState('part_name');
 
   // Supplier Filter
   const [supplierSearch, setSupplierSearch] = useState('');

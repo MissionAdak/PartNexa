@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShopAuth } from '../../contexts/ShopAuthContext';
 import { Link } from 'react-router-dom';
+import NotificationBell from '../notifications/NotificationBell';
 
 export const ShopNavbar = () => {
   const { shop, user, logout, theme, toggleTheme } = useShopAuth();
@@ -93,6 +94,9 @@ export const ShopNavbar = () => {
           <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#10B981', animation: 'pulse 1.5s infinite' }} />
           Online & Receiving DIFM
         </div>
+
+        {/* Real Notification Bell */}
+        <NotificationBell role="shop" />
 
         {/* Dark / Light Mode Switcher */}
         <button

@@ -1,5 +1,6 @@
 import prisma from '../../config/prisma';
 import { OrderStatus, PaymentStatus, DIFMType, DIFMStatus, DeliveryAssignmentStatus } from '@prisma/client';
+import { createNotification } from '../notifications/notifications.service';
 
 export interface PropagateOrderResult {
   orderId: string;
@@ -93,6 +94,71 @@ export const propagateOrderConfirmed = async (orderId: string): Promise<Propagat
         message: `Order assigned to logistics fleet. Dispatching via partner ${activePartner.vehicleType || 'Courier'}.`,
       },
     });
+
+    // Authoritative Customer and Partner In-App Notifications
+    try {
+      const existingCustNotifs = await prisma.notification.findMany({
+        where: { userId: order.userId },
+        take: 20,
+      });
+
+      // 1. Customer: Order Confirmed
+      if (!existingCustNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'ORDER_CONFIRMED')) {
+        await createNotification({
+          userId: order.userId,
+          title: 'Order Confirmed',
+          body: `Your Order #${order.orderNumber} for ₹${Number(order.total).toLocaleString('en-IN')} has been confirmed.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: `/customer/orders/${order.id}`,
+            orderId: order.id,
+            type: 'ORDER_CONFIRMED',
+          },
+        });
+      }
+
+      // 2. Customer: Delivery Assigned
+      if (!existingCustNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'DELIVERY_ASSIGNED')) {
+        await createNotification({
+          userId: order.userId,
+          title: 'Delivery Assigned',
+          body: `A delivery partner (${activePartner.vehicleType || 'Courier'}) has been assigned to Order #${order.orderNumber}.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: `/customer/orders/${order.id}`,
+            orderId: order.id,
+            type: 'DELIVERY_ASSIGNED',
+          },
+        });
+      }
+
+      // 3. Delivery Partner: New assignment
+      if (activePartner?.userId) {
+        const partnerNotifs = await prisma.notification.findMany({
+          where: { userId: activePartner.userId },
+          take: 20,
+        });
+        if (!partnerNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'NEW_DELIVERY_ASSIGNMENT')) {
+          await createNotification({
+            userId: activePartner.userId,
+            title: 'New Delivery Assignment',
+            body: `New delivery job for Order #${order.orderNumber} (${order.address?.city || 'Bangalore'}). Fee: ₹${fee}.`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: '/delivery/jobs',
+              orderId: order.id,
+              assignmentId: existingAssignment.id,
+              type: 'NEW_DELIVERY_ASSIGNMENT',
+            },
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.warn('[Propagation] Notification error:', notifErr);
+    }
   } else if (existingAssignment) {
     result.deliveryAssignmentId = existingAssignment.id;
   }
@@ -254,6 +320,84 @@ export const propagateOrderConfirmed = async (orderId: string): Promise<Propagat
         result.shopDeliveryId = shopDelivery.id;
       }
     }
+  }
+
+  // 3. Workshop & Admin In-App Notifications
+  try {
+    if (result.shopJobId && targetShopId) {
+      const targetShop = await prisma.shop.findUnique({ where: { id: targetShopId } });
+      const shopOwnerId = targetShop?.ownerId || 'shop-owner-1';
+      if (shopOwnerId) {
+        const existingShopNotifs = await prisma.notification.findMany({
+          where: { userId: shopOwnerId },
+          take: 20,
+        });
+        if (!existingShopNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'SHOP_NEW_JOB')) {
+          await createNotification({
+            userId: shopOwnerId,
+            title: 'New Service Job',
+            body: `New installation job #${order.orderNumber} scheduled for customer.`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: '/shop/calendar',
+              orderId: order.id,
+              jobId: result.shopJobId,
+              type: 'SHOP_NEW_JOB',
+            },
+          });
+        }
+      }
+
+      // Customer notification for workshop assigned
+      const custNotifs = await prisma.notification.findMany({
+        where: { userId: order.userId },
+        take: 20,
+      });
+      if (!custNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'WORKSHOP_ASSIGNED')) {
+        await createNotification({
+          userId: order.userId,
+          title: 'Workshop Assigned',
+          body: `Workshop ${targetShop?.name || 'Partner Workshop'} has been assigned for Order #${order.orderNumber}.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: `/customer/orders/${order.id}`,
+            orderId: order.id,
+            type: 'WORKSHOP_ASSIGNED',
+          },
+        });
+      }
+    }
+
+    // Operational notice for Admins
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+      take: 2,
+    });
+    for (const adm of admins) {
+      const admNotifs = await prisma.notification.findMany({
+        where: { userId: adm.id },
+        take: 10,
+      });
+      if (!admNotifs.some((n: any) => n.data?.orderId === order.id && n.data?.type === 'ADMIN_NEW_ORDER')) {
+        await createNotification({
+          userId: adm.id,
+          title: 'New Order Received',
+          body: `Order #${order.orderNumber} confirmed for ₹${Number(order.total).toLocaleString('en-IN')}.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: {
+            route: '/admin/orders',
+            orderId: order.id,
+            type: 'ADMIN_NEW_ORDER',
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[Propagation] Workshop/Admin notification error:', err);
   }
 
   return result;

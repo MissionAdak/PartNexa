@@ -12,7 +12,6 @@ import './CheckoutPage.css';
 const CheckoutPage = () => {
   const { cart, clearCart } = useCart();
   const { user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Addresses State
@@ -123,6 +122,7 @@ const CheckoutPage = () => {
     } finally {
       setIsQuoteLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, cartItemKey, selectedAddressId, difmOption, selectedShopId, appliedCoupon, coordsLat, coordsLng]);
 
   // Recalculate quote immediately whenever option, address, shop, or coupon changes
@@ -436,7 +436,6 @@ const CheckoutPage = () => {
   };
 
   const eligibleShops = quote?.eligibleShops || [];
-  const assignedShop = quote?.difm?.assignedShop || eligibleShops[0];
   const distanceKm = quote?.difm?.distanceKm || 4.8;
   const durationMinutes = quote?.difm?.durationMinutes || 25;
 

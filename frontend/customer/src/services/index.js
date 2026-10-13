@@ -81,6 +81,9 @@ export const subscriptionsService = {
 export const servicesService = {
   getShops: (city) => api.get('/shops', { params: city ? { city } : {} }),
   getShop: (slug) => api.get(`/shops/${slug}`),
+  bookAppointment: (data) => api.post('/services/book', data),
+  getMyAppointments: () => api.get('/services/my'),
+  getAppointment: (id) => api.get(`/services/${id}`),
 };
 
 export const usedPartsService = {
@@ -104,4 +107,5 @@ export const supportService = {
 export { default as shopService } from './shopService';
 export { default as deliveryService } from './deliveryService';
 export { default as adminService } from './adminService';
+export { default as notificationsService } from './notificationsService';
 

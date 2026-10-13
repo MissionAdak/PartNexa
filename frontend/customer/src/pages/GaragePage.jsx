@@ -9,7 +9,7 @@ import './GaragePage.css';
 import VehicleSelectorModal from '../components/vehicle/VehicleSelectorModal';
 import { BrandLogo } from '../components/vehicle/BrandLogos';
 
-const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
+const VehicleCard = ({ vehicle, isActive, onSwitchActive, onEdit, onRemove, onSetPrimary }) => {
   const { variant } = vehicle;
   const make = variant?.model?.make;
   const model = variant?.model;
@@ -18,14 +18,22 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
 
   return (
     <div
-      className={`vehicle-card card ${vehicle.isPrimary ? 'primary' : ''}`}
+      className={`vehicle-card card ${vehicle.isPrimary ? 'primary' : ''} ${isActive ? 'is-active-card' : ''}`}
       id={`garage-vehicle-${vehicle.id}`}
+      style={isActive ? { borderColor: '#10b981', boxShadow: '0 0 0 1px #10b981' } : {}}
     >
-      {vehicle.isPrimary && (
-        <div className="primary-badge badge badge-primary">
-          ⭐ Primary Vehicle
-        </div>
-      )}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+        {isActive && (
+          <div className="badge" style={{ background: '#10b981', color: '#ffffff', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.04em', padding: '3px 8px', borderRadius: '6px' }}>
+            ✓ ACTIVE FITMENT
+          </div>
+        )}
+        {vehicle.isPrimary && (
+          <div className="primary-badge badge badge-primary">
+            ⭐ Primary Vehicle
+          </div>
+        )}
+      </div>
       <div className="vehicle-card-body">
         <div className="vehicle-icon">
           {make?.name ? (
@@ -54,6 +62,16 @@ const VehicleCard = ({ vehicle, onEdit, onRemove, onSetPrimary }) => {
       </div>
 
       <div className="vehicle-card-actions">
+        {!isActive && (
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={() => onSwitchActive(vehicle)}
+            id={`switch-active-${vehicle.id}`}
+            title="Set as active vehicle for part fitment"
+          >
+            Switch Active
+          </button>
+        )}
         <Link
           to={`/products?vehicleVariantId=${variant?.id}&compatibleOnly=true`}
           className="btn btn-primary btn-sm"
@@ -232,11 +250,13 @@ const DeleteVehicleModal = ({ vehicle, onClose, onConfirm }) => {
 const GaragePage = () => {
   const {
     vehicles,
+    activeVehicle,
     loading,
     addVehicle,
     updateVehicle,
     deleteVehicle,
     setPrimaryVehicle,
+    switchActiveVehicle,
   } = useVehicles();
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -295,6 +315,8 @@ const GaragePage = () => {
               <VehicleCard
                 key={vehicle.id}
                 vehicle={vehicle}
+                isActive={activeVehicle?.id === vehicle.id}
+                onSwitchActive={(v) => switchActiveVehicle(v)}
                 onEdit={(v) => setEditingVehicle(v)}
                 onRemove={(v) => setDeletingVehicle(v)}
                 onSetPrimary={(id) => setPrimaryVehicle(id)}

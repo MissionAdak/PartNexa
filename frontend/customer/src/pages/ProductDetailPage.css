@@ -112,7 +112,7 @@
   position: relative;
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  background: var(--color-surface);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   aspect-ratio: 4/3;
   display: flex;
@@ -122,7 +122,7 @@
 }
 
 [data-theme='dark'] .product-main-image {
-  background: var(--color-surface-elevated);
+  background: var(--color-bg-card);
 }
 
 .product-main-img {
@@ -285,12 +285,13 @@
 .product-price-box {
   padding: var(--space-5);
   border-radius: var(--radius-xl);
-  background: var(--color-surface);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 [data-theme='dark'] .product-price-box {
-  background: var(--color-surface-elevated);
+  background: var(--color-bg-card);
 }
 
 .price-row {
@@ -393,13 +394,13 @@
   padding: var(--space-3) var(--space-4);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--color-bg-card);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 [data-theme='dark'] .seller-option-card {
-  background: var(--color-surface-elevated);
+  background: var(--color-bg-card);
 }
 
 .seller-option-card:hover {
@@ -591,12 +592,13 @@
 .product-tabs-body {
   padding: var(--space-6);
   border-radius: var(--radius-2xl);
-  background: var(--color-surface);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 [data-theme='dark'] .product-tabs-body {
-  background: var(--color-surface-elevated);
+  background: var(--color-bg-card);
 }
 
 .tab-pane-title {

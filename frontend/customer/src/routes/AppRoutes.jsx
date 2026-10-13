@@ -31,6 +31,7 @@ import OrdersPage from '../pages/OrdersPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import ProfilePage from '../pages/ProfilePage';
 import SupportPage from '../pages/SupportPage';
+import NotificationPage from '../pages/NotificationPage';
 
 // Shop Pages
 import ShopDashboardPage from '../pages/shop/ShopDashboardPage';
@@ -150,6 +151,15 @@ export const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/customer/notifications"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <NotificationPage portal="customer" />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/notifications" element={<Navigate to="/customer/notifications" replace />} />
 
         {/* Backward-Compatible Direct Aliases */}
         <Route path="/products" element={<Navigate to="/customer/products" replace />} />
@@ -219,6 +229,7 @@ export const AppRoutes = () => {
         <Route path="used-parts" element={<UsedPartIntakePage />} />
         <Route path="tickets" element={<ShopTicketsPage />} />
         <Route path="profile" element={<ShopProfilePage />} />
+        <Route path="notifications" element={<NotificationPage portal="shop" />} />
       </Route>
 
       {/* ============================================================ */}
@@ -242,6 +253,7 @@ export const AppRoutes = () => {
         <Route path="cod" element={<CodReconciliationPage />} />
         <Route path="kyc" element={<KycUploadPage />} />
         <Route path="profile" element={<DeliveryProfilePage />} />
+        <Route path="notifications" element={<NotificationPage portal="delivery" />} />
       </Route>
 
       {/* ============================================================ */}
@@ -267,6 +279,7 @@ export const AppRoutes = () => {
         <Route path="used-parts" element={<UsedPartsOversightPage />} />
         <Route path="deliveries" element={<DeliveriesOversightPage />} />
         <Route path="care-hub" element={<CustomerCareHubPage />} />
+        <Route path="notifications" element={<NotificationPage portal="admin" />} />
       </Route>
 
       {/* Global 404 Catch-All */}

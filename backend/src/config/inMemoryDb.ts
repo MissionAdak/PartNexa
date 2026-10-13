@@ -1278,6 +1278,7 @@ class InMemoryStore {
   public subscriptionPayments: any[] = [];
   public usedPartListings: any[] = [...initialUsedPartListings];
   public shopJobs: any[] = [];
+  public serviceAppointments: any[] = [];
   public commissionLedgers: any[] = [];
   public shopDeliveries: any[] = [];
   public usedPartIntakes: any[] = [];
@@ -3034,6 +3035,90 @@ class InMemoryStore {
   };
 
   public mechanicJob = this.shopJob;
+
+  // --- SERVICE APPOINTMENT ---
+  public serviceAppointment = {
+    findMany: async ({ where, orderBy, include }: { where?: any; orderBy?: any; include?: any } = {}) => {
+      let list = this.serviceAppointments.filter((a) => {
+        if (where?.customerId && a.customerId !== where.customerId) return false;
+        if (where?.shopId && a.shopId !== where.shopId) return false;
+        if (where?.status && a.status !== where.status) return false;
+        if (where?.mode && a.mode !== where.mode) return false;
+        return true;
+      });
+      if (orderBy?.createdAt === 'desc') {
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      }
+      return list.map((a) => {
+        const item = { ...a };
+        if (include?.customer) {
+          item.customer = this.users.find((u) => u.id === a.customerId) || null;
+        }
+        if (include?.shop) {
+          item.shop = this.shops.find((s) => s.id === a.shopId) || null;
+        }
+        if (include?.customerVehicle) {
+          item.customerVehicle = this.customerVehicles.find((v) => v.id === a.customerVehicleId) || null;
+        }
+        if (include?.address) {
+          item.address = this.addresses.find((addr) => addr.id === a.addressId) || null;
+        }
+        return item;
+      });
+    },
+    findUnique: async ({ where, include }: { where: { id: string }; include?: any }) => {
+      const a = this.serviceAppointments.find((x) => x.id === where.id);
+      if (!a) return null;
+      const item = { ...a };
+      if (include?.customer) {
+        item.customer = this.users.find((u) => u.id === a.customerId) || null;
+      }
+      if (include?.shop) {
+        item.shop = this.shops.find((s) => s.id === a.shopId) || null;
+      }
+      return item;
+    },
+    findFirst: async ({ where }: { where: any }) => {
+      return this.serviceAppointments.find((a) => {
+        if (where?.id && a.id !== where.id) return false;
+        if (where?.customerId && a.customerId !== where.customerId) return false;
+        return true;
+      }) || null;
+    },
+    create: async ({ data }: { data: any }) => {
+      const id = 'appt-' + crypto.randomUUID();
+      const newAppt = {
+        id,
+        ...data,
+        status: data.status || 'PENDING',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.serviceAppointments.unshift(newAppt);
+      return newAppt;
+    },
+    update: async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = this.serviceAppointments.findIndex((a) => a.id === where.id);
+      if (idx === -1) throw new Error('ServiceAppointment not found');
+      const updated = { ...this.serviceAppointments[idx], ...data, updatedAt: new Date() };
+      this.serviceAppointments[idx] = updated;
+      return updated;
+    },
+    delete: async ({ where }: { where: { id: string } }) => {
+      const idx = this.serviceAppointments.findIndex((a) => a.id === where.id);
+      if (idx !== -1) {
+        return this.serviceAppointments.splice(idx, 1)[0];
+      }
+      return null;
+    },
+    count: async ({ where }: { where?: any } = {}) => {
+      return this.serviceAppointments.filter((a) => {
+        if (where?.customerId && a.customerId !== where.customerId) return false;
+        if (where?.status && a.status !== where.status) return false;
+        return true;
+      }).length;
+    },
+  };
 
   // --- COMMISSION LEDGER ---
   public commissionLedger = {
@@ -5380,11 +5465,37 @@ class InMemoryStore {
       if (where?.isRead !== undefined) list = list.filter((n) => n.isRead === where.isRead);
       return list.length;
     },
+    findFirst: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.notifications];
+      if (where?.id) list = list.filter((n) => n.id === where.id);
+      if (where?.userId) list = list.filter((n) => n.userId === where.userId);
+      if (where?.isRead !== undefined) list = list.filter((n) => n.isRead === where.isRead);
+      return list[0] || null;
+    },
     update: async ({ where, data }: { where: { id: string }; data: any }) => {
       const idx = this.notifications.findIndex((n) => n.id === where.id);
       if (idx !== -1) {
         this.notifications[idx] = { ...this.notifications[idx], ...data, updatedAt: new Date() };
         return this.notifications[idx];
+      }
+      return null;
+    },
+    updateMany: async ({ where, data }: { where?: any; data: any }) => {
+      let count = 0;
+      this.notifications = this.notifications.map((n) => {
+        if ((!where?.userId || n.userId === where.userId) && (where?.isRead === undefined || n.isRead === where.isRead)) {
+          count++;
+          return { ...n, ...data, updatedAt: new Date() };
+        }
+        return n;
+      });
+      return { count };
+    },
+    delete: async ({ where }: { where: { id: string } }) => {
+      const idx = this.notifications.findIndex((n) => n.id === where.id);
+      if (idx !== -1) {
+        const deleted = this.notifications.splice(idx, 1)[0];
+        return deleted;
       }
       return null;
     },

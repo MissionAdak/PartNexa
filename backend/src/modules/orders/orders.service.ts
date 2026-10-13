@@ -38,7 +38,7 @@ export const listCustomerOrders = async (userId: string) => {
 };
 
 export const getOrderById = async (userId: string, orderId: string) => {
-  const order = await prisma.order.findFirst({
+  let order = await prisma.order.findFirst({
     where: {
       userId,
       OR: [
@@ -75,6 +75,45 @@ export const getOrderById = async (userId: string, orderId: string) => {
       },
     },
   });
+
+  if (!order) {
+    order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNumber: orderId },
+        ],
+      },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: { images: true, brandRel: true },
+            },
+            shop: true,
+          },
+        },
+        address: true,
+        payment: true,
+        difmRequest: {
+          include: { shop: true, serviceBooking: true },
+        },
+        deliveryAssignments: {
+          include: {
+            deliveryPartner: {
+              include: { user: true },
+            },
+          },
+        },
+        tracking: {
+          orderBy: { createdAt: 'asc' },
+        },
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+  }
 
   if (!order) throw AppError.notFound('Order not found.');
   return {
@@ -151,7 +190,23 @@ export const getCheckoutQuote = async (
 
   // 3. Resolve shop for installation
   let assignedShop: any = null;
-  if (data.shopId) {
+  const isHomeInstallation =
+    data.difmType === 'HOME_INSTALLATION' ||
+    data.difmType === 'HOME' ||
+    data.difmType === DIFMType.HOME_INSTALLATION;
+
+  if (isHomeInstallation) {
+    // For doorstep home installation, always assign local partner shop (<= 35km)
+    if (data.shopId) {
+      const requestedShop = eligibleShops.find((s: any) => s.id === data.shopId);
+      if (requestedShop && (requestedShop.distanceKm || 0) <= 35) {
+        assignedShop = requestedShop;
+      }
+    }
+    if (!assignedShop && eligibleShops.length > 0) {
+      assignedShop = eligibleShops[0]; // Nearest qualified shop
+    }
+  } else if (data.shopId) {
     assignedShop = eligibleShops.find((s: any) => s.id === data.shopId) || null;
   }
   if (!assignedShop && eligibleShops.length > 0) {
@@ -311,15 +366,42 @@ export const createOrderDraft = async (
 
   const eligibleShops = await findEligiblePartneredShops(customerLocation);
   let assignedShop: any = null;
-  if (data.shopId) {
+  const isHomeInstallation =
+    data.difmType === 'HOME_INSTALLATION' ||
+    data.difmType === 'HOME' ||
+    data.difmType === DIFMType.HOME_INSTALLATION;
+
+  if (isHomeInstallation) {
+    if (data.shopId) {
+      const requestedShop = eligibleShops.find((s: any) => s.id === data.shopId);
+      if (requestedShop && (requestedShop.distanceKm || 0) <= 35) {
+        assignedShop = requestedShop;
+      }
+    }
+    if (!assignedShop && eligibleShops.length > 0) {
+      assignedShop = eligibleShops[0];
+    }
+  } else if (data.shopId) {
     assignedShop = eligibleShops.find((s: any) => s.id === data.shopId) || null;
   }
   if (!assignedShop && eligibleShops.length > 0) {
     assignedShop = eligibleShops[0];
   }
 
-  // 1. Authoritative Inventory Stock Check: Prevent negative stock or ordering above available inventory
+  // Pre-Order Revalidation Matrix:
+  // - Product still exists and is ACTIVE
+  // - Inventory still exists and isAvailable
+  // - Sufficient stock available
+  // - Authoritative selling price matches cart priceSnapshot (return clear price-change response if changed)
   for (const it of cart.items) {
+    const product = await prisma.product.findUnique({ where: { id: it.productId } });
+    if (!product || product.status !== 'ACTIVE') {
+      throw AppError.badRequest(
+        `Product "${it.product?.name || 'Selected item'}" is no longer available. Please remove it from your cart.`,
+        'PRODUCT_UNAVAILABLE'
+      );
+    }
+
     const inv = await prisma.inventory.findFirst({
       where: {
         productId: it.productId,
@@ -327,10 +409,31 @@ export const createOrderDraft = async (
       },
     });
 
-    const stock = inv ? Number(inv.quantity || 0) : 0;
-    if (!inv || stock < it.quantity) {
+    if (!inv || !inv.isAvailable) {
       throw AppError.badRequest(
-        `Insufficient inventory for "${it.product?.name || 'Selected product'}". Requested: ${it.quantity}, Available in stock: ${stock}. Please adjust quantity.`
+        `Inventory for "${product.name}" is currently unavailable.`,
+        'INVENTORY_UNAVAILABLE'
+      );
+    }
+
+    const stock = Number(inv.quantity || 0);
+    const requestedQty = Math.max(1, Number(it.quantity) || 1);
+    if (stock < requestedQty) {
+      throw AppError.badRequest(
+        `Insufficient inventory for "${product.name}". Requested: ${requestedQty}, Available in stock: ${stock}. Please adjust quantity.`,
+        'INSUFFICIENT_STOCK'
+      );
+    }
+
+    // Price Integrity Revalidation:
+    // If the inventory selling price changed since it was added to the cart,
+    // return a clear price-change response so the customer can confirm the updated price.
+    const currentSellingPrice = Number(inv.sellingPrice);
+    const cartPriceSnapshot = Number(it.priceSnapshot);
+    if (cartPriceSnapshot > 0 && Math.abs(cartPriceSnapshot - currentSellingPrice) > 0.01) {
+      throw AppError.badRequest(
+        `Price for "${product.name}" has changed from ₹${cartPriceSnapshot} to ₹${currentSellingPrice}. Please review your cart and confirm the updated price.`,
+        'PRICE_CHANGED'
       );
     }
   }

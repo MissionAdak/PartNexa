@@ -12,7 +12,6 @@ import './CheckoutPage.css';
 const CheckoutPage = () => {
   const { cart, clearCart } = useCart();
   const { user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Addresses State
@@ -110,8 +109,11 @@ const CheckoutPage = () => {
       const quoteData = res.data?.data;
       if (quoteData) {
         setQuote(quoteData);
-        // If shop is not explicitly selected yet, default to the assigned shop from backend
-        if (!selectedShopId && quoteData.difm?.assignedShop?.id) {
+        // For Home Installation, always align to backend's assigned local shop
+        if (difmOption === 'HOME_INSTALLATION' && quoteData.difm?.assignedShop?.id) {
+          setSelectedShopId(quoteData.difm.assignedShop.id);
+          setSelectedShopObj(quoteData.difm.assignedShop);
+        } else if (!selectedShopId && quoteData.difm?.assignedShop?.id) {
           setSelectedShopId(quoteData.difm.assignedShop.id);
           setSelectedShopObj(quoteData.difm.assignedShop);
         } else if (quoteData.difm?.assignedShop && !selectedShopObj) {
@@ -123,6 +125,7 @@ const CheckoutPage = () => {
     } finally {
       setIsQuoteLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, cartItemKey, selectedAddressId, difmOption, selectedShopId, appliedCoupon, coordsLat, coordsLng]);
 
   // Recalculate quote immediately whenever option, address, shop, or coupon changes
@@ -436,7 +439,6 @@ const CheckoutPage = () => {
   };
 
   const eligibleShops = quote?.eligibleShops || [];
-  const assignedShop = quote?.difm?.assignedShop || eligibleShops[0];
   const distanceKm = quote?.difm?.distanceKm || 4.8;
   const durationMinutes = quote?.difm?.durationMinutes || 25;
 

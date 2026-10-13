@@ -23,6 +23,7 @@ const SORT_OPTIONS = [
 
 export const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { activeVehicle } = useVehicles();
 
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState(null);
@@ -37,7 +38,7 @@ export const ProductsPage = () => {
     localStorage.setItem('partnexa_view_mode', mode);
   };
 
-  // Filter state synced with URL searchParams
+  // Filter state synced with URL searchParams & Active Vehicle
   const search = searchParams.get('search') || '';
   const categorySlug = searchParams.get('categorySlug') || '';
   const brandSlug = searchParams.get('brand') || '';
@@ -45,6 +46,7 @@ export const ProductsPage = () => {
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
   const vehicleVariantId = searchParams.get('vehicleVariantId') || '';
+  const effectiveVariantId = vehicleVariantId || activeVehicle?.variantId || activeVehicle?.variant?.id || '';
   const compatibleOnly = searchParams.get('compatibleOnly') === 'true';
   const sortParam = searchParams.get('sort') || 'createdAt-desc';
   const page = parseInt(searchParams.get('page') || '1', 10);
@@ -105,7 +107,7 @@ export const ProductsPage = () => {
         ...(condition && { condition }),
         ...(minPrice && { minPrice }),
         ...(maxPrice && { maxPrice }),
-        ...(vehicleVariantId && { vehicleVariantId }),
+        ...(effectiveVariantId && { vehicleVariantId: effectiveVariantId }),
         ...(compatibleOnly && { compatibleOnly: 'true' }),
         ...(sortBy && { sortBy }),
         ...(sortOrder && { sortOrder }),
@@ -121,7 +123,7 @@ export const ProductsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, search, categorySlug, brandSlug, condition, minPrice, maxPrice, vehicleVariantId, compatibleOnly, sortBy, sortOrder]);
+  }, [page, search, categorySlug, brandSlug, condition, minPrice, maxPrice, effectiveVariantId, compatibleOnly, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchProducts();
@@ -332,7 +334,7 @@ export const ProductsPage = () => {
         <div className="products-main">
           {/* VEHICLE COMPATIBILITY BAR */}
           <VehicleCompatibilityBar
-            selectedVariantId={vehicleVariantId}
+            selectedVariantId={effectiveVariantId}
             compatibleOnly={compatibleOnly}
             onVariantChange={(varId) => updateParam('vehicleVariantId', varId)}
             onCompatibleOnlyChange={(only) => updateParam('compatibleOnly', only ? 'true' : '')}

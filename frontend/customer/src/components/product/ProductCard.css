@@ -8,15 +8,16 @@
   height: 100%;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: var(--color-surface);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.22s ease;
 }
 
 [data-theme='dark'] .product-card {
-  background: var(--color-surface-elevated);
+  background: var(--color-bg-card);
   border-color: var(--color-border);
 }
 

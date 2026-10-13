@@ -3,6 +3,7 @@ import prisma from '../../config/prisma';
 import config from '../../config/env';
 import AppError from '../../utils/AppError';
 import { PaymentMethod, PaymentStatus, SubscriptionStatus } from '@prisma/client';
+import { createNotification } from '../notifications/notifications.service';
 
 const DEMO_RAZORPAY_KEY_ID =
   config.razorpay?.keyId && !config.razorpay.keyId.includes('placeholder')
@@ -398,7 +399,7 @@ export const verifySubscriptionPayment = async (
   }
 
   // Signature valid: Activate subscription in database transaction
-  return prisma.$transaction(async (tx) => {
+  const txResult = await prisma.$transaction(async (tx) => {
     // 1. Update Payment record to CAPTURED
     await tx.subscriptionPayment.updateMany({
       where: { subscriptionId: subscription.id },
@@ -427,6 +428,25 @@ export const verifySubscriptionPayment = async (
       message: `🎉 Membership activated! You now have full access to ${subscription.plan?.name || 'PartNexa Care'} benefits.`,
     };
   });
+
+  try {
+    await createNotification({
+      userId,
+      title: 'Subscription Activated',
+      body: `Your PartNexa ${subscription.plan?.name || 'Care'} membership is now active! Enjoy your benefits and free deliveries.`,
+      channel: 'IN_APP',
+      status: 'DELIVERED',
+      data: {
+        route: '/customer/my-subscriptions',
+        subscriptionId: subscription.id,
+        type: 'SUBSCRIPTION_ACTIVATED',
+      },
+    });
+  } catch (notifErr) {
+    console.warn('[Subscriptions] Notification error:', notifErr);
+  }
+
+  return txResult;
 };
 
 /**

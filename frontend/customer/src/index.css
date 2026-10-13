@@ -37,21 +37,77 @@
   --color-bg-elevated: #F1F5F9;
   --color-bg-hover: #E2E8F0;
 
-  /* Derived surface tokens — also used by dark mode override */
+  /* Derived surface tokens */
   --color-surface-elevated: #F1F5F9;
   --color-primary-bg: rgba(2, 132, 199, 0.08);
 
   --color-surface: rgba(15, 23, 42, 0.03);
   --color-surface-hover: rgba(15, 23, 42, 0.06);
-  --color-glass: rgba(255, 255, 255, 0.92);
+  --color-glass: rgba(255, 255, 255, 0.94);
 
-  --color-border: rgba(15, 23, 42, 0.09);
-  --color-border-strong: rgba(15, 23, 42, 0.18);
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
   --color-text-primary: #0F172A;
   --color-text-secondary: #334155;
   --color-text-muted: #64748B;
   --color-text-inverse: #FFFFFF;
+
+  /* Universal Canonical Aliases (Light Mode) */
+  --bg-surface: var(--color-bg-card);
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-card);
+  --bg-tertiary: var(--color-bg-elevated);
+  --bg-card: var(--color-bg-card);
+  --color-bg-base: var(--color-bg);
+  --color-surface-card: var(--color-bg-card);
+
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border);
+  --border-color-strong: var(--color-border-strong);
+  --border-light: #F1F5F9;
+
+  /* Primary Color Scale (Light Mode) */
+  --color-primary-50: #F0F9FF;
+  --color-primary-100: #E0F2FE;
+  --color-primary-200: #BAE6FD;
+  --color-primary-300: #7DD3FC;
+  --color-primary-400: #38BDF8;
+  --color-primary-500: var(--color-primary);
+  --color-primary-600: var(--color-primary-dark);
+  --color-primary-700: #075985;
+  --color-primary-800: #0C4A6E;
+  --color-primary-900: #082F49;
+
+  /* Teal Color Scale (Light Mode) */
+  --color-teal-50: #F0FDFA;
+  --color-teal-100: #CCFBF1;
+  --color-teal-200: #99F6E4;
+  --color-teal-300: #5EEAD4;
+  --color-teal-400: #14B8A6;
+  --color-teal-500: var(--color-teal);
+  --color-teal-600: var(--color-teal-dark);
+  --color-teal-700: #115E59;
+  --color-teal-800: #134E4A;
+  --color-teal-900: #042F2E;
+
+  /* Status, Neutral & Layout Aliases (Light Mode) */
+  --color-success-50: #ECFDF5;
+  --color-success-500: #10B981;
+  --color-success-600: #059669;
+  --color-gray-100: #F1F5F9;
+  --color-gray-200: #E2E8F0;
+  --color-gray-700: #334155;
+  --color-gray-800: #1E293B;
+  --color-navy-900: #0F172A;
+  --color-secondary: #475569;
+  --color-secondary-dark: #334155;
+  --color-accent: #0284C7;
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --space-24: 1.5rem;
+  --z-modal: 1000;
 
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
@@ -125,7 +181,6 @@
   --color-bg-elevated: #1E293B;
   --color-bg-hover: #283548;
 
-  /* Previously missing variables — caused invisible cards in dark mode */
   --color-surface-elevated: #141D30;
   --color-surface: rgba(255, 255, 255, 0.04);
   --color-surface-hover: rgba(255, 255, 255, 0.08);
@@ -140,12 +195,127 @@
   --color-text-muted: #64748B;
   --color-text-inverse: #0B0F19;
 
+  /* Universal Canonical Aliases (Dark Mode) */
+  --bg-surface: var(--color-bg-card);
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-card);
+  --bg-tertiary: var(--color-bg-elevated);
+  --bg-card: var(--color-bg-card);
+  --color-bg-base: var(--color-bg);
+  --color-surface-card: var(--color-bg-card);
+
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border);
+  --border-color-strong: var(--color-border-strong);
+  --border-light: rgba(255, 255, 255, 0.08);
+
+  /* Primary Color Scale (Dark Mode) */
+  --color-primary-50: rgba(2, 132, 199, 0.12);
+  --color-primary-100: rgba(2, 132, 199, 0.2);
+  --color-primary-200: rgba(2, 132, 199, 0.3);
+  --color-primary-300: #7DD3FC;
+  --color-primary-400: #38BDF8;
+  --color-primary-500: var(--color-primary);
+  --color-primary-600: var(--color-primary-dark);
+  --color-primary-700: #075985;
+  --color-primary-800: #0C4A6E;
+  --color-primary-900: #082F49;
+
+  /* Teal Color Scale (Dark Mode) */
+  --color-teal-50: rgba(13, 148, 136, 0.12);
+  --color-teal-100: rgba(13, 148, 136, 0.2);
+  --color-teal-200: rgba(13, 148, 136, 0.3);
+  --color-teal-300: #5EEAD4;
+  --color-teal-400: #14B8A6;
+  --color-teal-500: var(--color-teal);
+  --color-teal-600: var(--color-teal-dark);
+  --color-teal-700: #115E59;
+  --color-teal-800: #134E4A;
+  --color-teal-900: #042F2E;
+
+  /* Status, Neutral & Layout Aliases (Dark Mode) */
+  --color-success-50: rgba(16, 185, 129, 0.12);
+  --color-success-500: #10B981;
+  --color-success-600: #34D399;
+  --color-gray-100: #1E293B;
+  --color-gray-200: #283548;
+  --color-gray-700: #94A3B8;
+  --color-gray-800: #CBD5E1;
+  --color-navy-900: #0B0F19;
+  --color-secondary: #94A3B8;
+  --color-secondary-dark: #CBD5E1;
+  --color-accent: #38BDF8;
+
+  --color-primary: #0284C7;
+  --color-teal: #0D9488;
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --z-modal: 1000;
+
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.7);
   --shadow-primary: 0 4px 25px rgba(2, 132, 199, 0.4);
   --shadow-teal: 0 4px 25px rgba(13, 148, 136, 0.4);
+}
+
+/* ---- Global Status Badges & Pills ---- */
+.status-pill-paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .status-pill-paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.status-pill-cod {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .status-pill-cod {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.status-pill-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="dark"] .status-pill-pending {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 /* ---- Custom Scrollbars (Light + Dark) ---- */

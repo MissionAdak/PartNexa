@@ -1,6 +1,7 @@
 import prisma from '../../config/prisma';
 import AppError from '../../utils/AppError';
 import { UsedPartStatus } from '@prisma/client';
+import { createNotification } from '../notifications/notifications.service';
 
 export { UsedPartStatus };
 
@@ -105,15 +106,8 @@ export const createUsedPartListing = async (sellerId: string, input: CreateUsedP
     throw new AppError(`Condition must be one of: ${validConditions.join(', ')}.`, 400);
   }
 
-  const rawDescription = (input.description || '').trim();
-  if (!rawDescription || rawDescription.length < 10) {
-    throw new AppError('Description is required (minimum 10 characters detailing condition and history).', 400);
-  }
-
-  const location = (input.location || '').trim();
-  if (!location) {
-    throw new AppError('Pickup location/city is required for verification logistics.', 400);
-  }
+  const rawDescription = (input.description || `Pre-owned ${title} for ${vehicleModel} in operational condition.`).trim();
+  const location = (input.location || 'Bangalore').trim();
 
   const images = Array.isArray(input.images) ? input.images.filter(Boolean) : [];
 
@@ -148,6 +142,23 @@ export const createUsedPartListing = async (sellerId: string, input: CreateUsedP
       },
     },
   });
+
+  try {
+    await createNotification({
+      userId: sellerId,
+      title: 'Used Part Submitted for Valuation',
+      body: `Your part listing for "${title}" has been submitted. Our team will perform digital valuation and schedule inspection.`,
+      channel: 'IN_APP',
+      status: 'DELIVERED',
+      data: {
+        route: '/customer/used-parts',
+        listingId: listing.id,
+        type: 'USED_PART_VALUATION',
+      },
+    });
+  } catch (err) {
+    console.warn('[UsedParts] Notification error:', err);
+  }
 
   return formatListing(listing);
 };
