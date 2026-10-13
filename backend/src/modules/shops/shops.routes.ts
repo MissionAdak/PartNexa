@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from '../../types';
 import { UserRole } from '@prisma/client';
 import prisma from '../../config/prisma';
 import AppError from '../../utils/AppError';
+import { verifyInstallationCompletion } from '../services/installationCompletion.service';
 
 const router = Router();
 
@@ -101,6 +102,35 @@ router.patch('/portal/jobs/:id/status', authenticate, authorize(UserRole.SHOP_OW
       req.body.notes
     );
     return successResponse(res, result, `Job status updated to ${req.body.status}.`);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Step 11: Verify installation completion with customer 6-digit confirmation code
+router.post('/portal/jobs/:id/verify-completion', authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await verifyInstallationCompletion({
+      jobId: req.params.id as string,
+      code: req.body.code,
+      notes: req.body.notes,
+      user: req.user!,
+    });
+    return successResponse(res, result, 'Installation completion verified successfully!');
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/portal/service-bookings/:id/verify-completion', authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await verifyInstallationCompletion({
+      bookingId: req.params.id as string,
+      code: req.body.code,
+      notes: req.body.notes,
+      user: req.user!,
+    });
+    return successResponse(res, result, 'Installation completion verified successfully!');
   } catch (error) {
     next(error);
   }
@@ -234,7 +264,27 @@ router.get('/portal/used-parts', authenticate, authorize(UserRole.SHOP_OWNER), a
   }
 });
 
-// Record used-part inspection & testing
+// Mark used-part received at workshop
+router.patch('/portal/used-parts/:id/receive', authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const intake = await shopsService.receiveUsedPart(req.user!.id, req.params.id as string);
+    return successResponse(res, intake, 'Used part marked as physically received at workshop.');
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Submit structured technical inspection & calculate valuation
+router.post('/portal/used-parts/:id/inspect', authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const intake = await shopsService.recordUsedPartIntake(req.user!.id, { ...req.body, intakeId: req.params.id });
+    return successResponse(res, intake, 'Technical inspection completed and valuation calculated.');
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Record used-part inspection & testing (legacy/modal support)
 router.post('/portal/used-parts', authenticate, authorize(UserRole.SHOP_OWNER), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const intake = await shopsService.recordUsedPartIntake(req.user!.id, req.body);

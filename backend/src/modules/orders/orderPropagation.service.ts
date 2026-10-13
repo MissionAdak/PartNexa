@@ -1,6 +1,7 @@
 import prisma from '../../config/prisma';
 import { OrderStatus, PaymentStatus, DIFMType, DIFMStatus, DeliveryAssignmentStatus } from '@prisma/client';
 import { createNotification } from '../notifications/notifications.service';
+import { ensureServiceBookingForDifm } from '../services/installationCompletion.service';
 
 export interface PropagateOrderResult {
   orderId: string;
@@ -230,6 +231,13 @@ export const propagateOrderConfirmed = async (orderId: string): Promise<Propagat
         });
       }
       result.shopJobId = shopJob.id;
+
+      // 2a-ii. ServiceBooking (Customer Installation Confirmation Code)
+      try {
+        await ensureServiceBookingForDifm(order.id, shopJob.scheduledSlot || '10:00 AM - 12:00 PM');
+      } catch (sbErr) {
+        console.warn('[Propagation] Failed to ensure service booking with code:', sbErr);
+      }
 
       // 2b. ShopDelivery (Workshop parts manifest)
       let shopDelivery = await prisma.shopDelivery.findFirst({ where: { orderId: order.id } });

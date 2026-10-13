@@ -3,12 +3,19 @@ import prisma from '../../config/prisma';
 import AppError from '../../utils/AppError';
 import { generateAccessToken } from '../../utils/jwt';
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
+import { UsedPartStatus } from '@prisma/client';
+import { createNotification } from '../notifications/notifications.service';
+import { calculateUsedPartValuation } from '../usedparts/usedpartsValuation.service';
+import { sanitizeForInstaller } from '../services/installationCompletion.service';
 
 // Helper to resolve shop from authenticated owner
 export const resolveShopByOwner = async (ownerId: string) => {
-  const shop = await prisma.shop.findFirst({
+  let shop = await prisma.shop.findFirst({
     where: { ownerId },
   });
+  if (!shop && (ownerId === 'shop-owner-official' || ownerId === 'shop-owner-1')) {
+    shop = await prisma.shop.findFirst({ where: { id: 'shop-1' } });
+  }
   if (!shop) {
     throw AppError.notFound('No workshop is associated with this account. Please register your workshop first or contact support.');
   }
@@ -189,9 +196,15 @@ export const loginShop = async (data: { email: string; password: string }) => {
     throw AppError.unauthorized('Invalid email or password.');
   }
 
-  const shop = await prisma.shop.findFirst({
+  let shop = await prisma.shop.findFirst({
     where: { ownerId: user.id },
   });
+
+  if (!shop && (user.id === 'shop-owner-official' || user.id === 'shop-owner-1')) {
+    shop = await prisma.shop.findFirst({
+      where: { id: 'shop-1' },
+    });
+  }
 
   if (!shop) {
     throw AppError.forbidden('No mechanical shop is registered for this account. Please register your workshop at /shop/register.');
@@ -265,7 +278,7 @@ export const getShopDashboard = async (ownerId: string) => {
     prisma.shopDelivery.findMany({ where: { shopId: shop.id } }).catch(() => []),
     prisma.usedPartIntake.findMany({ where: { shopId: shop.id } }).catch(() => []),
     prisma.commissionLedger.findMany({ where: { shopId: shop.id } }).catch(() => []),
-    prisma.dIFMRequest.findMany({
+    (prisma.difmRequest || (prisma as any).dIFMRequest).findMany({
       where: { shopId: shop.id },
       include: {
         order: {
@@ -377,8 +390,8 @@ export const getShopDashboard = async (ownerId: string) => {
       recent: intakes.slice(0, 4),
     },
     customerVehicleVisits: vehicleVisits,
-    upcomingToday,
-    recentJobs: combinedJobs.slice(0, 10),
+    upcomingToday: sanitizeForInstaller(upcomingToday),
+    recentJobs: sanitizeForInstaller(combinedJobs.slice(0, 10)),
     earnings: {
       totalGross,
       platformCut,
@@ -412,13 +425,14 @@ export const getServiceCalendar = async (
 
   if (query.date) {
     const target = query.date;
-    return jobs.filter((j: any) => {
+    const filtered = jobs.filter((j: any) => {
       const d = new Date(j.scheduledDate).toISOString().split('T')[0];
       return d === target;
     });
+    return sanitizeForInstaller(filtered);
   }
 
-  return jobs;
+  return sanitizeForInstaller(jobs);
 };
 
 export const updateJobStatus = async (
@@ -449,6 +463,24 @@ export const updateJobStatus = async (
   if (status === 'IN_PROGRESS' && !job.startedAt) {
     updatePayload.startedAt = new Date();
   } else if (status === 'COMPLETED') {
+    // Security Guard: Installation jobs require customer confirmation code
+    const isInstallationJob = Boolean(
+      job.difmRequestId ||
+      (job.jobType && job.jobType.includes('DIFM')) ||
+      (job.serviceName && job.serviceName.toLowerCase().includes('installation'))
+    );
+
+    if (isInstallationJob) {
+      const booking = job.difmRequestId
+        ? await prisma.serviceBooking.findUnique({ where: { difmRequestId: job.difmRequestId } })
+        : (job.orderId ? await prisma.serviceBooking.findFirst({ where: { difmRequest: { orderId: job.orderId } } }) : null);
+
+      if (booking && !booking.isCompleted) {
+        throw AppError.badRequest(
+          'Installation jobs require customer confirmation code to mark completed. Please use [Verify & Complete] with the customer\'s 6-digit code.'
+        );
+      }
+    }
     updatePayload.completedAt = new Date();
   }
 
@@ -667,27 +699,279 @@ export const receiveDelivery = async (
 
 export const listUsedPartIntakes = async (ownerId: string) => {
   const shop = await resolveShopByOwner(ownerId);
-  return prisma.usedPartIntake.findMany({
+  const intakes = await prisma.usedPartIntake.findMany({
     where: { shopId: shop.id },
+    include: {
+      listing: {
+        include: {
+          seller: {
+            select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+          },
+        },
+      },
+      shop: {
+        select: { id: true, name: true, city: true, address: true, phone: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
   });
+
+  // Ensure any listings assigned to this shop have an intake record
+  const assignedListings = await prisma.usedPartListing.findMany({
+    where: { assignedShopId: shop.id },
+    include: {
+      seller: {
+        select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+      },
+    },
+  });
+
+  const existingListingIds = new Set(intakes.map((i: any) => i.listingId).filter(Boolean));
+  for (const l of assignedListings) {
+    if (!existingListingIds.has(l.id)) {
+      const sellerName = l.seller ? `${l.seller.firstName || ''} ${l.seller.lastName || ''}`.trim() : 'Customer Seller';
+      const created = await prisma.usedPartIntake.create({
+        data: {
+          shopId: shop.id,
+          listingId: l.id,
+          partTitle: l.title,
+          sellerName,
+          vehicleModel: l.description?.match(/Vehicle: (.*)/)?.[1] || 'Universal',
+          status: 'GARAGE_ASSIGNED',
+          physicalCondition: l.condition || 'GOOD',
+          technicalTestStatus: 'NEEDS_TESTING',
+          technicianNotes: `Awaiting customer ${l.deliveryMethod === 'PICKUP' ? 'courier delivery' : 'drop-off'} at ${shop.name}.`,
+        },
+        include: {
+          listing: {
+            include: {
+              seller: {
+                select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+              },
+            },
+          },
+          shop: {
+            select: { id: true, name: true, city: true, address: true, phone: true },
+          },
+        },
+      });
+      intakes.unshift(created);
+      existingListingIds.add(l.id);
+    }
+  }
+
+  return intakes;
+};
+
+export const receiveUsedPart = async (ownerId: string, intakeId: string) => {
+  const shop = await resolveShopByOwner(ownerId);
+  const intake = await prisma.usedPartIntake.findFirst({
+    where: { id: intakeId, shopId: shop.id },
+    include: { listing: { include: { seller: true } } },
+  });
+
+  if (!intake) {
+    throw AppError.notFound('Used part intake record not found in your workshop queue.');
+  }
+
+  const updated = await prisma.usedPartIntake.update({
+    where: { id: intake.id },
+    data: {
+      status: 'PART_RECEIVED',
+      receivedAt: new Date(),
+    },
+    include: { listing: { include: { seller: true } }, shop: true },
+  });
+
+  if (intake.listing?.sellerId) {
+    try {
+      await createNotification({
+        userId: intake.listing.sellerId,
+        title: 'Used Part Received at Workshop',
+        body: `Partner garage "${shop.name}" has confirmed receipt of your part "${intake.partTitle}". Technical inspection will begin shortly.`,
+        channel: 'IN_APP',
+        status: 'DELIVERED',
+        data: {
+          route: '/customer/used-parts',
+          listingId: intake.listing.id,
+          intakeId: intake.id,
+          type: 'USED_PART_RECEIVED_AT_GARAGE',
+        },
+      });
+    } catch (e) {
+      console.warn('[ShopsService] Notification error:', e);
+    }
+  }
+
+  return updated;
 };
 
 export const recordUsedPartIntake = async (ownerId: string, data: any) => {
   const shop = await resolveShopByOwner(ownerId);
-  const newIntake = await prisma.usedPartIntake.create({
-    data: {
-      shopId: shop.id,
-      listingId: data.listingId || 'used-' + Date.now().toString().slice(-6),
-      partTitle: data.partTitle,
-      sellerName: data.sellerName || 'Customer Dropped Off',
-      vehicleModel: data.vehicleModel || 'Universal',
-      physicalCondition: data.physicalCondition || 'GOOD',
-      technicalTestStatus: data.technicalTestStatus || 'PASSED',
-      technicianNotes: data.technicianNotes || 'Bench tested and verified operational.',
-      status: data.status || 'VERIFIED_ACCEPTED',
-    },
+  const intakeId = data.intakeId || data.id;
+
+  let existingIntake: any = null;
+  if (intakeId) {
+    existingIntake = await prisma.usedPartIntake.findFirst({
+      where: { id: intakeId, shopId: shop.id },
+      include: { listing: { include: { seller: true } } },
+    });
+  } else if (data.listingId) {
+    existingIntake = await prisma.usedPartIntake.findFirst({
+      where: { listingId: data.listingId, shopId: shop.id },
+      include: { listing: { include: { seller: true } } },
+    });
+  }
+
+  const physicalConditionRating = Math.min(Math.max(1, Number(data.physicalConditionRating) || 4), 5);
+  const functionalTestRating = Math.min(Math.max(1, Number(data.functionalTestRating) || 4), 5);
+  const wearLevelRating = Math.min(Math.max(1, Number(data.wearLevelRating) || 3), 5);
+  const safetyConfidenceRating = Math.min(Math.max(1, Number(data.safetyConfidenceRating) || 5), 5);
+
+  const technicalResult = data.technicalResult || (data.technicalTestStatus === 'DEFECTIVE' ? 'FAILED' : 'PASSED');
+
+  // Compute Valuation from PartNexa catalog reference price
+  const valuation = await calculateUsedPartValuation({
+    physicalConditionRating,
+    functionalTestRating,
+    wearLevelRating,
+    safetyConfidenceRating,
+    technicalResult,
+    repairEstimatedCost: data.repairEstimatedCost ? Number(data.repairEstimatedCost) : undefined,
+    catalogProductId: existingIntake?.listing?.productId,
+    partNumber: data.partNumber || existingIntake?.partNumber,
+    partTitle: data.partTitle || existingIntake?.partTitle,
+    askingPrice: existingIntake?.listing ? Number(existingIntake.listing.askingPrice) : undefined,
   });
-  return newIntake;
+
+  const photos = Array.isArray(data.photos) ? data.photos : (data.photos ? [data.photos] : (existingIntake?.photos || []));
+
+  const updateFields: any = {
+    partTitle: data.partTitle || existingIntake?.partTitle || 'Used Auto Component',
+    sellerName: data.sellerName || existingIntake?.sellerName || 'Customer Seller',
+    vehicleModel: data.vehicleModel || existingIntake?.vehicleModel || 'Universal',
+    partNumber: data.partNumber || existingIntake?.partNumber || null,
+    vehicleCompatibility: data.vehicleCompatibility || existingIntake?.vehicleCompatibility || null,
+    physicalConditionRating,
+    functionalTestRating,
+    wearLevelRating,
+    safetyConfidenceRating,
+    overallGrade: valuation.overallGrade,
+    visualDamage: data.visualDamage || null,
+    corrosionLevel: data.corrosionLevel || 'NONE',
+    mountingPointsOk: data.mountingPointsOk !== false,
+    electricalWorking: data.electricalWorking !== false,
+    benchTestNotes: data.benchTestNotes || null,
+    safetyTestNotes: data.safetyTestNotes || null,
+    repairRequired: Boolean(data.repairRequired),
+    repairNotes: data.repairNotes || null,
+    photos,
+    technicianNotes: data.technicianNotes || 'Structured technical inspection completed by partner garage.',
+    inspectorName: data.inspectorName || 'Workshop Technician',
+    technicalResult,
+    inspectionScore: valuation.inspectionScore,
+    referenceNewPrice: valuation.referenceNewPrice,
+    recommendedResaleMin: valuation.recommendedResaleMin,
+    recommendedResaleMax: valuation.recommendedResaleMax,
+    recommendedListingPrice: valuation.recommendedListingPrice,
+    recommendedSellerPayout: valuation.recommendedSellerPayout,
+    inspectedAt: new Date(),
+    status: technicalResult === 'FAILED' ? 'REJECTED_FAILED_INSPECTION' : 'OFFER_PENDING_CUSTOMER',
+    technicalTestStatus: technicalResult === 'FAILED' ? 'FAILED' : 'PASSED',
+    physicalCondition: valuation.overallGrade === 'A' ? 'EXCELLENT' : (valuation.overallGrade === 'B' ? 'GOOD' : 'FAIR'),
+  };
+
+  let savedIntake: any;
+  if (existingIntake) {
+    savedIntake = await prisma.usedPartIntake.update({
+      where: { id: existingIntake.id },
+      data: updateFields,
+      include: { listing: { include: { seller: true } }, shop: true },
+    });
+  } else {
+    // If recording a new intake directly from workshop
+    // DO NOT generate fake listing ID!
+    savedIntake = await prisma.usedPartIntake.create({
+      data: {
+        shopId: shop.id,
+        listingId: data.listingId || null,
+        ...updateFields,
+      },
+      include: { listing: { include: { seller: true } }, shop: true },
+    });
+  }
+
+  // Update associated listing if present
+  if (savedIntake.listing) {
+    await prisma.usedPartListing.update({
+      where: { id: savedIntake.listing.id },
+      data: {
+        status: technicalResult === 'FAILED' ? UsedPartStatus.REJECTED : 'OFFER_READY',
+        conditionGrade: valuation.overallGrade,
+        resalePrice: valuation.recommendedListingPrice,
+        estimatedValuation: valuation.recommendedListingPrice,
+        finalValuation: valuation.recommendedListingPrice,
+      },
+    });
+
+    await prisma.usedPartVerification.upsert({
+      where: { listingId: savedIntake.listing.id },
+      create: {
+        listingId: savedIntake.listing.id,
+        conditionRating: Math.round(valuation.inspectionScore / 10),
+        notes: `Workshop Inspection [${shop.name}]: Grade ${valuation.overallGrade} (${valuation.inspectionScore}/100). Technical result: ${technicalResult}. ${data.technicianNotes || ''}`,
+        approvedAt: technicalResult !== 'FAILED' ? new Date() : null,
+        rejectedAt: technicalResult === 'FAILED' ? new Date() : null,
+        rejectionReason: technicalResult === 'FAILED' ? (data.technicianNotes || 'Failed technical safety check') : null,
+      },
+      update: {
+        conditionRating: Math.round(valuation.inspectionScore / 10),
+        notes: `Workshop Inspection [${shop.name}]: Grade ${valuation.overallGrade} (${valuation.inspectionScore}/100). Technical result: ${technicalResult}. ${data.technicianNotes || ''}`,
+        approvedAt: technicalResult !== 'FAILED' ? new Date() : null,
+        rejectedAt: technicalResult === 'FAILED' ? new Date() : null,
+        rejectionReason: technicalResult === 'FAILED' ? (data.technicianNotes || 'Failed technical safety check') : null,
+      },
+    });
+
+    // Notify customer that valuation & offer are ready
+    if (savedIntake.listing.sellerId) {
+      try {
+        if (technicalResult !== 'FAILED') {
+          await createNotification({
+            userId: savedIntake.listing.sellerId,
+            title: 'Technical Inspection Complete — Offer Ready!',
+            body: `Inspection complete by ${shop.name}! Grade: ${valuation.overallGrade} (${valuation.inspectionScore}/100). Recommended resale: ₹${valuation.recommendedListingPrice}. Expected payout offer: ₹${valuation.recommendedSellerPayout}. Review offer now.`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: '/customer/used-parts',
+              listingId: savedIntake.listing.id,
+              intakeId: savedIntake.id,
+              type: 'USED_PART_OFFER_READY',
+            },
+          });
+        } else {
+          await createNotification({
+            userId: savedIntake.listing.sellerId,
+            title: 'Part Inspection Failed Quality Standards',
+            body: `Your part "${savedIntake.partTitle}" did not pass safety/functional tests at ${shop.name}. Notes: ${data.technicianNotes || 'Component failed bench testing.'}`,
+            channel: 'IN_APP',
+            status: 'DELIVERED',
+            data: {
+              route: '/customer/used-parts',
+              listingId: savedIntake.listing.id,
+              intakeId: savedIntake.id,
+              type: 'USED_PART_INSPECTION_FAILED',
+            },
+          });
+        }
+      } catch (notifErr) {
+        console.warn('[ShopsService] Notification error:', notifErr);
+      }
+    }
+  }
+
+  return savedIntake;
 };
 
 // ============================================================================

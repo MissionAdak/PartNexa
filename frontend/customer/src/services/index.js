@@ -93,6 +93,8 @@ export const usedPartsService = {
   getMyListings: (params) => api.get('/usedparts/my', { params }),
   getMyListing: (id) => api.get(`/usedparts/my/${id}`),
   cancelListing: (id, data) => api.patch(`/usedparts/my/${id}/cancel`, data),
+  getPartnerGarages: () => api.get('/usedparts/partner-garages'),
+  respondToOffer: (id, decision) => api.post(`/usedparts/my/${id}/offer-decision`, { decision }),
   uploadPhotos: (formData) =>
     api.post('/usedparts/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

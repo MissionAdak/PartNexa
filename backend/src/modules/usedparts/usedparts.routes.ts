@@ -95,11 +95,38 @@ router.patch('/my/:id/cancel', authenticate, async (req: AuthenticatedRequest, r
   }
 });
 
+// Fetch verified partner garages for customer selection
+router.get('/partner-garages', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const garages = await usedPartsService.getPartnerGarages();
+    return successResponse(res, garages);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Customer accepts or declines garage valuation offer
+router.post('/my/:id/offer-decision', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { decision } = req.body;
+    if (decision !== 'ACCEPT' && decision !== 'DECLINE') {
+      throw new AppError('Decision must be either "ACCEPT" or "DECLINE".', 400);
+    }
+    const updated = await usedPartsService.respondToOffer(req.user!.id, req.params.id as string, decision);
+    const msg = decision === 'ACCEPT'
+      ? 'Offer accepted! Part is now listed as USED_VERIFIED on the marketplace.'
+      : 'Offer declined. Listing has been closed.';
+    return successResponse(res, updated, msg);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Create used part listing
 router.post('/', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const listing = await usedPartsService.createUsedPartListing(req.user!.id, req.body);
-    return createdResponse(res, listing, 'Used part listing submitted for verification.');
+    return createdResponse(res, listing, 'Used part listing submitted for partner garage inspection.');
   } catch (error) {
     next(error);
   }

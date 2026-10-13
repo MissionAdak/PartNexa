@@ -344,6 +344,8 @@ const OrderDetailPage = () => {
                           src={imgUrl}
                           alt=""
                           className="order-item-img"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <div className="order-item-info">
                           <div className="order-item-name">
@@ -572,6 +574,63 @@ const OrderDetailPage = () => {
                       📅 Scheduled Date: {new Date(order.difmRequest.preferredDate).toLocaleDateString()}
                     </div>
                   )}
+
+                  {/* Step 11: Installation Confirmation Code Box */}
+                  {(order.installationConfirmationCode || order.difmRequest?.serviceBooking?.completionCode) && !isDifmCompleted && (
+                    <div
+                      className="installation-code-card"
+                      style={{
+                        marginTop: '1rem',
+                        padding: '1rem',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%)',
+                        border: '1.5px dashed #10B981',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#059669', marginBottom: '0.35rem' }}>
+                        🔐 Installation Confirmation Code
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '1.85rem',
+                          fontWeight: 800,
+                          letterSpacing: '0.35em',
+                          color: '#0F172A',
+                          fontFamily: 'monospace',
+                          margin: '0.35rem 0',
+                          userSelect: 'all',
+                        }}
+                        id="installation-confirmation-code-display"
+                      >
+                        {order.installationConfirmationCode || order.difmRequest?.serviceBooking?.completionCode}
+                      </div>
+                      <p style={{ margin: '0', fontSize: '0.78rem', color: '#475569', lineHeight: 1.4 }}>
+                        Share this code verbally only after installation is completed to your satisfaction.
+                      </p>
+                    </div>
+                  )}
+
+                  {isDifmCompleted && (
+                    <div
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        background: 'rgba(16, 185, 129, 0.12)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#065F46',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>🛡️</span>
+                      <span>Verified by Customer Confirmation Code</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -651,6 +710,8 @@ const OrderDetailPage = () => {
                   src={returnModalItem.product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1600790142055-619df03207e6?w=200'}
                   alt=""
                   style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>

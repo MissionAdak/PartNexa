@@ -634,6 +634,44 @@ export const initialProducts = [
     ],
   },
   {
+    id: 'prod-bosch-brake-nexon',
+    name: 'Bosch Front Ceramic Brake Pad Set',
+    slug: 'bosch-front-ceramic-brake-pad-set-nexon',
+    description: 'High-performance ceramic brake pads engineered specifically for Tata Nexon. Provides instant bite, silent braking, and minimum rotor wear.',
+    sku: 'BOSCH-BP-TN-204',
+    partNumber: 'BP-TN-204',
+    categoryId: 'cat-braking',
+    brandId: 'brand-bosch',
+    brand: 'Bosch',
+    condition: 'GENUINE_NEW',
+    status: 'ACTIVE',
+    basePrice: 2100,
+    mrp: 2499,
+    warranty: '12 Months / 20,000 km Warranty',
+    rating: 4.9,
+    weight: 1.2,
+    dimensions: '15x10x5 cm',
+    tags: ['brake pad', 'bosch', 'tata nexon', 'brakes', 'ceramic'],
+    requiresDIFM: true,
+    installationDifficulty: 'MODERATE',
+    baseServiceFee: 399,
+    estimatedInstallTimeMinutes: 45,
+    createdAt: new Date('2024-01-10'),
+    images: [
+      { id: 'img-bbp-1', url: 'https://images.unsplash.com/photo-1600793575654-910699b5e4d4?w=600', isPrimary: true, altText: 'Bosch Front Ceramic Brake Pad Set', sortOrder: 0 },
+    ],
+    specs: [
+      { key: 'Position', value: 'Front Axle', unit: '' },
+      { key: 'Material', value: 'Ceramic Low-Dust', unit: '' },
+      { key: 'Compatibility', value: 'Tata Nexon (2020-2024)', unit: '' },
+    ],
+    compatibleVariantIds: ['var-nexon-creative', 'var-nexon-fearless'],
+    inventories: [
+      { id: 'inv-bosch-bp-1', shopId: 'shop-1', shop: initialShops[0], quantity: 20, sellingPrice: 2100, isAvailable: true },
+    ],
+    reviews: [],
+  },
+  {
     id: 'prod-brembo-brakes',
     name: 'Brembo Front Brake Pads Set P 54 040',
     slug: 'brembo-front-brake-pads-set-p54040',
@@ -1279,9 +1317,12 @@ class InMemoryStore {
   public usedPartListings: any[] = [...initialUsedPartListings];
   public shopJobs: any[] = [];
   public serviceAppointments: any[] = [];
+  public serviceBookings: any[] = [];
   public commissionLedgers: any[] = [];
   public shopDeliveries: any[] = [];
   public usedPartIntakes: any[] = [];
+  public usedPartPayouts: any[] = [];
+  public usedPartVerifications: any[] = [];
   public shopTickets: any[] = [];
   public deliveryPartners: any[] = [];
   public kycRecords: any[] = [];
@@ -1289,6 +1330,15 @@ class InMemoryStore {
   public deliveryAssignments: any[] = [];
   public codReconciliations: any[] = [];
   public supportTickets: any[] = [];
+  public suppliers: any[] = [];
+  public supplierCatalogItems: any[] = [];
+  public bulkPriceTiers: any[] = [];
+  public procurementCarts: any[] = [];
+  public procurementCartItems: any[] = [];
+  public purchaseOrders: any[] = [];
+  public purchaseOrderItems: any[] = [];
+  public goodsReceipts: any[] = [];
+  public goodsReceiptItems: any[] = [];
   public platformConfigs: any = {
     difm: {
       homeVisitBaseSurcharge: 99,
@@ -1315,6 +1365,7 @@ class InMemoryStore {
     this.seedDeliveryPartnerData();
     this.seedOrdersData();
     this.seedSupportTicketsData();
+    this.seedProcurementData();
   }
 
   private seedInventoriesAndShops() {
@@ -2504,6 +2555,650 @@ class InMemoryStore {
     ];
   }
 
+  private seedProcurementData() {
+    this.suppliers = [
+      {
+        id: 'sup-bosch',
+        name: 'Bosch Automotive Aftermarket Hub',
+        slug: 'bosch-india-hub',
+        contactPerson: 'Rajesh Sharma',
+        email: 'procurement@bosch-demo.in',
+        phone: '+91 80 6657 1111',
+        address: 'Hosur Road, Adugodi',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        gstNumber: '29AABCB1234F1Z8',
+        supplierType: 'MANUFACTURER',
+        logoUrl: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=200',
+        categories: ['Brake System', 'Engine Components', 'Electrical', 'Filters', 'Sensors'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-exide',
+        name: 'Exide Industries National Hub',
+        slug: 'exide-power-hub',
+        contactPerson: 'Amitava Banerjee',
+        email: 'orders@exide-demo.in',
+        phone: '+91 33 2283 2121',
+        address: '59E Chowringhee Road',
+        city: 'Kolkata',
+        state: 'West Bengal',
+        gstNumber: '19AAACE4567G1Z2',
+        supplierType: 'MANUFACTURER',
+        logoUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200',
+        categories: ['Battery', 'Electrical'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-brembo',
+        name: 'Brembo Brake Systems India',
+        slug: 'brembo-india-hub',
+        contactPerson: 'Marco Moretti',
+        email: 'b2b@brembo-demo.in',
+        phone: '+91 20 6712 3456',
+        address: 'Chakan Industrial Area Phase II',
+        city: 'Pune',
+        state: 'Maharashtra',
+        gstNumber: '27AABCB9876H1Z5',
+        supplierType: 'MANUFACTURER',
+        logoUrl: 'https://images.unsplash.com/photo-1600793575654-910699b5e4d4?w=200',
+        categories: ['Brake System'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-unominda',
+        name: 'Uno Minda Distribution Depot',
+        slug: 'uno-minda-distributor',
+        contactPerson: 'Sandeep Chawla',
+        email: 'bulk@unominda-demo.in',
+        phone: '+91 124 229 0011',
+        address: 'Sector 37, Pace City I',
+        city: 'Gurugram',
+        state: 'Haryana',
+        gstNumber: '06AAACU3344J1Z9',
+        supplierType: 'OEM_SUPPLIER',
+        logoUrl: null,
+        categories: ['Electrical', 'Lighting', 'Sensors', 'Accessories'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-lumax',
+        name: 'Lumax Industries Automotive Lighting',
+        slug: 'lumax-auto-hub',
+        contactPerson: 'Deepak Jain',
+        email: 'supply@lumax-demo.in',
+        phone: '+91 11 4985 7000',
+        address: 'Okhla Industrial Area Phase III',
+        city: 'New Delhi',
+        state: 'Delhi',
+        gstNumber: '07AAACL5566K1Z1',
+        supplierType: 'MANUFACTURER',
+        logoUrl: null,
+        categories: ['Lighting', 'Electrical', 'Body Parts'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-amaron',
+        name: 'Amaron Amara Raja Energy Hub',
+        slug: 'amaron-amara-raja',
+        contactPerson: 'S. Ramakrishna',
+        email: 'institutional@amaron-demo.in',
+        phone: '+91 40 2313 9000',
+        address: 'Hitech City, Madhapur',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        gstNumber: '36AAACA1122L1Z3',
+        supplierType: 'MANUFACTURER',
+        logoUrl: null,
+        categories: ['Battery', 'Electrical'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-castrol',
+        name: 'Castrol India Industrial & Fleet Supply',
+        slug: 'castrol-india-fleet',
+        contactPerson: 'Kedar Joshi',
+        email: 'bulkorder@castrol-demo.in',
+        phone: '+91 22 6698 4100',
+        address: 'Techniplex I, Goregaon West',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        gstNumber: '27AAACC2233M1Z4',
+        supplierType: 'MANUFACTURER',
+        logoUrl: null,
+        categories: ['Lubricants', 'Cooling System'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-zf',
+        name: 'ZF Aftermarket & TRW India Hub',
+        slug: 'zf-aftermarket-india',
+        contactPerson: 'Venkatesh R',
+        email: 'orders@zf-demo.in',
+        phone: '+91 44 2624 8800',
+        address: 'Ambattur Industrial Estate',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        gstNumber: '33AAACZ7788N1Z7',
+        supplierType: 'DISTRIBUTOR',
+        logoUrl: null,
+        categories: ['Steering', 'Suspension', 'Clutch & Transmission'],
+        supportedVehicles: ['4 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-valeo',
+        name: 'Valeo Automotive India Central',
+        slug: 'valeo-india-supply',
+        contactPerson: 'Prakash Sundaram',
+        email: 'sales@valeo-demo.in',
+        phone: '+91 44 4710 5000',
+        address: 'Vallam Vadagal SIPCOT Industrial Park',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        gstNumber: '33AAACV9900P1Z6',
+        supplierType: 'OEM_SUPPLIER',
+        logoUrl: null,
+        categories: ['Clutch & Transmission', 'Cooling System', 'Lighting', 'Electrical'],
+        supportedVehicles: ['4 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-denso',
+        name: 'Denso India Components',
+        slug: 'denso-india-supply',
+        contactPerson: 'Rakesh Verma',
+        email: 'b2b@denso-demo.in',
+        phone: '+91 120 256 7000',
+        address: 'Surajpur Industrial Area',
+        city: 'Greater Noida',
+        state: 'Uttar Pradesh',
+        gstNumber: '09AAACD4455Q1Z8',
+        supplierType: 'MANUFACTURER',
+        logoUrl: null,
+        categories: ['Sensors', 'Engine Components', 'Electrical', 'Cooling System'],
+        supportedVehicles: ['4 Wheeler', '2 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-tatamotors',
+        name: 'Tata Motors Genuine Spare Parts Depot',
+        slug: 'tata-motors-oem-hub',
+        contactPerson: 'Milind Kulkarni',
+        email: 'oemparts@tatamotors-demo.in',
+        phone: '+91 20 6613 1111',
+        address: 'Pimpri Logistics Hub',
+        city: 'Pune',
+        state: 'Maharashtra',
+        gstNumber: '27AAACT0011R1Z2',
+        supplierType: 'OEM',
+        logoUrl: null,
+        categories: ['Engine Components', 'Body Parts', 'Suspension', 'Brake System', 'Filters'],
+        supportedVehicles: ['4 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+      {
+        id: 'sup-marutisuzuki',
+        name: 'Maruti Suzuki Genuine Spares Regional',
+        slug: 'maruti-suzuki-genuine-hub',
+        contactPerson: 'Harish Singhal',
+        email: 'genuine@maruti-demo.in',
+        phone: '+91 124 439 2000',
+        address: 'IMT Manesar Central Warehouse',
+        city: 'Gurugram',
+        state: 'Haryana',
+        gstNumber: '06AAACM8899S1Z5',
+        supplierType: 'OEM',
+        logoUrl: null,
+        categories: ['Engine Components', 'Body Parts', 'Suspension', 'Brake System', 'Electrical'],
+        supportedVehicles: ['4 Wheeler'],
+        verificationStatus: 'VERIFIED',
+        isDemo: true,
+        isActive: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      },
+    ];
+
+    const catalogDefs = [
+      {
+        id: 'cat-item-bosch-bp-nexon',
+        supplierId: 'sup-bosch',
+        productId: 'prod-bosch-brake-nexon',
+        partName: 'Bosch Front Ceramic Brake Pad Set',
+        partNumber: 'BP-TN-204',
+        categoryName: 'Brake System',
+        brandName: 'Bosch',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 2100.0,
+        bulkPrice: 1750.0,
+        moq: 10,
+        stockQuantity: 500,
+        leadTime: '3–5 days',
+        leadTimeDays: 3,
+        warranty: '12 Months / 20,000 km Warranty',
+        isAvailable: true,
+        imageUrl: 'https://images.unsplash.com/photo-1600793575654-910699b5e4d4?w=600',
+        tiers: [
+          { minQuantity: 1, maxQuantity: 9, unitPrice: 2100.0, discountPercent: 0 },
+          { minQuantity: 10, maxQuantity: 49, unitPrice: 1900.0, discountPercent: 9.52 },
+          { minQuantity: 50, maxQuantity: 99, unitPrice: 1750.0, discountPercent: 16.67 },
+          { minQuantity: 100, maxQuantity: null, unitPrice: 1600.0, discountPercent: 23.81 },
+        ],
+      },
+      {
+        id: 'cat-item-brembo-bp-nexon',
+        supplierId: 'sup-brembo',
+        productId: null,
+        partName: 'Brembo Premium Disc Brake Pads (Front)',
+        partNumber: 'BRM-P83024N',
+        categoryName: 'Brake System',
+        brandName: 'Brembo',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 2650.0,
+        bulkPrice: 2150.0,
+        moq: 10,
+        stockQuantity: 320,
+        leadTime: '2–4 days',
+        leadTimeDays: 2,
+        warranty: '18 Months Brembo Warranty',
+        isAvailable: true,
+        imageUrl: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?w=600',
+        tiers: [
+          { minQuantity: 1, maxQuantity: 9, unitPrice: 2650.0, discountPercent: 0 },
+          { minQuantity: 10, maxQuantity: 49, unitPrice: 2350.0, discountPercent: 11.32 },
+          { minQuantity: 50, maxQuantity: 99, unitPrice: 2150.0, discountPercent: 18.87 },
+          { minQuantity: 100, maxQuantity: null, unitPrice: 1950.0, discountPercent: 26.42 },
+        ],
+      },
+      {
+        id: 'cat-item-tata-caliper-nexon',
+        supplierId: 'sup-tatamotors',
+        productId: null,
+        partName: 'Tata Motors Genuine Front Brake Caliper Assembly',
+        partNumber: 'TM-NEX-BC-09',
+        categoryName: 'Brake System',
+        brandName: 'Tata Motors Genuine',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 4200.0,
+        bulkPrice: 3500.0,
+        moq: 5,
+        stockQuantity: 150,
+        leadTime: '4–6 days',
+        leadTimeDays: 4,
+        warranty: '24 Months OEM Factory Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 4, unitPrice: 4200.0, discountPercent: 0 },
+          { minQuantity: 5, maxQuantity: 19, unitPrice: 3800.0, discountPercent: 9.52 },
+          { minQuantity: 20, maxQuantity: null, unitPrice: 3500.0, discountPercent: 16.67 },
+        ],
+      },
+      {
+        id: 'cat-item-bosch-shoe-swift',
+        supplierId: 'sup-bosch',
+        productId: null,
+        partName: 'Bosch High-Performance Brake Shoe Set (Rear)',
+        partNumber: 'BS-MS-SW01',
+        categoryName: 'Brake System',
+        brandName: 'Bosch',
+        vehicleMakeId: 'make-maruti',
+        vehicleMakeName: 'Maruti Suzuki',
+        vehicleModelId: 'model-swift',
+        vehicleModelName: 'Swift',
+        variantName: 'VXi 1.2L',
+        year: 2022,
+        condition: 'GENUINE_NEW',
+        unitPrice: 1250.0,
+        bulkPrice: 980.0,
+        moq: 15,
+        stockQuantity: 400,
+        leadTime: '3–5 days',
+        leadTimeDays: 3,
+        warranty: '12 Months Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 14, unitPrice: 1250.0, discountPercent: 0 },
+          { minQuantity: 15, maxQuantity: 49, unitPrice: 1100.0, discountPercent: 12.0 },
+          { minQuantity: 50, maxQuantity: null, unitPrice: 980.0, discountPercent: 21.6 },
+        ],
+      },
+      {
+        id: 'cat-item-exide-battery-nexon',
+        supplierId: 'sup-exide',
+        productId: null,
+        partName: 'Exide Epiq 12V 45Ah Maintenance-Free Car Battery',
+        partNumber: 'EX-EP-45L',
+        categoryName: 'Battery',
+        brandName: 'Exide',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 5600.0,
+        bulkPrice: 4750.0,
+        moq: 5,
+        stockQuantity: 250,
+        leadTime: '2–3 days',
+        leadTimeDays: 2,
+        warranty: '66 Months (36F + 30P) Pro-Rata',
+        isAvailable: true,
+        imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600',
+        tiers: [
+          { minQuantity: 1, maxQuantity: 4, unitPrice: 5600.0, discountPercent: 0 },
+          { minQuantity: 5, maxQuantity: 19, unitPrice: 5100.0, discountPercent: 8.93 },
+          { minQuantity: 20, maxQuantity: null, unitPrice: 4750.0, discountPercent: 15.18 },
+        ],
+      },
+      {
+        id: 'cat-item-amaron-battery-swift',
+        supplierId: 'sup-amaron',
+        productId: null,
+        partName: 'Amaron FLO 42B20L High Cranking Automotive Battery',
+        partNumber: 'AM-FLO-42B',
+        categoryName: 'Battery',
+        brandName: 'Amaron',
+        vehicleMakeId: 'make-maruti',
+        vehicleMakeName: 'Maruti Suzuki',
+        vehicleModelId: 'model-swift',
+        vehicleModelName: 'Swift',
+        variantName: 'VXi 1.2L',
+        year: 2022,
+        condition: 'GENUINE_NEW',
+        unitPrice: 4900.0,
+        bulkPrice: 4200.0,
+        moq: 5,
+        stockQuantity: 280,
+        leadTime: '2–4 days',
+        leadTimeDays: 2,
+        warranty: '55 Months Replacement Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 4, unitPrice: 4900.0, discountPercent: 0 },
+          { minQuantity: 5, maxQuantity: 19, unitPrice: 4500.0, discountPercent: 8.16 },
+          { minQuantity: 20, maxQuantity: null, unitPrice: 4200.0, discountPercent: 14.29 },
+        ],
+      },
+      {
+        id: 'cat-item-lumax-headlamp-nexon',
+        supplierId: 'sup-lumax',
+        productId: null,
+        partName: 'Lumax Bi-Function Projector Headlamp Assembly (Right)',
+        partNumber: 'LX-HL-NEX-R',
+        categoryName: 'Lighting',
+        brandName: 'Lumax',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 6800.0,
+        bulkPrice: 5600.0,
+        moq: 4,
+        stockQuantity: 120,
+        leadTime: '3–6 days',
+        leadTimeDays: 4,
+        warranty: '12 Months Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 3, unitPrice: 6800.0, discountPercent: 0 },
+          { minQuantity: 4, maxQuantity: 9, unitPrice: 6100.0, discountPercent: 10.29 },
+          { minQuantity: 10, maxQuantity: null, unitPrice: 5600.0, discountPercent: 17.65 },
+        ],
+      },
+      {
+        id: 'cat-item-unominda-alternator-nexon',
+        supplierId: 'sup-unominda',
+        productId: null,
+        partName: 'Uno Minda Heavy-Duty Alternator Assembly 12V 90A',
+        partNumber: 'UM-ALT-NEX-90',
+        categoryName: 'Electrical',
+        brandName: 'Uno Minda',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 7900.0,
+        bulkPrice: 6500.0,
+        moq: 3,
+        stockQuantity: 90,
+        leadTime: '4–7 days',
+        leadTimeDays: 5,
+        warranty: '24 Months Replacement Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 2, unitPrice: 7900.0, discountPercent: 0 },
+          { minQuantity: 3, maxQuantity: 9, unitPrice: 7100.0, discountPercent: 10.13 },
+          { minQuantity: 10, maxQuantity: null, unitPrice: 6500.0, discountPercent: 17.72 },
+        ],
+      },
+      {
+        id: 'cat-item-castrol-oil',
+        supplierId: 'sup-castrol',
+        productId: null,
+        partName: 'Castrol Magnatec 5W-30 Full Synthetic Engine Oil (3.5L)',
+        partNumber: 'CAS-MAG-5W30',
+        categoryName: 'Lubricants',
+        brandName: 'Castrol',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 1850.0,
+        bulkPrice: 1450.0,
+        moq: 12,
+        stockQuantity: 600,
+        leadTime: '2–3 days',
+        leadTimeDays: 2,
+        warranty: 'Tamper-Proof Hologram Seal',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 11, unitPrice: 1850.0, discountPercent: 0 },
+          { minQuantity: 12, maxQuantity: 47, unitPrice: 1600.0, discountPercent: 13.51 },
+          { minQuantity: 48, maxQuantity: null, unitPrice: 1450.0, discountPercent: 21.62 },
+        ],
+      },
+      {
+        id: 'cat-item-valeo-clutch-nexon',
+        supplierId: 'sup-valeo',
+        productId: null,
+        partName: 'Valeo Dual-Friction Clutch Kit with Release Bearing',
+        partNumber: 'VAL-CLK-NEX-01',
+        categoryName: 'Clutch & Transmission',
+        brandName: 'Valeo',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 5400.0,
+        bulkPrice: 4400.0,
+        moq: 5,
+        stockQuantity: 110,
+        leadTime: '3–5 days',
+        leadTimeDays: 3,
+        warranty: '12 Months Factory Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 4, unitPrice: 5400.0, discountPercent: 0 },
+          { minQuantity: 5, maxQuantity: 19, unitPrice: 4800.0, discountPercent: 11.11 },
+          { minQuantity: 20, maxQuantity: null, unitPrice: 4400.0, discountPercent: 18.52 },
+        ],
+      },
+      {
+        id: 'cat-item-denso-sensor-nexon',
+        supplierId: 'sup-denso',
+        productId: null,
+        partName: 'Denso Direct-Fit Heated Oxygen Sensor (Upstream)',
+        partNumber: 'DEN-O2-NEX-01',
+        categoryName: 'Sensors',
+        brandName: 'Denso',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 3100.0,
+        bulkPrice: 2500.0,
+        moq: 8,
+        stockQuantity: 190,
+        leadTime: '3–5 days',
+        leadTimeDays: 3,
+        warranty: '12 Months Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 7, unitPrice: 3100.0, discountPercent: 0 },
+          { minQuantity: 8, maxQuantity: 24, unitPrice: 2750.0, discountPercent: 11.29 },
+          { minQuantity: 25, maxQuantity: null, unitPrice: 2500.0, discountPercent: 19.35 },
+        ],
+      },
+      {
+        id: 'cat-item-zf-suspension-nexon',
+        supplierId: 'sup-zf',
+        productId: null,
+        partName: 'ZF TRW Heavy-Duty Lower Control Arm Assembly (Left)',
+        partNumber: 'ZF-TRW-LCA-01',
+        categoryName: 'Suspension',
+        brandName: 'ZF',
+        vehicleMakeId: 'make-tata',
+        vehicleMakeName: 'Tata',
+        vehicleModelId: 'model-nexon',
+        vehicleModelName: 'Nexon',
+        variantName: 'XZ 1.2 Petrol',
+        year: 2023,
+        condition: 'GENUINE_NEW',
+        unitPrice: 3800.0,
+        bulkPrice: 3100.0,
+        moq: 6,
+        stockQuantity: 140,
+        leadTime: '4–6 days',
+        leadTimeDays: 4,
+        warranty: '18 Months Warranty',
+        isAvailable: true,
+        imageUrl: null,
+        tiers: [
+          { minQuantity: 1, maxQuantity: 5, unitPrice: 3800.0, discountPercent: 0 },
+          { minQuantity: 6, maxQuantity: 19, unitPrice: 3450.0, discountPercent: 9.21 },
+          { minQuantity: 20, maxQuantity: null, unitPrice: 3100.0, discountPercent: 18.42 },
+        ],
+      },
+    ];
+
+    for (const c of catalogDefs) {
+      const { tiers, ...itemData } = c;
+      this.supplierCatalogItems.push({
+        ...itemData,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      });
+
+      for (const t of tiers) {
+        this.bulkPriceTiers.push({
+          id: 'tier-' + Math.random().toString(36).substring(2, 9),
+          catalogItemId: itemData.id,
+          minQuantity: t.minQuantity,
+          maxQuantity: t.maxQuantity,
+          unitPrice: t.unitPrice,
+          discountPercent: t.discountPercent,
+          createdAt: new Date('2024-01-01'),
+        });
+      }
+    }
+  }
+
+
   // --- USER ---
   public user = {
     findMany: async ({ where, orderBy }: { where?: any; orderBy?: any } = {}) => {
@@ -2514,9 +3209,11 @@ class InMemoryStore {
       });
       return list;
     },
-    findUnique: async ({ where, select }: { where: { email?: string; id?: string }; select?: any }) => {
+    findUnique: async ({ where, select }: { where: { email?: string; id?: string; phone?: string }; select?: any }) => {
       const u = this.users.find(
-        (usr) => (where.email && usr.email.toLowerCase() === where.email.toLowerCase()) || (where.id && usr.id === where.id)
+        (usr) => (where.email && usr.email.toLowerCase() === where.email.toLowerCase()) || 
+                 (where.id && usr.id === where.id) ||
+                 (where.phone && usr.phone === where.phone)
       );
       if (!u) return null;
       const countVehicles = this.customerVehicles.filter((v) => v.userId === u.id).length;
@@ -2535,6 +3232,7 @@ class InMemoryStore {
       const u = this.users.find((usr) => {
         if (where?.id && usr.id !== where.id) return false;
         if (where?.email && usr.email.toLowerCase() !== where.email.toLowerCase()) return false;
+        if (where?.phone && usr.phone !== where.phone) return false;
         if (where?.role && usr.role !== where.role) return false;
         if (where?.status && usr.status !== where.status) return false;
         return true;
@@ -2787,9 +3485,19 @@ class InMemoryStore {
       return list.map((inv) => {
         const prod = initialProducts.find((p) => p.id === inv.productId);
         const shop = this.shops.find((s) => s.id === inv.shopId);
+        const populatedProd = prod ? this.populateProduct(prod) : null;
+        if (populatedProd) {
+          const catItems = this.supplierCatalogItems
+            .filter((c) => c.productId === prod!.id)
+            .map((c) => ({
+              ...c,
+              supplier: this.suppliers.find((s) => s.id === c.supplierId) || null,
+            }));
+          populatedProd.supplierCatalogItems = catItems;
+        }
         return {
           ...inv,
-          product: prod ? this.populateProduct(prod) : null,
+          product: populatedProd,
           shop: shop ? { id: shop.id, name: shop.name, city: shop.city } : null,
         };
       });
@@ -3120,6 +3828,153 @@ class InMemoryStore {
     },
   };
 
+  // --- SERVICE BOOKING (STEP 11 INSTALLATION COMPLETION CONFIRMATION) ---
+  public serviceBooking = {
+    findMany: async ({ where, orderBy, include }: { where?: any; orderBy?: any; include?: any } = {}) => {
+      let list = this.serviceBookings.filter((b) => {
+        if (where?.id && b.id !== where.id) return false;
+        if (where?.difmRequestId && b.difmRequestId !== where.difmRequestId) return false;
+        if (where?.shopId && b.shopId !== where.shopId) return false;
+        if (where?.isCompleted !== undefined && b.isCompleted !== where.isCompleted) return false;
+        return true;
+      });
+      if (orderBy?.createdAt === 'desc') {
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      }
+      return list.map((b) => {
+        const item = { ...b };
+        if (include?.shop) {
+          item.shop = this.shops.find((s) => s.id === b.shopId) || null;
+        }
+        if (include?.difmRequest) {
+          item.difmRequest = this.difmRequests.find((d) => d.id === b.difmRequestId) || null;
+        }
+        return item;
+      });
+    },
+    findUnique: async ({ where, include }: { where: { id?: string; difmRequestId?: string }; include?: any }) => {
+      const b = this.serviceBookings.find(
+        (x) => (where.id && x.id === where.id) || (where.difmRequestId && x.difmRequestId === where.difmRequestId)
+      );
+      if (!b) return null;
+      const item = { ...b };
+      if (include?.shop) {
+        item.shop = this.shops.find((s) => s.id === b.shopId) || null;
+      }
+      if (include?.difmRequest) {
+        item.difmRequest = this.difmRequests.find((d) => d.id === b.difmRequestId) || null;
+      }
+      return item;
+    },
+    findFirst: async ({ where, include }: { where: any; include?: any }) => {
+      const b = this.serviceBookings.find((x) => {
+        if (where?.id && x.id !== where.id) return false;
+        if (where?.difmRequestId && x.difmRequestId !== where.difmRequestId) return false;
+        if (where?.shopId && x.shopId !== where.shopId) return false;
+        if (where?.isCompleted !== undefined && x.isCompleted !== where.isCompleted) return false;
+        return true;
+      });
+      if (!b) return null;
+      const item = { ...b };
+      if (include?.shop) {
+        item.shop = this.shops.find((s) => s.id === b.shopId) || null;
+      }
+      if (include?.difmRequest) {
+        item.difmRequest = this.difmRequests.find((d) => d.id === b.difmRequestId) || null;
+      }
+      return item;
+    },
+    create: async ({ data, include }: { data: any; include?: any }) => {
+      const id = 'sb-' + crypto.randomUUID();
+      const newBooking = {
+        id,
+        scheduledSlot: '10:00 AM - 12:00 PM',
+        isCompleted: false,
+        completionCodeAttempts: 0,
+        completionCodeLocked: false,
+        completedAt: null,
+        completedByRole: null,
+        completedById: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...data,
+      };
+      this.serviceBookings.unshift(newBooking);
+      const item = { ...newBooking };
+      if (include?.shop) {
+        item.shop = this.shops.find((s) => s.id === item.shopId) || null;
+      }
+      if (include?.difmRequest) {
+        item.difmRequest = this.difmRequests.find((d) => d.id === item.difmRequestId) || null;
+      }
+      return item;
+    },
+    update: async ({ where, data, include }: { where: { id?: string; difmRequestId?: string }; data: any; include?: any }) => {
+      const idx = this.serviceBookings.findIndex(
+        (x) => (where.id && x.id === where.id) || (where.difmRequestId && x.difmRequestId === where.difmRequestId)
+      );
+      if (idx === -1) throw new Error('ServiceBooking not found to update.');
+      this.serviceBookings[idx] = {
+        ...this.serviceBookings[idx],
+        ...data,
+        updatedAt: new Date(),
+      };
+      const item = { ...this.serviceBookings[idx] };
+      if (include?.shop) {
+        item.shop = this.shops.find((s) => s.id === item.shopId) || null;
+      }
+      if (include?.difmRequest) {
+        item.difmRequest = this.difmRequests.find((d) => d.id === item.difmRequestId) || null;
+      }
+      return item;
+    },
+    upsert: async ({ where, create, update, include }: { where: { id?: string; difmRequestId?: string }; create: any; update: any; include?: any }) => {
+      const idx = this.serviceBookings.findIndex(
+        (x) => (where.id && x.id === where.id) || (where.difmRequestId && x.difmRequestId === where.difmRequestId)
+      );
+      if (idx !== -1) {
+        this.serviceBookings[idx] = {
+          ...this.serviceBookings[idx],
+          ...update,
+          updatedAt: new Date(),
+        };
+        const item = { ...this.serviceBookings[idx] };
+        if (include?.shop) item.shop = this.shops.find((s) => s.id === item.shopId) || null;
+        if (include?.difmRequest) item.difmRequest = this.difmRequests.find((d) => d.id === item.difmRequestId) || null;
+        return item;
+      } else {
+        const id = 'sb-' + crypto.randomUUID();
+        const newBooking = {
+          id,
+          scheduledSlot: '10:00 AM - 12:00 PM',
+          isCompleted: false,
+          completionCodeAttempts: 0,
+          completionCodeLocked: false,
+          completedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          ...create,
+        };
+        this.serviceBookings.unshift(newBooking);
+        const item = { ...newBooking };
+        if (include?.shop) item.shop = this.shops.find((s) => s.id === item.shopId) || null;
+        if (include?.difmRequest) item.difmRequest = this.difmRequests.find((d) => d.id === item.difmRequestId) || null;
+        return item;
+      }
+    },
+    delete: async ({ where }: { where: { id?: string; difmRequestId?: string } }) => {
+      const idx = this.serviceBookings.findIndex(
+        (x) => (where.id && x.id === where.id) || (where.difmRequestId && x.difmRequestId === where.difmRequestId)
+      );
+      if (idx !== -1) {
+        const deleted = this.serviceBookings[idx];
+        this.serviceBookings.splice(idx, 1);
+        return deleted;
+      }
+      return null;
+    },
+  };
+
   // --- COMMISSION LEDGER ---
   public commissionLedger = {
     findMany: async ({ where, orderBy }: { where?: any; orderBy?: any } = {}) => {
@@ -3211,6 +4066,16 @@ class InMemoryStore {
     findUnique: async ({ where }: { where: { id: string } }) => {
       return this.shopDeliveries.find((d) => d.id === where.id) || null;
     },
+    findFirst: async ({ where }: { where?: any } = {}) => {
+      return (
+        this.shopDeliveries.find(
+          (d) =>
+            (!where?.id || d.id === where.id) &&
+            (!where?.shopId || d.shopId === where.shopId) &&
+            (!where?.orderId || d.orderId === where.orderId)
+        ) || null
+      );
+    },
     create: async ({ data }: { data: any }) => {
       const id = 'del-' + (this.shopDeliveries.length + 101);
       const item = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
@@ -3227,25 +4092,164 @@ class InMemoryStore {
 
   // --- USED PART INTAKE ---
   public usedPartIntake = {
-    findMany: async ({ where }: { where?: any } = {}) => {
-      return this.usedPartIntakes
+    findMany: async ({ where, include, orderBy }: { where?: any; include?: any; orderBy?: any } = {}) => {
+      let list = this.usedPartIntakes
         .filter((i) => !where?.shopId || i.shopId === where.shopId)
-        .sort((a, b) => new Date(b.intakeDate).getTime() - new Date(a.intakeDate).getTime());
+        .filter((i) => !where?.listingId || i.listingId === where.listingId);
+      if (where?.status) {
+        if (typeof where.status === 'string') list = list.filter((i) => i.status === where.status);
+        else if (where.status.in && Array.isArray(where.status.in)) list = list.filter((i) => where.status.in.includes(i.status));
+      }
+      return list
+        .sort((a, b) => new Date(b.createdAt || b.intakeDate || 0).getTime() - new Date(a.createdAt || a.intakeDate || 0).getTime())
+        .map((i) => {
+          const shop = include?.shop ? this.shops.find((s) => s.id === i.shopId) : null;
+          const listing = include?.listing ? this.usedPartListings.find((l) => l.id === i.listingId) : null;
+          return {
+            ...i,
+            shop: shop || null,
+            listing: listing ? { ...listing, seller: this.users.find((u) => u.id === listing.sellerId) || null } : null,
+          };
+        });
     },
-    findUnique: async ({ where }: { where: { id: string } }) => {
-      return this.usedPartIntakes.find((i) => i.id === where.id) || null;
+    findUnique: async ({ where, include }: { where: { id?: string; listingId?: string }; include?: any }) => {
+      const item = this.usedPartIntakes.find((i) => (where.id && i.id === where.id) || (where.listingId && i.listingId === where.listingId)) || null;
+      if (!item) return null;
+      const shop = include?.shop ? this.shops.find((s) => s.id === item.shopId) : null;
+      const listing = include?.listing ? this.usedPartListings.find((l) => l.id === item.listingId) : null;
+      return {
+        ...item,
+        shop: shop || null,
+        listing: listing ? { ...listing, seller: this.users.find((u) => u.id === listing.sellerId) || null } : null,
+      };
     },
-    create: async ({ data }: { data: any }) => {
-      const id = 'intake-' + (this.usedPartIntakes.length + 101);
-      const item = { id, ...data, intakeDate: new Date(), createdAt: new Date(), updatedAt: new Date() };
+    findFirst: async ({ where, include }: { where: any; include?: any }) => {
+      const item = this.usedPartIntakes.find((i) => {
+        if (where.id && i.id !== where.id) return false;
+        if (where.shopId && i.shopId !== where.shopId) return false;
+        if (where.listingId && i.listingId !== where.listingId) return false;
+        if (where.status && i.status !== where.status) return false;
+        return true;
+      }) || null;
+      if (!item) return null;
+      const shop = include?.shop ? this.shops.find((s) => s.id === item.shopId) : null;
+      const listing = include?.listing ? this.usedPartListings.find((l) => l.id === item.listingId) : null;
+      return {
+        ...item,
+        shop: shop || null,
+        listing: listing ? { ...listing, seller: this.users.find((u) => u.id === listing.sellerId) || null } : null,
+      };
+    },
+    create: async ({ data, include }: { data: any; include?: any }) => {
+      const id = data.id || 'intake-' + (this.usedPartIntakes.length + 101);
+      const item = { id, ...data, intakeDate: data.intakeDate || new Date(), createdAt: new Date(), updatedAt: new Date() };
+      this.usedPartIntakes.unshift(item);
+      const shop = include?.shop ? this.shops.find((s) => s.id === item.shopId) : null;
+      const listing = include?.listing ? this.usedPartListings.find((l) => l.id === item.listingId) : null;
+      return {
+        ...item,
+        shop: shop || null,
+        listing: listing ? { ...listing, seller: this.users.find((u) => u.id === listing.sellerId) || null } : null,
+      };
+    },
+    update: async ({ where, data, include }: { where: { id?: string; listingId?: string }; data: any; include?: any }) => {
+      const idx = this.usedPartIntakes.findIndex((i) => (where.id && i.id === where.id) || (where.listingId && i.listingId === where.listingId));
+      if (idx === -1) return null;
+      this.usedPartIntakes[idx] = { ...this.usedPartIntakes[idx], ...data, updatedAt: new Date() };
+      const item = this.usedPartIntakes[idx];
+      const shop = include?.shop ? this.shops.find((s) => s.id === item.shopId) : null;
+      const listing = include?.listing ? this.usedPartListings.find((l) => l.id === item.listingId) : null;
+      return {
+        ...item,
+        shop: shop || null,
+        listing: listing ? { ...listing, seller: this.users.find((u) => u.id === listing.sellerId) || null } : null,
+      };
+    },
+    upsert: async ({ where, update, create }: any) => {
+      const existing = this.usedPartIntakes.find((i) => (where.id && i.id === where.id) || (where.listingId && i.listingId === where.listingId));
+      if (existing) {
+        const idx = this.usedPartIntakes.indexOf(existing);
+        this.usedPartIntakes[idx] = { ...this.usedPartIntakes[idx], ...update, updatedAt: new Date() };
+        return this.usedPartIntakes[idx];
+      }
+      const id = create.id || 'intake-' + (this.usedPartIntakes.length + 101);
+      const item = { id, ...create, createdAt: new Date(), updatedAt: new Date() };
       this.usedPartIntakes.unshift(item);
       return item;
     },
-    update: async ({ where, data }: { where: { id: string }; data: any }) => {
-      const idx = this.usedPartIntakes.findIndex((i) => i.id === where.id);
+  };
+
+  // --- USED PART PAYOUT ---
+  public usedPartPayout = {
+    findMany: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.usedPartPayouts];
+      if (where?.sellerId) list = list.filter((p) => p.sellerId === where.sellerId);
+      if (where?.listingId) list = list.filter((p) => p.listingId === where.listingId);
+      if (where?.status) list = list.filter((p) => p.status === where.status);
+      return list;
+    },
+    findFirst: async ({ where }: { where?: any } = {}) => {
+      return (
+        this.usedPartPayouts.find((p) => {
+          if (where?.id && p.id !== where.id) return false;
+          if (where?.listingId && p.listingId !== where.listingId) return false;
+          if (where?.sellerId && p.sellerId !== where.sellerId) return false;
+          return true;
+        }) || null
+      );
+    },
+    findUnique: async ({ where }: { where: { id?: string; listingId?: string } }) => {
+      return (
+        this.usedPartPayouts.find((p) => (where.id && p.id === where.id) || (where.listingId && p.listingId === where.listingId)) || null
+      );
+    },
+    create: async ({ data }: { data: any }) => {
+      const id = data.id || 'payout_' + Math.random().toString(36).substring(2, 11);
+      const item = { id, ...data, createdAt: new Date(), updatedAt: new Date() };
+      this.usedPartPayouts.unshift(item);
+      return item;
+    },
+    upsert: async ({ where, create, update }: any) => {
+      const existing = this.usedPartPayouts.find((p) => (where.id && p.id === where.id) || (where.listingId && p.listingId === where.listingId));
+      if (existing) {
+        const idx = this.usedPartPayouts.indexOf(existing);
+        this.usedPartPayouts[idx] = { ...this.usedPartPayouts[idx], ...update, updatedAt: new Date() };
+        return this.usedPartPayouts[idx];
+      }
+      const id = create.id || 'payout_' + Math.random().toString(36).substring(2, 11);
+      const item = { id, ...create, createdAt: new Date(), updatedAt: new Date() };
+      this.usedPartPayouts.unshift(item);
+      return item;
+    },
+    update: async ({ where, data }: { where: { id?: string; listingId?: string }; data: any }) => {
+      const idx = this.usedPartPayouts.findIndex((p) => (where.id && p.id === where.id) || (where.listingId && p.listingId === where.listingId));
       if (idx === -1) return null;
-      this.usedPartIntakes[idx] = { ...this.usedPartIntakes[idx], ...data, updatedAt: new Date() };
-      return this.usedPartIntakes[idx];
+      this.usedPartPayouts[idx] = { ...this.usedPartPayouts[idx], ...data, updatedAt: new Date() };
+      return this.usedPartPayouts[idx];
+    },
+  };
+
+  // --- USED PART VERIFICATION ---
+  public usedPartVerification = {
+    findMany: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.usedPartVerifications];
+      if (where?.listingId) list = list.filter((v) => v.listingId === where.listingId);
+      return list;
+    },
+    findFirst: async ({ where }: { where?: any } = {}) => {
+      return this.usedPartVerifications.find((v) => !where?.listingId || v.listingId === where.listingId) || null;
+    },
+    upsert: async ({ where, create, update }: any) => {
+      const existing = this.usedPartVerifications.find((v) => (where.id && v.id === where.id) || (where.listingId && v.listingId === where.listingId));
+      if (existing) {
+        const idx = this.usedPartVerifications.indexOf(existing);
+        this.usedPartVerifications[idx] = { ...this.usedPartVerifications[idx], ...update, updatedAt: new Date() };
+        return this.usedPartVerifications[idx];
+      }
+      const id = create.id || 'verif_' + Math.random().toString(36).substring(2, 11);
+      const item = { id, ...create, createdAt: new Date(), updatedAt: new Date() };
+      this.usedPartVerifications.unshift(item);
+      return item;
     },
   };
 
@@ -3289,11 +4293,12 @@ class InMemoryStore {
       );
       if (!p) return null;
       const user = include?.user ? this.users.find((u) => u.id === p.userId) : null;
+      const userAddresses = user ? this.addresses.filter((a) => a.userId === user.id) : [];
       const rawKyc = this.kycRecords.find((k) => k.userId === p.userId) || null;
       const kyc = rawKyc ? { ...rawKyc, documents: this.kycDocuments.filter((d) => d.kycId === rawKyc.id) } : null;
       return {
         ...p,
-        user: user ? { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+        user: user ? { ...user, addresses: userAddresses, kyc } : null,
         kyc,
       };
     },
@@ -3302,10 +4307,15 @@ class InMemoryStore {
         if (where?.id && dp.id !== where.id) return false;
         if (where?.userId && dp.userId !== where.userId) return false;
         if (where?.isOnline !== undefined && dp.isOnline !== where.isOnline) return false;
+        if (where?.vehicleNum) {
+          const vQuery = typeof where.vehicleNum === 'string' ? where.vehicleNum.toLowerCase() : (where.vehicleNum?.equals ? where.vehicleNum.equals.toLowerCase() : '');
+          if (dp.vehicleNum?.toLowerCase() !== vQuery) return false;
+        }
         if (where?.OR && Array.isArray(where.OR)) {
           const match = where.OR.some((cond: any) => {
             if (cond.id && dp.id === cond.id) return true;
             if (cond.userId && dp.userId === cond.userId) return true;
+            if (cond.vehicleNum && dp.vehicleNum?.toLowerCase() === (typeof cond.vehicleNum === 'string' ? cond.vehicleNum.toLowerCase() : '')) return true;
             return false;
           });
           if (!match) return false;
@@ -3314,11 +4324,12 @@ class InMemoryStore {
       });
       if (!p) return null;
       const user = include?.user ? this.users.find((u) => u.id === p.userId) : null;
+      const userAddresses = user ? this.addresses.filter((a) => a.userId === user.id) : [];
       const rawKyc = this.kycRecords.find((k) => k.userId === p.userId) || null;
       const kyc = rawKyc ? { ...rawKyc, documents: this.kycDocuments.filter((d) => d.kycId === rawKyc.id) } : null;
       return {
         ...p,
-        user: user ? { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+        user: user ? { ...user, addresses: userAddresses, kyc } : null,
         kyc,
       };
     },
@@ -3328,15 +4339,17 @@ class InMemoryStore {
           if (where?.isOnline !== undefined && dp.isOnline !== where.isOnline) return false;
           if (where?.verificationStatus !== undefined && dp.verificationStatus !== where.verificationStatus) return false;
           if (where?.vehicleType !== undefined && dp.vehicleType !== where.vehicleType) return false;
+          if (where?.vehicleNum && dp.vehicleNum?.toLowerCase() !== (typeof where.vehicleNum === 'string' ? where.vehicleNum.toLowerCase() : '')) return false;
           return true;
         })
         .map((dp) => {
           const user = include?.user ? this.users.find((u) => u.id === dp.userId) : null;
+          const userAddresses = user ? this.addresses.filter((a) => a.userId === user.id) : [];
           const rawKyc = this.kycRecords.find((k) => k.userId === dp.userId) || null;
           const kyc = rawKyc ? { ...rawKyc, documents: this.kycDocuments.filter((d) => d.kycId === rawKyc.id) } : null;
           return {
             ...dp,
-            user: user ? { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone } : null,
+            user: user ? { ...user, addresses: userAddresses, kyc } : null,
             kyc,
             assignments: [],
           };
@@ -3371,6 +4384,17 @@ class InMemoryStore {
       if (idx === -1) return null;
       this.deliveryPartners[idx] = { ...this.deliveryPartners[idx], ...data, updatedAt: new Date() };
       return this.deliveryPartners[idx];
+    },
+    updateMany: async ({ where, data }: { where?: any; data: any }) => {
+      let count = 0;
+      this.deliveryPartners = this.deliveryPartners.map((dp) => {
+        if (!where?.userId || dp.userId === where.userId) {
+          count++;
+          return { ...dp, ...data, updatedAt: new Date() };
+        }
+        return dp;
+      });
+      return { count };
     },
     count: async () => this.deliveryPartners.length,
   };
@@ -3479,6 +4503,27 @@ class InMemoryStore {
       const idx = this.kycDocuments.findIndex((d) => d.id === where.id);
       if (idx === -1) return null;
       return this.kycDocuments.splice(idx, 1)[0];
+    },
+    updateMany: async ({ where, data }: { where?: any; data: any }) => {
+      let count = 0;
+      this.kycDocuments = this.kycDocuments.map((doc) => {
+        if (!where?.kycId || doc.kycId === where.kycId) {
+          count++;
+          return { ...doc, ...data, updatedAt: new Date() };
+        }
+        return doc;
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: { where?: any } = {}) => {
+      const initial = this.kycDocuments.length;
+      this.kycDocuments = this.kycDocuments.filter((doc) => {
+        if (where?.kycId && doc.kycId === where.kycId) return false;
+        if (where?.id && doc.id === where.id) return false;
+        if (where?.documentType && doc.documentType === where.documentType) return false;
+        return true;
+      });
+      return { count: initial - this.kycDocuments.length };
     },
   };
 
@@ -3853,13 +4898,19 @@ class InMemoryStore {
     const address = this.addresses.find((a) => a.id === order.addressId) || null;
     const payment = this.payments.find((pm) => pm.orderId === order.id) || null;
     const difmReq = this.difmRequests.find((d) => d.orderId === order.id);
+    const difmBooking = difmReq ? this.serviceBookings.find((b) => b.difmRequestId === difmReq.id) || null : null;
     const difmRequest = difmReq
       ? {
           ...difmReq,
           installationFee: Number(difmReq.installationFee || 0),
           homeVisitSurcharge: Number(difmReq.homeVisitSurcharge || 0),
           shop: this.shops.find((s) => s.id === difmReq.shopId) || null,
-          serviceBooking: null,
+          serviceBooking: difmBooking
+            ? {
+                ...difmBooking,
+                shop: this.shops.find((s) => s.id === difmBooking.shopId) || null,
+              }
+            : null,
         }
       : null;
     const tracking = this.orderTrackings
@@ -3905,7 +4956,7 @@ class InMemoryStore {
         return {
           ...base,
           user: include?.user ? (user ? { ...user, fullName: `${user.firstName} ${user.lastName}`.trim() } : null) : undefined,
-          difmRequest: difm ? { ...difm, shop: this.shops.find((s) => s.id === difm.shopId) || null } : null,
+          difmRequest: base.difmRequest,
           mechanicJob: job ? { ...job, shop: this.shops.find((s) => s.id === job.shopId) || null } : null,
           deliveryAssignment: delivery
             ? {
@@ -3945,7 +4996,7 @@ class InMemoryStore {
       return {
         ...base,
         user: include?.user ? (user ? { ...user, fullName: `${user.firstName} ${user.lastName}`.trim() } : null) : undefined,
-        difmRequest: difm ? { ...difm, shop: this.shops.find((s) => s.id === difm.shopId) || null } : null,
+        difmRequest: base.difmRequest,
         mechanicJob: job ? { ...job, shop: this.shops.find((s) => s.id === job.shopId) || null } : null,
         deliveryAssignment: delivery
           ? {
@@ -3983,7 +5034,7 @@ class InMemoryStore {
       return {
         ...base,
         user: include?.user ? (user ? { ...user, fullName: `${user.firstName} ${user.lastName}`.trim() } : null) : undefined,
-        difmRequest: difm ? { ...difm, shop: this.shops.find((s) => s.id === difm.shopId) || null } : null,
+        difmRequest: base.difmRequest,
         mechanicJob: job ? { ...job, shop: this.shops.find((s) => s.id === job.shopId) || null } : null,
         deliveryAssignment: delivery
           ? {
@@ -4256,6 +5307,37 @@ class InMemoryStore {
   };
 
   public difmRequest = {
+    findMany: async (args: any = {}) => {
+      const { where, include } = args || {};
+      let results = [...this.difmRequests];
+      if (where) {
+        if (where.shopId) results = results.filter((d) => d.shopId === where.shopId);
+        if (where.orderId) results = results.filter((d) => d.orderId === where.orderId);
+        if (where.status) results = results.filter((d) => d.status === where.status);
+      }
+      return results.map((d) => {
+        let order = null;
+        if (include?.order) {
+          order = this.orders.find((o) => o.id === d.orderId) || null;
+          if (order && include.order.include) {
+            const user = this.users.find((u) => u.id === order.userId) || null;
+            const address = this.addresses.find((a) => a.id === (order.shippingAddressId || order.addressId)) || null;
+            const items = this.orderItems
+              .filter((it) => it.orderId === order.id)
+              .map((it) => ({
+                ...it,
+                product: initialProducts.find((p) => p.id === it.productId) || null,
+              }));
+            order = { ...order, user, address, items };
+          }
+        }
+        return {
+          ...d,
+          shop: this.shops.find((s) => s.id === d.shopId) || null,
+          ...(order ? { order } : {}),
+        };
+      });
+    },
     findUnique: async ({ where }: { where: { id?: string; orderId?: string } }) => {
       const d = this.difmRequests.find(
         (req) => (where.id && req.id === where.id) || (where.orderId && req.orderId === where.orderId)
@@ -5183,10 +6265,18 @@ class InMemoryStore {
 
       return list.map((item) => {
         const seller = include?.seller ? this.users.find((u) => u.id === item.sellerId) : null;
+        const intake = include?.intake ? this.usedPartIntakes.find((i) => i.listingId === item.id) : null;
+        const assignedShop = include?.assignedShop ? this.shops.find((s) => s.id === item.assignedShopId) : null;
+        const payouts = include?.payouts ? this.usedPartPayouts.filter((p) => p.listingId === item.id) : [];
+        const verifications = include?.verifications ? this.usedPartVerifications.filter((v) => v.listingId === item.id) : [];
         return {
           ...item,
           askingPrice: item.expectedPrice || item.askingPrice,
           seller: seller ? { firstName: seller.firstName, lastName: seller.lastName, email: seller.email, phone: seller.phone } : item.seller || null,
+          intake: intake || item.intake || null,
+          assignedShop: assignedShop || item.assignedShop || null,
+          payouts,
+          verifications,
         };
       });
     },
@@ -5200,10 +6290,18 @@ class InMemoryStore {
       });
       if (!match) return null;
       const seller = include?.seller ? this.users.find((u) => u.id === match.sellerId) : null;
+      const intake = include?.intake ? this.usedPartIntakes.find((i) => i.listingId === match.id) : null;
+      const assignedShop = include?.assignedShop ? this.shops.find((s) => s.id === match.assignedShopId) : null;
+      const payouts = include?.payouts ? this.usedPartPayouts.filter((p) => p.listingId === match.id) : [];
+      const verifications = include?.verifications ? this.usedPartVerifications.filter((v) => v.listingId === match.id) : [];
       return {
         ...match,
         askingPrice: match.expectedPrice || match.askingPrice,
         seller: seller ? { firstName: seller.firstName, lastName: seller.lastName, email: seller.email, phone: seller.phone } : match.seller || null,
+        intake: intake || match.intake || null,
+        assignedShop: assignedShop || match.assignedShop || null,
+        payouts,
+        verifications,
       };
     },
 
@@ -5211,10 +6309,18 @@ class InMemoryStore {
       const match = this.usedPartListings.find((item) => item.id === where.id);
       if (!match) return null;
       const seller = include?.seller ? this.users.find((u) => u.id === match.sellerId) : null;
+      const intake = include?.intake ? this.usedPartIntakes.find((i) => i.listingId === match.id) : null;
+      const assignedShop = include?.assignedShop ? this.shops.find((s) => s.id === match.assignedShopId) : null;
+      const payouts = include?.payouts ? this.usedPartPayouts.filter((p) => p.listingId === match.id) : [];
+      const verifications = include?.verifications ? this.usedPartVerifications.filter((v) => v.listingId === match.id) : [];
       return {
         ...match,
         askingPrice: match.expectedPrice || match.askingPrice,
         seller: seller ? { firstName: seller.firstName, lastName: seller.lastName, email: seller.email, phone: seller.phone } : match.seller || null,
+        intake: intake || match.intake || null,
+        assignedShop: assignedShop || match.assignedShop || null,
+        payouts,
+        verifications,
       };
     },
 
@@ -5295,18 +6401,6 @@ class InMemoryStore {
       if (where?.status) list = list.filter((item) => item.status === where.status);
       return list.length;
     },
-  };
-
-  public usedPartVerification = {
-    findFirst: async ({ where }: { where: { listingId: string } }) => null,
-    findUnique: async ({ where }: { where: { listingId: string } }) => null,
-    create: async ({ data }: { data: any }) => ({ id: 'verif_' + Date.now(), ...data, createdAt: new Date() }),
-  };
-
-  public usedPartPayout = {
-    findFirst: async ({ where }: { where: { listingId?: string; sellerId?: string } }) => null,
-    findUnique: async ({ where }: { where: { listingId: string } }) => null,
-    create: async ({ data }: { data: any }) => ({ id: 'payout_' + Date.now(), ...data, createdAt: new Date() }),
   };
 
   public supportTicket = {
@@ -5549,6 +6643,16 @@ class InMemoryStore {
       if (where?.referenceId) list = list.filter((m) => m.referenceId === where.referenceId);
       return list;
     },
+    findFirst: async ({ where, orderBy }: { where?: any; orderBy?: any } = {}) => {
+      let list = [...this.stockMovements];
+      if (where?.inventoryId) list = list.filter((m) => m.inventoryId === where.inventoryId);
+      if (where?.type) list = list.filter((m) => m.type === where.type);
+      if (where?.referenceId) list = list.filter((m) => m.referenceId === where.referenceId);
+      if (orderBy?.createdAt === 'desc') {
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      }
+      return list[0] || null;
+    },
   };
 
   public returnRequests: any[] = [];
@@ -5654,6 +6758,615 @@ class InMemoryStore {
       if (where?.userId) list = list.filter((r) => r.userId === where.userId);
       if (where?.status) list = list.filter((r) => r.status === where.status);
       return list.length;
+    },
+  };
+
+  // --- PROCUREMENT: SUPPLIERS ---
+  public supplier = {
+    findMany: async ({ where, orderBy, include }: { where?: any; orderBy?: any; include?: any } = {}) => {
+      let list = [...this.suppliers];
+      if (where?.isActive !== undefined) list = list.filter((s) => s.isActive === where.isActive);
+      if (where?.supplierType && where.supplierType !== 'ALL') list = list.filter((s) => s.supplierType === where.supplierType);
+      if (where?.status && where.status !== 'ALL') list = list.filter((s) => s.verificationStatus === where.status);
+      if (where?.search) {
+        const q = String(where.search).toLowerCase();
+        list = list.filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) ||
+            s.contactPerson?.toLowerCase().includes(q) ||
+            s.city?.toLowerCase().includes(q)
+        );
+      }
+      if (where?.category) {
+        list = list.filter((s) => (s.categories || []).some((c: string) => c.toLowerCase().includes(String(where.category).toLowerCase())));
+      }
+      return list.map((s) => ({
+        ...s,
+        catalogItems: include?.catalogItems ? this.supplierCatalogItems.filter((c) => c.supplierId === s.id) : undefined,
+        purchaseOrders: include?.purchaseOrders ? this.purchaseOrders.filter((po) => po.supplierId === s.id) : undefined,
+      }));
+    },
+    findUnique: async ({ where, include }: { where: { id?: string; slug?: string }; include?: any }) => {
+      const s = this.suppliers.find((item) => (where.id && item.id === where.id) || (where.slug && item.slug === where.slug));
+      if (!s) return null;
+      return {
+        ...s,
+        catalogItems: include?.catalogItems ? this.supplierCatalogItems.filter((c) => c.supplierId === s.id) : undefined,
+        purchaseOrders: include?.purchaseOrders ? this.purchaseOrders.filter((po) => po.supplierId === s.id) : undefined,
+      };
+    },
+    findFirst: async ({ where, include }: { where?: any; include?: any } = {}) => {
+      const s = this.suppliers.find((item) => {
+        if (where?.id && item.id !== where.id) return false;
+        if (where?.slug && item.slug !== where.slug) return false;
+        if (where?.isActive !== undefined && item.isActive !== where.isActive) return false;
+        return true;
+      });
+      if (!s) return null;
+      return {
+        ...s,
+        catalogItems: include?.catalogItems ? this.supplierCatalogItems.filter((c) => c.supplierId === s.id) : undefined,
+      };
+    },
+    create: async ({ data }: { data: any }) => {
+      const id = data.id || 'sup-' + Math.random().toString(36).substring(2, 9);
+      const newSup = {
+        id,
+        name: data.name,
+        slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        contactPerson: data.contactPerson || 'Procurement Desk',
+        email: data.email || 'orders@supplier.in',
+        phone: data.phone || '+91 98000 00000',
+        address: data.address || null,
+        city: data.city || 'Bengaluru',
+        state: data.state || 'Karnataka',
+        gstNumber: data.gstNumber || '29AABCS1234F1Z1',
+        logoUrl: data.logoUrl || null,
+        supplierType: data.supplierType || 'DISTRIBUTOR',
+        categories: data.categories || ['Brake System', 'Engine Components'],
+        supportedVehicles: data.supportedVehicles || ['4 Wheeler'],
+        verificationStatus: data.verificationStatus || 'VERIFIED',
+        isDemo: data.isDemo !== undefined ? data.isDemo : true,
+        isActive: data.isActive !== undefined ? data.isActive : true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.suppliers.push(newSup);
+      return newSup;
+    },
+    update: async ({ where, data }: { where: { id?: string; slug?: string }; data: any }) => {
+      const idx = this.suppliers.findIndex((s) => (where.id && s.id === where.id) || (where.slug && s.slug === where.slug));
+      if (idx === -1) return null;
+      this.suppliers[idx] = { ...this.suppliers[idx], ...data, updatedAt: new Date() };
+      return this.suppliers[idx];
+    },
+    count: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.suppliers];
+      if (where?.isActive !== undefined) list = list.filter((s) => s.isActive === where.isActive);
+      return list.length;
+    },
+  };
+
+  // --- PROCUREMENT: CATALOG ITEMS ---
+  public supplierCatalogItem = {
+    findMany: async ({ where, orderBy, include, take }: { where?: any; orderBy?: any; include?: any; take?: number } = {}) => {
+      let list = [...this.supplierCatalogItems];
+      if (where?.supplierId) list = list.filter((c) => c.supplierId === where.supplierId);
+      if (where?.brandName && where.brandName !== 'ALL') list = list.filter((c) => c.brandName === where.brandName);
+      if (where?.categoryName && where.categoryName !== 'ALL') list = list.filter((c) => c.categoryName === where.categoryName);
+      if (where?.vehicleMakeName && where.vehicleMakeName !== 'ALL') list = list.filter((c) => c.vehicleMakeName === where.vehicleMakeName);
+      if (where?.vehicleModelName && where.vehicleModelName !== 'ALL') list = list.filter((c) => c.vehicleModelName === where.vehicleModelName);
+      if (where?.search) {
+        const q = String(where.search).toLowerCase();
+        list = list.filter(
+          (c) =>
+            c.partName.toLowerCase().includes(q) ||
+            c.partNumber.toLowerCase().includes(q) ||
+            c.brandName.toLowerCase().includes(q) ||
+            c.vehicleMakeName.toLowerCase().includes(q) ||
+            c.vehicleModelName.toLowerCase().includes(q)
+        );
+      }
+      if (where?.OR && Array.isArray(where.OR)) {
+        list = list.filter((c) =>
+          where.OR.some((cond: any) => {
+            const check = (val: string | null | undefined, match: any) => {
+              if (!val) return false;
+              if (typeof match === 'string') return val.toLowerCase() === match.toLowerCase();
+              if (match?.contains) return val.toLowerCase().includes(String(match.contains).toLowerCase());
+              return false;
+            };
+            if (cond.partNumber && check(c.partNumber, cond.partNumber)) return true;
+            if (cond.partName && check(c.partName, cond.partName)) return true;
+            if (cond.brandName && check(c.brandName, cond.brandName)) return true;
+            if (cond.vehicleMakeName && check(c.vehicleMakeName, cond.vehicleMakeName)) return true;
+            if (cond.vehicleModelName && check(c.vehicleModelName, cond.vehicleModelName)) return true;
+            if (cond.supplier?.name && check(this.suppliers.find((s) => s.id === c.supplierId)?.name, cond.supplier.name)) return true;
+            return false;
+          })
+        );
+      }
+      if (take && typeof take === 'number') {
+        list = list.slice(0, take);
+      }
+      return list.map((item) => {
+        const sup = this.suppliers.find((s) => s.id === item.supplierId);
+        const tiers = this.bulkPriceTiers.filter((t) => t.catalogItemId === item.id).sort((a, b) => a.minQuantity - b.minQuantity);
+        const prod = initialProducts.find((p) => p.id === item.productId);
+        return {
+          ...item,
+          unitPrice: Number(item.unitPrice),
+          bulkPrice: Number(item.bulkPrice),
+          supplier: sup || null,
+          bulkPriceTiers: tiers,
+          product: prod ? this.populateProduct(prod) : null,
+        };
+      });
+    },
+    findUnique: async ({ where, include }: { where: { id: string }; include?: any }) => {
+      const item = this.supplierCatalogItems.find((c) => c.id === where.id);
+      if (!item) return null;
+      const sup = this.suppliers.find((s) => s.id === item.supplierId);
+      const tiers = this.bulkPriceTiers.filter((t) => t.catalogItemId === item.id).sort((a, b) => a.minQuantity - b.minQuantity);
+      const prod = initialProducts.find((p) => p.id === item.productId);
+      return {
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        bulkPrice: Number(item.bulkPrice),
+        supplier: sup || null,
+        bulkPriceTiers: tiers,
+        product: prod ? this.populateProduct(prod) : null,
+      };
+    },
+    findFirst: async ({ where, include }: { where?: any; include?: any } = {}) => {
+      const items = await this.supplierCatalogItem.findMany({ where, include });
+      return items[0] || null;
+    },
+    create: async ({ data }: { data: any }) => {
+      const id = data.id || 'cat-' + Math.random().toString(36).substring(2, 9);
+      const newItem = {
+        id,
+        supplierId: data.supplierId,
+        productId: data.productId || null,
+        partName: data.partName,
+        partNumber: data.partNumber,
+        categoryName: data.categoryName || 'General Consumables',
+        categoryId: data.categoryId || null,
+        brandId: data.brandId || null,
+        brandName: data.brandName || 'Aftermarket',
+        vehicleMakeId: data.vehicleMakeId || null,
+        vehicleMakeName: data.vehicleMakeName || 'Universal',
+        vehicleModelId: data.vehicleModelId || null,
+        vehicleModelName: data.vehicleModelName || 'Universal',
+        vehicleVariantId: data.vehicleVariantId || null,
+        variantName: data.variantName || null,
+        year: data.year || 2023,
+        condition: data.condition || 'GENUINE_NEW',
+        unitPrice: Number(data.unitPrice),
+        bulkPrice: Number(data.bulkPrice || data.unitPrice),
+        moq: Number(data.moq || 10),
+        stockQuantity: Number(data.stockQuantity || 500),
+        warranty: data.warranty || '12 Months Warranty',
+        leadTime: data.leadTime || '3–5 days',
+        leadTimeDays: Number(data.leadTimeDays || 3),
+        isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
+        imageUrl: data.imageUrl || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.supplierCatalogItems.push(newItem);
+
+      if (data.bulkPriceTiers?.create && Array.isArray(data.bulkPriceTiers.create)) {
+        for (const t of data.bulkPriceTiers.create) {
+          this.bulkPriceTiers.push({
+            id: 'tier-' + Math.random().toString(36).substring(2, 9),
+            catalogItemId: id,
+            minQuantity: Number(t.minQuantity),
+            maxQuantity: t.maxQuantity !== undefined && t.maxQuantity !== null ? Number(t.maxQuantity) : null,
+            unitPrice: Number(t.unitPrice),
+            discountPercent: Number(t.discountPercent || 0),
+            createdAt: new Date(),
+          });
+        }
+      }
+
+      return newItem;
+    },
+    update: async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = this.supplierCatalogItems.findIndex((c) => c.id === where.id);
+      if (idx === -1) return null;
+      this.supplierCatalogItems[idx] = { ...this.supplierCatalogItems[idx], ...data, updatedAt: new Date() };
+      return this.supplierCatalogItems[idx];
+    },
+    count: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.supplierCatalogItems];
+      if (where?.supplierId) list = list.filter((c) => c.supplierId === where.supplierId);
+      return list.length;
+    },
+  };
+
+  // --- PROCUREMENT: BULK PRICE TIERS ---
+  public bulkPriceTier = {
+    findMany: async ({ where, orderBy }: { where?: any; orderBy?: any } = {}) => {
+      let list = this.bulkPriceTiers.filter((t) => !where?.catalogItemId || t.catalogItemId === where.catalogItemId);
+      if (orderBy?.minQuantity === 'asc') list.sort((a, b) => a.minQuantity - b.minQuantity);
+      return list;
+    },
+    create: async ({ data }: { data: any }) => {
+      const tier = {
+        id: data.id || 'tier-' + Math.random().toString(36).substring(2, 9),
+        catalogItemId: data.catalogItemId,
+        minQuantity: Number(data.minQuantity),
+        maxQuantity: data.maxQuantity !== null && data.maxQuantity !== undefined ? Number(data.maxQuantity) : null,
+        unitPrice: Number(data.unitPrice),
+        discountPercent: Number(data.discountPercent || 0),
+        createdAt: new Date(),
+      };
+      this.bulkPriceTiers.push(tier);
+      return tier;
+    },
+    createMany: async ({ data }: { data: any[] }) => {
+      for (const t of data) {
+        this.bulkPriceTiers.push({
+          id: t.id || 'tier-' + Math.random().toString(36).substring(2, 9),
+          catalogItemId: t.catalogItemId,
+          minQuantity: Number(t.minQuantity),
+          maxQuantity: t.maxQuantity !== null && t.maxQuantity !== undefined ? Number(t.maxQuantity) : null,
+          unitPrice: Number(t.unitPrice),
+          discountPercent: Number(t.discountPercent || 0),
+          createdAt: new Date(),
+        });
+      }
+      return { count: data.length };
+    },
+    deleteMany: async ({ where }: { where?: any } = {}) => {
+      const initLen = this.bulkPriceTiers.length;
+      this.bulkPriceTiers = this.bulkPriceTiers.filter((t) => !where?.catalogItemId || t.catalogItemId !== where.catalogItemId);
+      return { count: initLen - this.bulkPriceTiers.length };
+    },
+  };
+
+  // --- PROCUREMENT: CART ---
+  public procurementCart = {
+    findUnique: async ({ where, include }: { where: { adminId?: string; id?: string }; include?: any }) => {
+      let cart = this.procurementCarts.find(
+        (c) => (where.adminId && c.adminId === where.adminId) || (where.id && c.id === where.id)
+      );
+      if (!cart) return null;
+      const items = this.procurementCartItems
+        .filter((it) => it.cartId === cart.id)
+        .map((it) => {
+          const catItem = this.supplierCatalogItems.find((c) => c.id === it.catalogItemId);
+          const sup = catItem ? this.suppliers.find((s) => s.id === catItem.supplierId) : null;
+          const tiers = catItem ? this.bulkPriceTiers.filter((t) => t.catalogItemId === catItem.id) : [];
+          return {
+            ...it,
+            unitPrice: Number(it.unitPrice),
+            bulkDiscount: Number(it.bulkDiscount),
+            subtotal: Number(it.subtotal),
+            catalogItem: catItem ? { ...catItem, supplier: sup, bulkPriceTiers: tiers } : null,
+          };
+        });
+      return { ...cart, items };
+    },
+    findFirst: async ({ where, include }: { where?: any; include?: any } = {}) => {
+      return this.procurementCart.findUnique({ where, include });
+    },
+    create: async ({ data, include }: { data: any; include?: any }) => {
+      const newCart = {
+        id: data.id || 'pcart-' + Math.random().toString(36).substring(2, 9),
+        adminId: data.adminId,
+        notes: data.notes || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.procurementCarts.push(newCart);
+      return { ...newCart, items: [] };
+    },
+    update: async ({ where, data }: { where: { id?: string; adminId?: string }; data: any }) => {
+      const idx = this.procurementCarts.findIndex(
+        (c) => (where.id && c.id === where.id) || (where.adminId && c.adminId === where.adminId)
+      );
+      if (idx === -1) return null;
+      this.procurementCarts[idx] = { ...this.procurementCarts[idx], ...data, updatedAt: new Date() };
+      return this.procurementCart.findUnique({ where: { id: this.procurementCarts[idx].id } });
+    },
+    delete: async ({ where }: { where: { id?: string; adminId?: string } }) => {
+      const idx = this.procurementCarts.findIndex(
+        (c) => (where.id && c.id === where.id) || (where.adminId && c.adminId === where.adminId)
+      );
+      if (idx === -1) return null;
+      const [deleted] = this.procurementCarts.splice(idx, 1);
+      this.procurementCartItems = this.procurementCartItems.filter((it) => it.cartId !== deleted.id);
+      return deleted;
+    },
+  };
+
+  public procurementCartItem = {
+    findMany: async ({ where }: { where?: any } = {}) => {
+      return this.procurementCartItems.filter((it) => !where?.cartId || it.cartId === where.cartId);
+    },
+    findUnique: async ({
+      where,
+    }: {
+      where: { id?: string; cartId_catalogItemId?: { cartId: string; catalogItemId: string } };
+    }) => {
+      return (
+        this.procurementCartItems.find(
+          (it) =>
+            (where.id && it.id === where.id) ||
+            (where.cartId_catalogItemId &&
+              it.cartId === where.cartId_catalogItemId.cartId &&
+              it.catalogItemId === where.cartId_catalogItemId.catalogItemId)
+        ) || null
+      );
+    },
+    create: async ({ data }: { data: any }) => {
+      const item = {
+        id: data.id || 'pcitem-' + Math.random().toString(36).substring(2, 9),
+        cartId: data.cartId,
+        catalogItemId: data.catalogItemId,
+        quantity: Number(data.quantity || 10),
+        unitPrice: Number(data.unitPrice),
+        bulkDiscount: Number(data.bulkDiscount || 0),
+        subtotal: Number(data.subtotal),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.procurementCartItems.push(item);
+      return item;
+    },
+    update: async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = this.procurementCartItems.findIndex((it) => it.id === where.id);
+      if (idx === -1) return null;
+      this.procurementCartItems[idx] = { ...this.procurementCartItems[idx], ...data, updatedAt: new Date() };
+      return this.procurementCartItems[idx];
+    },
+    delete: async ({ where }: { where: { id: string } }) => {
+      const idx = this.procurementCartItems.findIndex((it) => it.id === where.id);
+      if (idx === -1) return null;
+      return this.procurementCartItems.splice(idx, 1)[0];
+    },
+    deleteMany: async ({ where }: { where?: any } = {}) => {
+      const initLen = this.procurementCartItems.length;
+      this.procurementCartItems = this.procurementCartItems.filter((it) => !where?.cartId || it.cartId !== where.cartId);
+      return { count: initLen - this.procurementCartItems.length };
+    },
+  };
+
+  // --- PROCUREMENT: PURCHASE ORDERS ---
+  public purchaseOrder = {
+    findMany: async ({
+      where,
+      orderBy,
+      include,
+      select,
+      take,
+    }: {
+      where?: any;
+      orderBy?: any;
+      include?: any;
+      select?: any;
+      take?: number;
+    } = {}) => {
+      let list = [...this.purchaseOrders];
+      if (where?.status) {
+        if (typeof where.status === 'string') list = list.filter((po) => po.status === where.status);
+        else if (where.status.in && Array.isArray(where.status.in)) list = list.filter((po) => where.status.in.includes(po.status));
+      }
+      if (where?.supplierId) list = list.filter((po) => po.supplierId === where.supplierId);
+      if (where?.search) {
+        const q = String(where.search).toLowerCase();
+        list = list.filter((po) => po.poNumber.toLowerCase().includes(q) || po.supplier?.name?.toLowerCase().includes(q));
+      }
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (take && typeof take === 'number') list = list.slice(0, take);
+
+      return list.map((po) => {
+        const sup = this.suppliers.find((s) => s.id === po.supplierId);
+        const items = this.purchaseOrderItems.filter((it) => it.purchaseOrderId === po.id);
+        const grs = this.goodsReceipts
+          .filter((gr) => gr.purchaseOrderId === po.id)
+          .map((gr) => ({
+            ...gr,
+            items: this.goodsReceiptItems.filter((gri) => gri.receiptId === gr.id),
+          }));
+        return {
+          ...po,
+          subtotal: Number(po.subtotal),
+          bulkDiscount: Number(po.bulkDiscount),
+          tax: Number(po.tax),
+          shipping: Number(po.shipping),
+          handling: Number(po.handling),
+          totalCost: Number(po.totalCost),
+          supplier: sup || null,
+          items,
+          goodsReceipts: grs,
+          payments: [],
+        };
+      });
+    },
+    findUnique: async ({ where, include }: { where: { id?: string; poNumber?: string }; include?: any }) => {
+      const po = this.purchaseOrders.find(
+        (item) => (where.id && item.id === where.id) || (where.poNumber && item.poNumber === where.poNumber)
+      );
+      if (!po) return null;
+      const sup = this.suppliers.find((s) => s.id === po.supplierId);
+      const items = this.purchaseOrderItems
+        .filter((it) => it.purchaseOrderId === po.id)
+        .map((it) => {
+          const catItem = this.supplierCatalogItems.find((c) => c.id === it.catalogItemId);
+          const prod = initialProducts.find((p) => p.id === it.productId);
+          return {
+            ...it,
+            catalogItem: catItem || null,
+            product: prod ? this.populateProduct(prod) : null,
+          };
+        });
+      const grs = this.goodsReceipts
+        .filter((gr) => gr.purchaseOrderId === po.id)
+        .map((gr) => ({
+          ...gr,
+          items: this.goodsReceiptItems.filter((gri) => gri.receiptId === gr.id),
+        }));
+      return {
+        ...po,
+        subtotal: Number(po.subtotal),
+        bulkDiscount: Number(po.bulkDiscount),
+        tax: Number(po.tax),
+        shipping: Number(po.shipping),
+        handling: Number(po.handling),
+        totalCost: Number(po.totalCost),
+        supplier: sup || null,
+        items,
+        goodsReceipts: grs,
+        payments: [],
+      };
+    },
+    findFirst: async ({ where, include }: { where?: any; include?: any } = {}) => {
+      const list = await this.purchaseOrder.findMany({ where, include });
+      return list[0] || null;
+    },
+    create: async ({ data, include }: { data: any; include?: any }) => {
+      const id = data.id || 'po-' + Math.random().toString(36).substring(2, 9);
+      const newPo = {
+        id,
+        poNumber: data.poNumber,
+        supplierId: data.supplierId,
+        adminId: data.adminId || null,
+        status: data.status || 'SUBMITTED',
+        subtotal: Number(data.subtotal),
+        bulkDiscount: Number(data.bulkDiscount || 0),
+        tax: Number(data.tax || 0),
+        shipping: Number(data.shipping || 0),
+        handling: Number(data.handling || 0),
+        totalCost: Number(data.totalCost),
+        paymentMethod: data.paymentMethod || 'DEMO_PAYMENT',
+        paymentStatus: data.paymentStatus || 'PENDING',
+        notes: data.notes || null,
+        expectedDelivery: data.expectedDelivery || new Date(Date.now() + 4 * 86400000),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.purchaseOrders.push(newPo);
+
+      if (data.items?.create && Array.isArray(data.items.create)) {
+        for (const it of data.items.create) {
+          this.purchaseOrderItems.push({
+            id: 'poitem-' + Math.random().toString(36).substring(2, 9),
+            purchaseOrderId: id,
+            catalogItemId: it.catalogItemId || null,
+            productId: it.productId || null,
+            partName: it.partName,
+            partNumber: it.partNumber,
+            brandName: it.brandName,
+            vehicleCompatibility: it.vehicleCompatibility || '',
+            orderedQuantity: Number(it.orderedQuantity),
+            receivedQuantity: Number(it.receivedQuantity || 0),
+            unitPrice: Number(it.unitPrice),
+            bulkDiscount: Number(it.bulkDiscount || 0),
+            totalCost: Number(it.totalCost),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      }
+
+      return this.purchaseOrder.findUnique({ where: { id } });
+    },
+    update: async ({ where, data }: { where: { id?: string; poNumber?: string }; data: any }) => {
+      const idx = this.purchaseOrders.findIndex(
+        (po) => (where.id && po.id === where.id) || (where.poNumber && po.poNumber === where.poNumber)
+      );
+      if (idx === -1) return null;
+      this.purchaseOrders[idx] = { ...this.purchaseOrders[idx], ...data, updatedAt: new Date() };
+      return this.purchaseOrder.findUnique({ where: { id: this.purchaseOrders[idx].id } });
+    },
+    count: async ({ where }: { where?: any } = {}) => {
+      let list = [...this.purchaseOrders];
+      if (where?.status) {
+        if (typeof where.status === 'string') list = list.filter((po) => po.status === where.status);
+        else if (where.status.in && Array.isArray(where.status.in)) list = list.filter((po) => where.status.in.includes(po.status));
+      }
+      return list.length;
+    },
+  };
+
+  public purchaseOrderItem = {
+    findMany: async ({ where }: { where?: any } = {}) => {
+      return this.purchaseOrderItems.filter((it) => !where?.purchaseOrderId || it.purchaseOrderId === where.purchaseOrderId);
+    },
+    findUnique: async ({ where }: { where: { id: string } }) => {
+      return this.purchaseOrderItems.find((it) => it.id === where.id) || null;
+    },
+    update: async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = this.purchaseOrderItems.findIndex((it) => it.id === where.id);
+      if (idx === -1) return null;
+      this.purchaseOrderItems[idx] = { ...this.purchaseOrderItems[idx], ...data, updatedAt: new Date() };
+      return this.purchaseOrderItems[idx];
+    },
+  };
+
+  // --- PROCUREMENT: GOODS RECEIPT ---
+  public goodsReceipt = {
+    findMany: async ({
+      where,
+      orderBy,
+      include,
+      take,
+    }: {
+      where?: any;
+      orderBy?: any;
+      include?: any;
+      take?: number;
+    } = {}) => {
+      let list = [...this.goodsReceipts];
+      if (where?.purchaseOrderId) list = list.filter((gr) => gr.purchaseOrderId === where.purchaseOrderId);
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (take && typeof take === 'number') list = list.slice(0, take);
+      return list.map((gr) => {
+        const po = this.purchaseOrders.find((p) => p.id === gr.purchaseOrderId);
+        const sup = po ? this.suppliers.find((s) => s.id === po.supplierId) : null;
+        const items = this.goodsReceiptItems.filter((gri) => gri.receiptId === gr.id);
+        return {
+          ...gr,
+          purchaseOrder: po ? { ...po, supplier: sup } : null,
+          items,
+        };
+      });
+    },
+    create: async ({ data }: { data: any }) => {
+      const newGr = {
+        id: data.id || 'gr-' + Math.random().toString(36).substring(2, 9),
+        receiptNumber: data.receiptNumber,
+        purchaseOrderId: data.purchaseOrderId,
+        receivedByAdminId: data.receivedByAdminId || null,
+        carrier: data.carrier || 'Logistics Carrier',
+        trackingNumber: data.trackingNumber || `TRK-${Date.now().toString().slice(-6)}`,
+        notes: data.notes || null,
+        createdAt: new Date(),
+      };
+      this.goodsReceipts.push(newGr);
+      return newGr;
+    },
+    count: async () => this.goodsReceipts.length,
+  };
+
+  public goodsReceiptItem = {
+    findMany: async ({ where }: { where?: any } = {}) => {
+      return this.goodsReceiptItems.filter((gri) => !where?.receiptId || gri.receiptId === where.receiptId);
+    },
+    create: async ({ data }: { data: any }) => {
+      const gri = {
+        id: data.id || 'gri-' + Math.random().toString(36).substring(2, 9),
+        receiptId: data.receiptId,
+        poItemId: data.poItemId,
+        productId: data.productId || null,
+        quantityReceived: Number(data.quantityReceived),
+        createdAt: new Date(),
+      };
+      this.goodsReceiptItems.push(gri);
+      return gri;
     },
   };
 

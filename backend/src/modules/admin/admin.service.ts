@@ -3,6 +3,7 @@ import config from '../../config/env';
 import AppError from '../../utils/AppError';
 import { UsedPartStatus, PayoutStatus, PaymentStatus, TicketStatus } from '@prisma/client';
 import * as deliveryService from '../delivery/delivery.service';
+import { createSignedKycUrl } from '../delivery/deliveryKycStorage.service';
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
 
 // ============================================================================
@@ -314,7 +315,7 @@ export const listOrders = async (filters: {
       user: true,
       items: { include: { product: true } },
       payment: true,
-      difmRequest: { include: { shop: true } },
+      difmRequest: { include: { shop: true, serviceBooking: true } },
       deliveryAssignments: { include: { deliveryPartner: { include: { user: true } } } },
     },
     orderBy: { createdAt: 'desc' },
@@ -324,6 +325,7 @@ export const listOrders = async (filters: {
     const user = o.user;
     const difm = o.difmRequest;
     const delivery = o.deliveryAssignments?.[0] || null;
+    const isInstallComplete = Boolean(difm?.serviceBooking?.isCompleted || difm?.status === 'COMPLETED');
 
     return {
       id: o.id,
@@ -340,8 +342,11 @@ export const listOrders = async (filters: {
       items: o.items || [],
       shippingAddress: o.shippingAddress || o.address || null,
       difmType: difm?.type || o.difmType || 'NO_INSTALLATION',
-      difmStatus: difm?.status || null,
+      difmStatus: isInstallComplete ? 'COMPLETED' : (difm?.status || null),
       difmShop: difm?.shop?.name || null,
+      installationCompleted: isInstallComplete,
+      installationStatus: isInstallComplete ? 'COMPLETED' : (difm?.status || null),
+      installationCompletedAt: difm?.serviceBooking?.completedAt || null,
       deliveryStatus: delivery?.status || null,
       deliveryPartnerName: delivery?.deliveryPartner?.user
         ? `${delivery.deliveryPartner.user.firstName} ${delivery.deliveryPartner.user.lastName}`.trim()
@@ -359,7 +364,7 @@ export const getOrderById = async (id: string) => {
       user: true,
       items: { include: { product: true } },
       payment: true,
-      difmRequest: { include: { shop: true } },
+      difmRequest: { include: { shop: true, serviceBooking: true } },
       deliveryAssignments: { include: { deliveryPartner: { include: { user: true } } } },
     },
   });
@@ -779,7 +784,12 @@ export const updateShopCommission = async (shopId: string, commissionRate: numbe
 
 export const listDeliveryPartners = async (filters: { status?: string; search?: string } = {}) => {
   const where: any = {};
-  if (filters.status && filters.status !== 'ALL') where.verificationStatus = filters.status;
+  if (filters.status && filters.status !== 'ALL') {
+    where.user = {
+      ...(where.user || {}),
+      kyc: { status: filters.status },
+    };
+  }
   if (filters.search) {
     where.OR = [
       { vehicleNum: { contains: filters.search, mode: 'insensitive' } },
@@ -787,6 +797,7 @@ export const listDeliveryPartners = async (filters: { status?: string; search?: 
       { user: { firstName: { contains: filters.search, mode: 'insensitive' } } },
       { user: { lastName: { contains: filters.search, mode: 'insensitive' } } },
       { user: { email: { contains: filters.search, mode: 'insensitive' } } },
+      { user: { phone: { contains: filters.search, mode: 'insensitive' } } },
     ];
   }
 
@@ -796,6 +807,7 @@ export const listDeliveryPartners = async (filters: { status?: string; search?: 
       user: {
         include: {
           kyc: { include: { documents: true } },
+          addresses: true,
         },
       },
       assignments: true,
@@ -806,19 +818,37 @@ export const listDeliveryPartners = async (filters: { status?: string; search?: 
   return partners.map((p: any) => {
     const user = p.user;
     const kyc = user?.kyc;
-    const docs = kyc?.documents || [];
+    const docs = (kyc?.documents || []).map((d: any) => {
+      let resolvedType = d.documentType;
+      if (d.documentType === 'OTHER') {
+        const match = d.objectKey?.match(/kyc_([A-Z_]+)_\d+/i);
+        if (match && match[1]) {
+          resolvedType = match[1].toUpperCase();
+        }
+      }
+      return {
+        ...d,
+        documentType: resolvedType,
+        fileUrl: createSignedKycUrl(d.objectKey),
+      };
+    });
     const jobs = p.assignments || [];
 
     const isApproved = user?.status === 'ACTIVE' && kyc?.status === 'APPROVED';
+    const primaryAddress = user?.addresses?.[0];
 
     return {
       ...p,
       driverName: user ? `${user.firstName} ${user.lastName}`.trim() : 'Delivery Partner',
       driverEmail: user?.email || '',
       driverPhone: user?.phone || '',
+      city: primaryAddress?.city || 'N/A',
+      address: primaryAddress ? `${primaryAddress.line1 || ''}, ${primaryAddress.city || ''}` : 'N/A',
+      accountStatus: user?.status || 'PENDING_VERIFICATION',
       kycStatus: kyc?.status || 'NOT_SUBMITTED',
       kycDocuments: docs,
       isActivated: isApproved,
+      registrationDate: p.createdAt,
       activeTrips: jobs.filter((j: any) => j.status === 'IN_TRANSIT' || j.status === 'PICKED_UP').length,
       completedDeliveries: p.totalDeliveries || jobs.filter((j: any) => j.status === 'DELIVERED').length,
     };
@@ -842,10 +872,26 @@ export const getDeliveryPartnerById = async (id: string) => {
   const kyc = user?.kyc;
   const isApproved = user?.status === 'ACTIVE' && kyc?.status === 'APPROVED';
 
+  const docs = (kyc?.documents || []).map((d: any) => {
+    let resolvedType = d.documentType;
+    if (d.documentType === 'OTHER') {
+      const match = d.objectKey?.match(/kyc_([A-Z_]+)_\d+/i);
+      if (match && match[1]) {
+        resolvedType = match[1].toUpperCase();
+      }
+    }
+    return {
+      ...d,
+      documentType: resolvedType,
+      fileUrl: createSignedKycUrl(d.objectKey),
+    };
+  });
+
   return {
     ...partner,
     isActivated: isApproved,
     kycStatus: kyc?.status || 'NOT_SUBMITTED',
+    kycDocuments: docs,
   };
 };
 
@@ -1152,23 +1198,35 @@ export const formatAdminUsedPart = (item: any) => {
   if (!item) return item;
   const askingPriceNum = Number(item.askingPrice || 0);
   const resalePriceNum = item.resalePrice ? Number(item.resalePrice) : null;
+  const intake = item.intake || null;
+  const assignedShop = item.assignedShop || intake?.shop || null;
+
   const payoutAmountNum = item.payout?.amount
     ? Number(item.payout.amount)
-    : (resalePriceNum ? Math.round(resalePriceNum * 0.9) : Math.round(askingPriceNum * 0.9));
+    : (intake?.recommendedSellerPayout
+        ? Number(intake.recommendedSellerPayout)
+        : (resalePriceNum ? Math.round(resalePriceNum * 0.89) : Math.round(askingPriceNum * 0.89)));
 
   let verificationStatus = 'PENDING';
-  if (item.status === UsedPartStatus.VERIFIED || item.status === UsedPartStatus.LISTED || item.status === UsedPartStatus.SOLD) {
+  if (
+    intake?.status === 'INSPECTION_COMPLETE' ||
+    intake?.status === 'OFFER_PENDING_CUSTOMER' ||
+    intake?.status === 'OFFER_ACCEPTED' ||
+    item.status === UsedPartStatus.VERIFIED ||
+    item.status === UsedPartStatus.LISTED ||
+    item.status === UsedPartStatus.SOLD
+  ) {
     verificationStatus = 'VERIFIED';
-  } else if (item.status === UsedPartStatus.REJECTED) {
+  } else if (intake?.status === 'REJECTED_FAILED_INSPECTION' || item.status === UsedPartStatus.REJECTED) {
     verificationStatus = 'REJECTED';
   }
 
   let displayStatus = item.status;
-  if (item.status === UsedPartStatus.LISTED) {
-    displayStatus = 'VALUED';
-  } else if (item.status === UsedPartStatus.PENDING_VERIFICATION) {
-    displayStatus = 'PENDING';
-  }
+  if (intake?.status === 'GARAGE_ASSIGNED') displayStatus = 'GARAGE_ASSIGNED';
+  else if (intake?.status === 'PART_RECEIVED') displayStatus = 'PART_RECEIVED';
+  else if (intake?.status === 'OFFER_PENDING_CUSTOMER') displayStatus = 'OFFER_READY';
+  else if (item.status === UsedPartStatus.LISTED) displayStatus = 'LISTED';
+  else if (item.status === UsedPartStatus.PENDING_VERIFICATION) displayStatus = 'PENDING';
 
   return {
     ...item,
@@ -1177,7 +1235,34 @@ export const formatAdminUsedPart = (item: any) => {
     status: displayStatus,
     rawStatus: item.status,
     verificationStatus,
-    verificationNotes: item.verification?.notes || null,
+    garageName: assignedShop?.name || 'Partner Garage',
+    assignedShop: assignedShop
+      ? {
+          id: assignedShop.id,
+          name: assignedShop.name,
+          city: assignedShop.city,
+          address: assignedShop.address,
+          phone: assignedShop.phone,
+        }
+      : null,
+    technician: intake?.inspectorName || 'Workshop Technician',
+    overallGrade: intake?.overallGrade || 'B',
+    inspectionScore: intake?.inspectionScore || (item.verification?.conditionRating ? item.verification.conditionRating * 10 : 80),
+    testScores: {
+      physical: intake?.physicalConditionRating || 4,
+      functional: intake?.functionalTestRating || 4,
+      wear: intake?.wearLevelRating || 3,
+      safety: intake?.safetyConfidenceRating || 5,
+      technicalResult: intake?.technicalResult || 'PASSED',
+    },
+    referenceNewPrice: intake?.referenceNewPrice ? Number(intake.referenceNewPrice) : null,
+    recommendedResaleMin: intake?.recommendedResaleMin ? Number(intake.recommendedResaleMin) : null,
+    recommendedResaleMax: intake?.recommendedResaleMax ? Number(intake.recommendedResaleMax) : null,
+    recommendedListingPrice: intake?.recommendedListingPrice ? Number(intake.recommendedListingPrice) : (resalePriceNum || askingPriceNum),
+    recommendedSellerPayout: intake?.recommendedSellerPayout ? Number(intake.recommendedSellerPayout) : payoutAmountNum,
+    adminOverridePrice: intake?.adminOverridePrice ? Number(intake.adminOverridePrice) : null,
+    adminOverrideReason: intake?.adminOverrideReason || null,
+    verificationNotes: item.verification?.notes || intake?.technicianNotes || null,
     finalValuation: resalePriceNum || askingPriceNum,
     valuationAmount: resalePriceNum || askingPriceNum,
     payoutAmount: payoutAmountNum,
@@ -1185,6 +1270,7 @@ export const formatAdminUsedPart = (item: any) => {
     payoutTransactionRef: item.payout?.transactionRef || null,
     adminNotes: item.verification?.notes || null,
     rejectionReason: item.verification?.rejectionReason || null,
+    photos: (intake?.photos && intake.photos.length > 0) ? intake.photos : (Array.isArray(item.images) ? item.images : []),
   };
 };
 
@@ -1213,6 +1299,12 @@ export const listUsedParts = async (filters: { status?: string } = {}) => {
       seller: true,
       verification: true,
       payout: true,
+      intake: {
+        include: {
+          shop: true,
+        },
+      },
+      assignedShop: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -1227,6 +1319,12 @@ export const getUsedPartById = async (id: string) => {
       seller: true,
       verification: true,
       payout: true,
+      intake: {
+        include: {
+          shop: true,
+        },
+      },
+      assignedShop: true,
     },
   });
   if (!item) throw AppError.notFound('Used part listing not found.');
@@ -1249,7 +1347,13 @@ export const verifyUsedPart = async (id: string, status: string, notes?: string)
       status: newStatus,
       updatedAt: new Date(),
     },
-    include: { seller: true, verification: true, payout: true },
+    include: {
+      seller: true,
+      verification: true,
+      payout: true,
+      intake: { include: { shop: true } },
+      assignedShop: true,
+    },
   });
 
   const verification = await prisma.usedPartVerification.upsert({
@@ -1279,12 +1383,27 @@ export const verifyUsedPart = async (id: string, status: string, notes?: string)
 export const valueUsedPart = async (id: string, valuationAmount: number, notes?: string) => {
   const existing = await prisma.usedPartListing.findUnique({
     where: { id },
-    include: { verification: true, payout: true, seller: true },
+    include: { verification: true, payout: true, seller: true, intake: true },
   });
   if (!existing) throw AppError.notFound('Used part listing not found.');
 
+  if (!notes || notes.trim().length < 5) {
+    throw AppError.badRequest('Admin price override requires an explicit reason (minimum 5 characters).');
+  }
+
   const amt = Number(valuationAmount);
-  const payoutAmt = Math.round(amt * 0.9); // 90% payout to seller
+  if (isNaN(amt) || amt <= 0) {
+    throw AppError.badRequest('Please enter a valid override valuation greater than ₹0.');
+  }
+
+  // Calculate platform cut & payout based on configured margin
+  let platformCutPercent = 10.7;
+  try {
+    const config = await prisma.commissionConfig.findFirst({ where: { isActive: true }, select: { ratePercent: true } });
+    if (config?.ratePercent) platformCutPercent = Number(config.ratePercent);
+  } catch {}
+
+  const payoutAmt = Math.round(amt * (1 - platformCutPercent / 100));
 
   const updatedListing = await prisma.usedPartListing.update({
     where: { id },
@@ -1293,18 +1412,37 @@ export const valueUsedPart = async (id: string, valuationAmount: number, notes?:
       status: UsedPartStatus.LISTED,
       updatedAt: new Date(),
     },
-    include: { seller: true, verification: true, payout: true },
+    include: {
+      seller: true,
+      verification: true,
+      payout: true,
+      intake: { include: { shop: true } },
+      assignedShop: true,
+    },
   });
+
+  if (existing.intake) {
+    await prisma.usedPartIntake.update({
+      where: { id: existing.intake.id },
+      data: {
+        adminOverridePrice: amt,
+        adminOverrideReason: notes.trim(),
+        recommendedListingPrice: amt,
+        recommendedSellerPayout: payoutAmt,
+        status: 'OFFER_ACCEPTED',
+      },
+    });
+  }
 
   const verification = await prisma.usedPartVerification.upsert({
     where: { listingId: id },
     create: {
       listingId: id,
-      notes: notes || `Valuation recorded at ₹${amt}. Part listed on marketplace.`,
+      notes: notes.trim(),
       approvedAt: new Date(),
     },
     update: {
-      notes: notes || `Valuation updated to ₹${amt}. Part listed on marketplace.`,
+      notes: notes.trim(),
       approvedAt: new Date(),
     },
   });

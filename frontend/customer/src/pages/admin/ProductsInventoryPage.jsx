@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
 
 export default function ProductsInventoryPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('catalog'); // 'catalog' | 'inventory' | 'categories' | 'brands'
   const [products, setProducts] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -397,12 +399,38 @@ export default function ProductsInventoryPage() {
                         </span>
                       </td>
                       <td>
-                        <button
-                          onClick={() => { setStockEditItem(inv); setNewStockQty(inv.quantity); }}
-                          className="btn btn-sm btn-primary"
-                        >
-                          Adjust Stock
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => { setStockEditItem(inv); setNewStockQty(inv.quantity); }}
+                            className="btn btn-sm btn-primary"
+                          >
+                            Adjust Stock
+                          </button>
+                          {(inv.quantity === 0 || inv.quantity <= (inv.lowStockThreshold || 5)) && (
+                            <button
+                              onClick={() => {
+                                const q = inv.product?.name || '';
+                                navigate(`/admin/procurement?search=${encodeURIComponent(q)}&tab=catalog`);
+                              }}
+                              style={{
+                                padding: '0.35rem 0.65rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: 'none',
+                                backgroundColor: 'var(--admin-blue)',
+                                color: '#FFFFFF',
+                                fontWeight: 700,
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)',
+                              }}
+                            >
+                              🏭 Procure Stock
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

@@ -1,78 +1,111 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
-// Layouts
+// Layouts (Synchronous for structural stability)
 import CustomerLayout from '../layouts/CustomerLayout';
 import ShopLayout from '../layouts/ShopLayout';
 import DeliveryLayout from '../layouts/DeliveryLayout';
 import AdminLayout from '../layouts/AdminLayout';
 
-// Public & Auth Pages
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import UnauthorizedPage from '../pages/UnauthorizedPage';
-import NotFoundPage from '../pages/NotFoundPage';
-
-// Customer Pages
+// Core Landing Page (Eager for instant above-the-fold paint)
 import HomePage from '../pages/HomePage';
-import ProductsPage from '../pages/ProductsPage';
-import ProductDetailPage from '../pages/ProductDetailPage';
-import VehiclesPage from '../pages/VehiclesPage';
-import VehicleOnboardingPage from '../pages/VehicleOnboardingPage';
-import CartPage from '../pages/CartPage';
-import CheckoutPage from '../pages/CheckoutPage';
-import ServicesPage from '../pages/ServicesPage';
-import SubscriptionsPage from '../pages/SubscriptionsPage';
-import SubscriptionPlanDetailPage from '../pages/SubscriptionPlanDetailPage';
-import MySubscriptionsPage from '../pages/MySubscriptionsPage';
-import SellUsedPartPage from '../pages/SellUsedPartPage';
-import OrdersPage from '../pages/OrdersPage';
-import OrderDetailPage from '../pages/OrderDetailPage';
-import ProfilePage from '../pages/ProfilePage';
-import SupportPage from '../pages/SupportPage';
-import NotificationPage from '../pages/NotificationPage';
 
-// Shop Pages
-import ShopDashboardPage from '../pages/shop/ShopDashboardPage';
-import ServiceCalendarPage from '../pages/shop/ServiceCalendarPage';
-import CommissionLedgerPage from '../pages/shop/CommissionLedgerPage';
-import DeliveriesPage from '../pages/shop/DeliveriesPage';
-import UsedPartIntakePage from '../pages/shop/UsedPartIntakePage';
-import ShopTicketsPage from '../pages/shop/ShopTicketsPage';
-import ShopProfilePage from '../pages/shop/ShopProfilePage';
-import ShopRegisterPage from '../pages/shop/ShopRegisterPage';
+// Lazy-loaded Public & Auth Pages
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const UnauthorizedPage = lazy(() => import('../pages/UnauthorizedPage'));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
-// Delivery Pages
-import DeliveryDashboardPage from '../pages/delivery/DeliveryDashboardPage';
-import AvailableJobsPage from '../pages/delivery/AvailableJobsPage';
-import MyTripsPage from '../pages/delivery/MyTripsPage';
-import JobDetailPage from '../pages/delivery/JobDetailPage';
-import UsedPartInspectionPage from '../pages/delivery/UsedPartInspectionPage';
-import UsedPartsListPage from '../pages/delivery/UsedPartsListPage';
-import CodReconciliationPage from '../pages/delivery/CodReconciliationPage';
-import KycUploadPage from '../pages/delivery/KycUploadPage';
-import DeliveryProfilePage from '../pages/delivery/DeliveryProfilePage';
-import DeliveryRegisterPage from '../pages/delivery/DeliveryRegisterPage';
+// Lazy-loaded Customer Pages
+const ProductsPage = lazy(() => import('../pages/ProductsPage'));
+const ProductDetailPage = lazy(() => import('../pages/ProductDetailPage'));
+const VehiclesPage = lazy(() => import('../pages/VehiclesPage'));
+const VehicleOnboardingPage = lazy(() => import('../pages/VehicleOnboardingPage'));
+const CartPage = lazy(() => import('../pages/CartPage'));
+const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
+const ServicesPage = lazy(() => import('../pages/ServicesPage'));
+const SubscriptionsPage = lazy(() => import('../pages/SubscriptionsPage'));
+const SubscriptionPlanDetailPage = lazy(() => import('../pages/SubscriptionPlanDetailPage'));
+const MySubscriptionsPage = lazy(() => import('../pages/MySubscriptionsPage'));
+const SellUsedPartPage = lazy(() => import('../pages/customer/SellUsedPartPage'));
+const OrdersPage = lazy(() => import('../pages/OrdersPage'));
+const OrderDetailPage = lazy(() => import('../pages/OrderDetailPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const SupportPage = lazy(() => import('../pages/SupportPage'));
+const NotificationPage = lazy(() => import('../pages/NotificationPage'));
 
-// Admin Pages
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
-import OrdersManagementPage from '../pages/admin/OrdersManagementPage';
-import CustomersPage from '../pages/admin/CustomersPage';
-import ShopsManagementPage from '../pages/admin/ShopsManagementPage';
-import DeliveryPartnersPage from '../pages/admin/DeliveryPartnersPage';
-import ProductsInventoryPage from '../pages/admin/ProductsInventoryPage';
-import PlatformConfigPage from '../pages/admin/PlatformConfigPage';
-import UsedPartsOversightPage from '../pages/admin/UsedPartsOversightPage';
-import DeliveriesOversightPage from '../pages/admin/DeliveriesOversightPage';
-import CustomerCareHubPage from '../pages/admin/CustomerCareHubPage';
-import ProcurementDashboardPage from '../pages/admin/ProcurementDashboardPage';
-import SupplierDetailPage from '../pages/admin/SupplierDetailPage';
-import ReturnsManagementPage from '../pages/admin/ReturnsManagementPage';
+// Lazy-loaded Shop Pages
+const ShopDashboardPage = lazy(() => import('../pages/shop/ShopDashboardPage'));
+const ServiceCalendarPage = lazy(() => import('../pages/shop/ServiceCalendarPage'));
+const CommissionLedgerPage = lazy(() => import('../pages/shop/CommissionLedgerPage'));
+const DeliveriesPage = lazy(() => import('../pages/shop/DeliveriesPage'));
+const UsedPartIntakePage = lazy(() => import('../pages/shop/UsedPartIntakePage'));
+const ShopTicketsPage = lazy(() => import('../pages/shop/ShopTicketsPage'));
+const ShopProfilePage = lazy(() => import('../pages/shop/ShopProfilePage'));
+const ShopRegisterPage = lazy(() => import('../pages/shop/ShopRegisterPage'));
+
+// Lazy-loaded Delivery Pages
+const DeliveryDashboardPage = lazy(() => import('../pages/delivery/DeliveryDashboardPage'));
+const AvailableJobsPage = lazy(() => import('../pages/delivery/AvailableJobsPage'));
+const MyTripsPage = lazy(() => import('../pages/delivery/MyTripsPage'));
+const JobDetailPage = lazy(() => import('../pages/delivery/JobDetailPage'));
+const UsedPartInspectionPage = lazy(() => import('../pages/delivery/UsedPartInspectionPage'));
+const UsedPartsListPage = lazy(() => import('../pages/delivery/UsedPartsListPage'));
+const CodReconciliationPage = lazy(() => import('../pages/delivery/CodReconciliationPage'));
+const KycUploadPage = lazy(() => import('../pages/delivery/KycUploadPage'));
+const DeliveryProfilePage = lazy(() => import('../pages/delivery/DeliveryProfilePage'));
+const DeliveryRegisterPage = lazy(() => import('../pages/delivery/DeliveryRegisterPage'));
+
+// Lazy-loaded Admin Pages
+const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'));
+const OrdersManagementPage = lazy(() => import('../pages/admin/OrdersManagementPage'));
+const CustomersPage = lazy(() => import('../pages/admin/CustomersPage'));
+const ShopsManagementPage = lazy(() => import('../pages/admin/ShopsManagementPage'));
+const DeliveryPartnersPage = lazy(() => import('../pages/admin/DeliveryPartnersPage'));
+const ProductsInventoryPage = lazy(() => import('../pages/admin/ProductsInventoryPage'));
+const PlatformConfigPage = lazy(() => import('../pages/admin/PlatformConfigPage'));
+const UsedPartsOversightPage = lazy(() => import('../pages/admin/UsedPartsOversightPage'));
+const DeliveriesOversightPage = lazy(() => import('../pages/admin/DeliveriesOversightPage'));
+const CustomerCareHubPage = lazy(() => import('../pages/admin/CustomerCareHubPage'));
+const ProcurementDashboardPage = lazy(() => import('../pages/admin/ProcurementDashboardPage'));
+const SupplierDetailPage = lazy(() => import('../pages/admin/SupplierDetailPage'));
+const PurchaseOrderDetailPage = lazy(() => import('../pages/admin/PurchaseOrderDetailPage'));
+const ReturnsManagementPage = lazy(() => import('../pages/admin/ReturnsManagementPage'));
+
+const RouteFallback = () => (
+  <div
+    style={{
+      minHeight: '60vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '1rem',
+      color: 'var(--text-muted, #94a3b8)',
+    }}
+  >
+    <div
+      style={{
+        width: '36px',
+        height: '36px',
+        border: '3px solid rgba(2, 132, 199, 0.15)',
+        borderTopColor: 'var(--color-primary, #0284c7)',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }}
+    />
+    <span style={{ fontSize: '0.88rem', fontWeight: 500, letterSpacing: '0.02em' }}>
+      Loading page...
+    </span>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 export const AppRoutes = () => {
   return (
-    <Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       {/* Root redirect to Customer Marketplace */}
       <Route path="/" element={<Navigate to="/customer" replace />} />
 
@@ -270,7 +303,14 @@ export const AppRoutes = () => {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="procurement" element={<ProcurementDashboardPage />} />
+        <Route path="procurement/suppliers" element={<ProcurementDashboardPage initialTab="suppliers" />} />
         <Route path="procurement/suppliers/:id" element={<SupplierDetailPage />} />
+        <Route path="procurement/catalog" element={<ProcurementDashboardPage initialTab="catalog" />} />
+        <Route path="procurement/orders" element={<ProcurementDashboardPage initialTab="pos" />} />
+        <Route path="procurement/orders/:id" element={<PurchaseOrderDetailPage />} />
+        <Route path="procurement/pos" element={<ProcurementDashboardPage initialTab="pos" />} />
+        <Route path="procurement/pos/:id" element={<PurchaseOrderDetailPage />} />
+        <Route path="procurement/history" element={<ProcurementDashboardPage initialTab="history" />} />
         <Route path="orders" element={<OrdersManagementPage />} />
         <Route path="returns" element={<ReturnsManagementPage />} />
         <Route path="customers" element={<CustomersPage />} />
@@ -287,7 +327,8 @@ export const AppRoutes = () => {
       {/* Global 404 Catch-All */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  );
+  </Suspense>
+);
 };
 
 export default AppRoutes;

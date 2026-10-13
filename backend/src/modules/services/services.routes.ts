@@ -63,6 +63,8 @@ router.get('/admin', authenticate, authorize(UserRole.ADMIN), async (req: Authen
   }
 });
 
+import { verifyInstallationCompletion } from './installationCompletion.service';
+
 // 4. Get Single Appointment by ID
 router.get('/:id', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -72,6 +74,21 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res: Response
       req.user!.role
     );
     return successResponse(res, appointment);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Step 11: Verify Service Booking Installation Completion
+router.post('/bookings/:id/verify-completion', authenticate, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const result = await verifyInstallationCompletion({
+      bookingId: req.params.id as string,
+      code: req.body.code,
+      notes: req.body.notes,
+      user: req.user!,
+    });
+    return successResponse(res, result, 'Installation completion verified successfully!');
   } catch (error) {
     next(error);
   }

@@ -161,23 +161,30 @@ export async function getDashboardStats() {
   const unitsOrdered = allPOItems.reduce((sum, item) => sum + item.orderedQuantity, 0);
 
   // Group low stock products with reorder suggestion
-  const lowStockAlerts = lowStockInventories.map((inv) => {
-    const defaultCatalogItem = inv.product.supplierCatalogItems[0] || null;
-    return {
-      inventoryId: inv.id,
-      productId: inv.productId,
-      productName: inv.product.name,
-      sku: inv.product.sku,
-      currentStock: inv.quantity,
-      reorderThreshold: inv.lowStockThreshold || 10,
-      isBelowReorderLevel: inv.quantity <= (inv.lowStockThreshold || 10),
-      category: inv.product.category.name,
-      suggestedSupplier: defaultCatalogItem?.supplier?.name || 'Bosch Automotive Hub',
-      suggestedCatalogItemId: defaultCatalogItem?.id || null,
-      suggestedMoq: defaultCatalogItem?.moq || 10,
-      suggestedBulkPrice: defaultCatalogItem ? Number(defaultCatalogItem.bulkPrice) : Number(inv.sellingPrice) * 0.75,
-    };
-  });
+  const lowStockAlerts = lowStockInventories
+    .filter((inv) => inv?.product)
+    .map((inv) => {
+      const catItems = Array.isArray(inv.product.supplierCatalogItems) ? inv.product.supplierCatalogItems : [];
+      const defaultCatalogItem = catItems.length > 0 ? catItems[0] : null;
+      const categoryName = typeof inv.product.category === 'object' && inv.product.category?.name
+        ? inv.product.category.name
+        : (inv.product.category || inv.product.categoryId || 'Spare Parts');
+
+      return {
+        inventoryId: inv.id,
+        productId: inv.productId,
+        productName: inv.product.name,
+        sku: inv.product.sku,
+        currentStock: inv.quantity,
+        reorderThreshold: inv.lowStockThreshold || 10,
+        isBelowReorderLevel: inv.quantity <= (inv.lowStockThreshold || 10),
+        category: categoryName,
+        suggestedSupplier: defaultCatalogItem?.supplier?.name || 'Bosch Automotive Hub',
+        suggestedCatalogItemId: defaultCatalogItem?.id || null,
+        suggestedMoq: defaultCatalogItem?.moq || 10,
+        suggestedBulkPrice: defaultCatalogItem ? Number(defaultCatalogItem.bulkPrice) : Number(inv.sellingPrice) * 0.75,
+      };
+    });
 
   return {
     totalSuppliers,

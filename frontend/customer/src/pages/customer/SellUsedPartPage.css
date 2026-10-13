@@ -1508,3 +1508,379 @@
   font-size: 1.2rem;
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   GARAGE SELECTION & HANDOVER TOGGLES
+   ========================================================================== */
+.garages-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.garage-option-card {
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+[data-theme="dark"] .garage-option-card {
+  background: var(--bg-card, #111827);
+  border-color: #374151;
+}
+
+.garage-option-card:hover {
+  border-color: #0d9488;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);
+}
+
+.garage-option-card.selected {
+  border-color: #0d9488;
+  background: rgba(13, 148, 136, 0.05);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35);
+}
+
+[data-theme="dark"] .garage-option-card.selected {
+  background: rgba(13, 148, 136, 0.15);
+  border-color: #14b8a6;
+}
+
+.garage-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.garage-avatar {
+  font-size: 1.5rem;
+  background: rgba(13, 148, 136, 0.12);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.garage-meta-info {
+  flex: 1;
+}
+
+.garage-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 3px 0;
+  color: var(--text-primary, #0f172a);
+}
+
+.garage-address {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.35;
+}
+
+.garage-radio-indicator {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0d9488;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(13, 148, 136, 0.12);
+}
+
+.garage-badges-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.74rem;
+  margin-top: 6px;
+}
+
+.garage-verified-pill {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.garage-rating-pill {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.garage-phone-pill {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.handover-toggle-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.handover-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--bg-card, #ffffff);
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .handover-btn {
+  background: var(--bg-card, #111827);
+  border-color: #374151;
+}
+
+.handover-btn:hover {
+  border-color: #0d9488;
+}
+
+.handover-btn.active {
+  border-color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.25);
+}
+
+[data-theme="dark"] .handover-btn.active {
+  background: rgba(13, 148, 136, 0.2);
+}
+
+.handover-icon {
+  font-size: 1.7rem;
+}
+
+.handover-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   CUSTOMER INSPECTION OFFER CARD
+   ========================================================================== */
+.customer-offer-card {
+  margin-top: 14px;
+  border-radius: 12px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(3, 105, 161, 0.08) 100%);
+  border: 1.5px solid rgba(13, 148, 136, 0.35);
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.08);
+}
+
+[data-theme="dark"] .customer-offer-card {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.15) 0%, rgba(3, 105, 161, 0.15) 100%);
+  border-color: rgba(13, 148, 136, 0.5);
+}
+
+.offer-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.offer-title-wrap h4 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: #0f766e;
+}
+
+[data-theme="dark"] .offer-title-wrap h4 {
+  color: #2dd4bf;
+}
+
+.offer-garage-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #475569);
+}
+
+.offer-badges-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.offer-grade-badge {
+  background: #0f766e;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+}
+
+.offer-verdict-badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.offer-verdict-badge.passed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #059669;
+}
+
+.offer-verdict-badge.repair_required {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+.offer-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+[data-theme="dark"] .offer-scores-grid {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.score-chip-mini {
+  text-align: center;
+}
+
+.score-chip-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 2px;
+}
+
+.score-chip-val {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-primary, #0f172a);
+}
+
+.offer-pricing-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  margin-bottom: 14px;
+}
+
+[data-theme="dark"] .offer-pricing-summary {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.offer-price-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.offer-price-col.highlight-payout {
+  border-left: 2px solid #0d9488;
+  padding-left: 12px;
+}
+
+.offer-col-lbl {
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 2px;
+}
+
+.offer-col-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f766e;
+}
+
+[data-theme="dark"] .offer-col-val {
+  color: #2dd4bf;
+}
+
+.offer-col-val.payout-big {
+  font-size: 1.35rem;
+  color: #059669;
+}
+
+[data-theme="dark"] .offer-col-val.payout-big {
+  color: #34d399;
+}
+
+.offer-actions-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.offer-accepted-banner {
+  margin-top: 12px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #047857;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+[data-theme="dark"] .offer-accepted-banner {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.offer-declined-banner {
+  margin-top: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+[data-theme="dark"] .offer-declined-banner {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.partner-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}

@@ -42,12 +42,10 @@ export const ShopAuthProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => localStorage.getItem('partnexa_theme') || localStorage.getItem('shop_theme') || 'light');
   const [loading, setLoading] = useState(true);
 
-  // Initialize and synchronize theme
+  // Listen for external theme change events
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('partnexa_theme', theme);
     const handleThemeChange = (e) => {
-      if (e.detail) setTheme(e.detail);
+      if (e.detail && e.detail !== theme) setTheme(e.detail);
     };
     window.addEventListener('theme:change', handleThemeChange);
     return () => window.removeEventListener('theme:change', handleThemeChange);
@@ -56,6 +54,8 @@ export const ShopAuthProvider = ({ children }) => {
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('partnexa_theme', nextTheme);
     window.dispatchEvent(new CustomEvent('theme:change', { detail: nextTheme }));
   };
 

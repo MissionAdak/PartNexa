@@ -39,6 +39,20 @@ export const deliveryService = {
     return res.data?.data;
   },
 
+  uploadKycFile: async (formData) => {
+    const res = await api.post('/delivery/kyc/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data?.data;
+  },
+
+  removeKycDoc: async (docId) => {
+    const res = await api.delete(`/delivery/kyc/document/${docId}`);
+    return res.data?.data;
+  },
+
   submitKyc: async () => {
     const res = await api.post('/delivery/kyc/submit');
     return res.data?.data;

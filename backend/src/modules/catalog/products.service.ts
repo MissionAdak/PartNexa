@@ -104,18 +104,23 @@ export const listProducts = async ({
         category: { select: { id: true, name: true, slug: true } },
         brandRel: { select: { id: true, name: true, slug: true, logoUrl: true } },
         inventories: {
-          include: {
-            shop: { select: { id: true, name: true, city: true, rating: true, isVerified: true } },
+          select: {
+            id: true,
+            sellingPrice: true,
+            quantity: true,
+            isAvailable: true,
+            shopId: true,
           },
           orderBy: { sellingPrice: 'asc' },
         },
-        compatibilities: {
-          include: {
-            variant: {
-              include: { model: { include: { make: true } } },
-            },
-          },
-        },
+        ...(vehicleVariantId
+          ? {
+              compatibilities: {
+                where: { variantId: vehicleVariantId },
+                select: { variantId: true },
+              },
+            }
+          : {}),
         _count: { select: { reviews: true, compatibilities: true } },
       },
     }),

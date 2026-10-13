@@ -69,25 +69,60 @@ export const registerDeliveryPartner = async (data: {
   email: string;
   password: string;
   phone: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
   vehicleType?: string;
+  vehicleMake?: string;
+  vehicleModel?: string;
   vehicleNum?: string;
   licenseNumber?: string;
+  preferredCity?: string;
+  emergencyContact?: string;
 }) => {
   if (!data.email || !data.password || !data.firstName || !data.lastName || !data.phone) {
     throw AppError.badRequest('First name, last name, email, password, and phone number are required.');
   }
 
+  if (data.password.length < 6) {
+    throw AppError.badRequest('Password must be at least 6 characters long.');
+  }
+
+  // 1. Prevent duplicate email
   const existingUser = await prisma.user.findUnique({
-    where: { email: data.email.toLowerCase() },
+    where: { email: data.email.toLowerCase().trim() },
   });
 
   if (existingUser) {
     throw AppError.conflict('An account with this email address already exists.');
   }
 
+  // 2. Prevent duplicate phone
+  if (data.phone && data.phone.trim()) {
+    const cleanPhone = data.phone.trim();
+    const existingPhone = await prisma.user.findFirst({
+      where: { phone: cleanPhone },
+    });
+    if (existingPhone) {
+      throw AppError.conflict('An account with this phone number already exists.');
+    }
+  }
+
+  // 3. Prevent duplicate vehicle registration number where provided
+  if (data.vehicleNum && data.vehicleNum.trim()) {
+    const cleanVehicleNum = data.vehicleNum.trim().toUpperCase();
+    const existingVehicle = await prisma.deliveryPartner.findFirst({
+      where: { vehicleNum: cleanVehicleNum },
+    });
+    if (existingVehicle) {
+      throw AppError.conflict('A vehicle with this registration number is already registered.');
+    }
+  }
+
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
-  // 1. Create Delivery Partner User
+  // 4. Create Delivery Partner User with initial PENDING_VERIFICATION status
   const newUser = await prisma.user.create({
     data: {
       firstName: data.firstName.trim(),
@@ -96,17 +131,22 @@ export const registerDeliveryPartner = async (data: {
       password: hashedPassword,
       phone: data.phone.trim(),
       role: 'DELIVERY_PARTNER',
-      status: 'ACTIVE',
+      status: 'PENDING_VERIFICATION',
     },
   });
 
-  // 2. Create Partner Profile (Activation pending KYC verification)
+  // 5. Compose vehicle description if make and model are provided
+  const baseVehicleType = data.vehicleType?.trim() || 'Bike';
+  const makeModel = [data.vehicleMake?.trim(), data.vehicleModel?.trim()].filter(Boolean).join(' ');
+  const formattedVehicle = makeModel ? `${baseVehicleType} (${makeModel})` : baseVehicleType;
+
+  // 6. Create Partner Profile (Activation pending KYC verification)
   const newPartner = await prisma.deliveryPartner.create({
     data: {
       userId: newUser.id,
-      vehicleType: data.vehicleType || 'Bike / Two-Wheeler',
-      vehicleNum: data.vehicleNum ? data.vehicleNum.toUpperCase() : null,
-      licenseNumber: data.licenseNumber ? data.licenseNumber.toUpperCase() : null,
+      vehicleType: formattedVehicle,
+      vehicleNum: data.vehicleNum ? data.vehicleNum.trim().toUpperCase() : null,
+      licenseNumber: data.licenseNumber ? data.licenseNumber.trim().toUpperCase() : null,
       isOnline: false,
       currentLat: 12.9716,
       currentLng: 77.5946,
@@ -115,7 +155,29 @@ export const registerDeliveryPartner = async (data: {
     },
   });
 
-  // 3. Initialize KYC container
+  // 7. Persist address record if provided
+  if (data.address || data.city || data.state || data.postalCode) {
+    try {
+      await prisma.address.create({
+        data: {
+          userId: newUser.id,
+          fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
+          phone: data.phone.trim(),
+          line1: data.address?.trim() || 'Operational Base',
+          line2: data.emergencyContact ? `Emergency Contact: ${data.emergencyContact.trim()}` : null,
+          city: data.city?.trim() || data.preferredCity?.trim() || 'Bengaluru',
+          state: data.state?.trim() || 'Karnataka',
+          pincode: data.postalCode?.trim() || '560001',
+          landmark: data.preferredCity ? `Preferred Zone: ${data.preferredCity.trim()}` : null,
+          isDefault: true,
+        },
+      });
+    } catch (addrErr) {
+      console.warn('[registerDeliveryPartner] Optional address creation notice:', addrErr);
+    }
+  }
+
+  // 8. Initialize KYC record container
   const newKyc = await prisma.kYC.create({
     data: {
       userId: newUser.id,
@@ -135,9 +197,15 @@ export const registerDeliveryPartner = async (data: {
       email: newUser.email,
       firstName: newUser.firstName,
       lastName: newUser.lastName,
+      phone: newUser.phone,
       role: newUser.role,
+      status: newUser.status,
     },
-    partner: newPartner,
+    partner: {
+      ...newPartner,
+      isActivated: false,
+      verificationStatus: 'NOT_SUBMITTED',
+    },
     kyc: newKyc,
     token,
     accessToken: token,
@@ -188,7 +256,9 @@ export const loginDeliveryPartner = async (data: { email: string; password: stri
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      phone: user.phone,
       role: user.role,
+      status: user.status,
     },
     partner: {
       ...partner,
@@ -201,6 +271,14 @@ export const loginDeliveryPartner = async (data: { email: string; password: stri
     refreshToken: token,
   };
 };
+
+import {
+  saveKycDocumentFile,
+  createSignedKycUrl,
+  retrieveKycFileBuffer,
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_MIME_TYPES,
+} from './deliveryKycStorage.service';
 
 // ============================================================================
 // 2. KYC UPLOAD & ADMIN VERIFICATION
@@ -222,7 +300,27 @@ export const getKycDetails = async (userId: string) => {
     };
   }
 
-  return kyc;
+  // Attach signed short-lived URLs and resolve display document type
+  const documentsWithSignedUrls = (kyc.documents || []).map((doc: any) => {
+    const signedUrl = createSignedKycUrl(doc.objectKey);
+    let resolvedType = doc.documentType;
+    if (doc.documentType === 'OTHER') {
+      const match = doc.objectKey.match(/kyc_([A-Z_]+)_\d+/i);
+      if (match && match[1]) {
+        resolvedType = match[1].toUpperCase();
+      }
+    }
+    return {
+      ...doc,
+      documentType: resolvedType,
+      fileUrl: signedUrl,
+    };
+  });
+
+  return {
+    ...kyc,
+    documents: documentsWithSignedUrls,
+  };
 };
 
 export const uploadKycDocument = async ({
@@ -268,14 +366,181 @@ export const uploadKycDocument = async ({
     },
   });
 
-  const updatedKyc = await prisma.kYC.findUnique({
-    where: { userId },
-    include: { documents: true },
-  });
+  const updatedKyc = await getKycDetails(userId);
 
   return {
     document: doc,
     kyc: updatedKyc,
+  };
+};
+
+export const uploadKycDocumentFile = async ({
+  userId,
+  documentType,
+  file,
+  idNumber,
+  vehicleType,
+  vehicleNum,
+}: {
+  userId: string;
+  documentType: string;
+  file: Express.Multer.File;
+  idNumber?: string;
+  vehicleType?: string;
+  vehicleNum?: string;
+}) => {
+  if (!file) {
+    throw AppError.badRequest('Please select a file to upload.');
+  }
+
+  // Check if KYC is currently locked under review
+  const existingKyc = await prisma.kYC.findUnique({
+    where: { userId },
+    include: { documents: true },
+  });
+
+  if (existingKyc?.status === 'PENDING') {
+    throw AppError.badRequest('Your KYC is currently under review by compliance. Documents are locked until review is completed.');
+  }
+
+  // 1. Process and securely store file (validates size, mime, magic bytes, assigns safe name)
+  const savedFile = await saveKycDocumentFile({
+    userId,
+    documentType,
+    file,
+  });
+
+  // 2. Generate signed URL for immediate preview
+  const signedUrl = createSignedKycUrl(savedFile.objectKey);
+
+  // 3. Map documentType to valid Prisma enum
+  const validPrismaEnums: string[] = ['PAN_CARD', 'AADHAAR_CARD', 'DRIVING_LICENSE', 'SHOP_REGISTRATION', 'GST_CERTIFICATE', 'VEHICLE_RC', 'OTHER'];
+  const prismaDocType = (validPrismaEnums.includes(documentType) ? documentType : 'OTHER') as KYCDocumentType;
+
+  // 4. Upsert KYC record
+  const kyc = await prisma.kYC.upsert({
+    where: { userId },
+    create: {
+      userId,
+      status: 'NOT_SUBMITTED',
+      aadharNumber: idNumber || null,
+    },
+    update: {
+      ...(idNumber && { aadharNumber: idNumber }),
+      ...(existingKyc?.status === 'REJECTED' && { status: 'NOT_SUBMITTED', rejectionReason: null }),
+    },
+  });
+
+  // 5. If partner previously uploaded a document of this type, replace it
+  const cleanTypePattern = documentType.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+  const existingDoc = (existingKyc?.documents || []).find((d: any) =>
+    d.documentType === prismaDocType && d.objectKey.toUpperCase().includes(cleanTypePattern)
+  );
+
+  let doc;
+  if (existingDoc) {
+    doc = await prisma.kYCDocument.update({
+      where: { id: existingDoc.id },
+      data: {
+        objectKey: savedFile.objectKey,
+        fileUrl: signedUrl,
+        mimeType: savedFile.mimeType,
+        verificationStatus: 'PENDING',
+        rejectionReason: null,
+      },
+    });
+  } else {
+    doc = await prisma.kYCDocument.create({
+      data: {
+        kycId: kyc.id,
+        documentType: prismaDocType,
+        objectKey: savedFile.objectKey,
+        fileUrl: signedUrl,
+        mimeType: savedFile.mimeType,
+        verificationStatus: 'PENDING',
+      },
+    });
+  }
+
+  // 6. Update vehicle details on partner if supplied
+  if (vehicleType || vehicleNum) {
+    const existingPartner = await prisma.deliveryPartner.findUnique({ where: { userId } });
+    if (existingPartner) {
+      await prisma.deliveryPartner.update({
+        where: { id: existingPartner.id },
+        data: {
+          ...(vehicleType && { vehicleType }),
+          ...(vehicleNum && { vehicleNum }),
+          updatedAt: new Date(),
+        },
+      });
+    }
+  }
+
+  const updatedKyc = await getKycDetails(userId);
+  return {
+    document: {
+      ...doc,
+      fileUrl: signedUrl,
+      documentType,
+    },
+    kyc: updatedKyc,
+  };
+};
+
+export const removeKycDocument = async (userId: string, docId: string) => {
+  const kyc = await prisma.kYC.findUnique({
+    where: { userId },
+    include: { documents: true },
+  });
+
+  if (!kyc) {
+    throw AppError.notFound('KYC record not found.');
+  }
+
+  if (kyc.status === 'PENDING') {
+    throw AppError.badRequest('Cannot remove documents while KYC is under review.');
+  }
+
+  const doc = kyc.documents.find((d: any) => d.id === docId);
+  if (!doc) {
+    throw AppError.notFound('KYC document not found.');
+  }
+
+  await prisma.kYCDocument.delete({
+    where: { id: docId },
+  });
+
+  return getKycDetails(userId);
+};
+
+export const getKycDocumentFileStream = async (user: any, docId: string) => {
+  const doc = await prisma.kYCDocument.findUnique({
+    where: { id: docId },
+    include: { kyc: true },
+  });
+
+  if (!doc) {
+    throw AppError.notFound('Document not found.');
+  }
+
+  // Security Access Check: Only Admin or the owning partner
+  const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+  const isOwner = doc.kyc?.userId === user.id;
+
+  if (!isAdmin && !isOwner) {
+    throw AppError.forbidden('Forbidden: You do not have permission to access this private KYC document.');
+  }
+
+  const fileResult = retrieveKycFileBuffer(doc.objectKey);
+  if (!fileResult) {
+    throw AppError.notFound('Document file data not found on secure storage.');
+  }
+
+  return {
+    buffer: fileResult.buffer,
+    mimeType: fileResult.mimeType || doc.mimeType || 'application/octet-stream',
+    filename: doc.objectKey.split('/').pop() || 'kyc_document',
   };
 };
 
@@ -286,7 +551,7 @@ export const submitKycForReview = async (userId: string) => {
   });
 
   if (!kyc || !kyc.documents || kyc.documents.length === 0) {
-    throw AppError.badRequest('Please upload at least one required KYC document (Driving License or Govt ID) before submitting.');
+    throw AppError.badRequest('Please upload required KYC documents before submitting for review.');
   }
 
   const updatedKyc = await prisma.kYC.update({
@@ -307,7 +572,49 @@ export const submitKycForReview = async (userId: string) => {
     },
   });
 
-  return updatedKyc;
+  // Notify Admins and Partner
+  try {
+    const partner = await prisma.deliveryPartner.findUnique({
+      where: { userId },
+      include: { user: true },
+    });
+    const partnerName = partner?.user ? `${partner.user.firstName} ${partner.user.lastName}`.trim() : 'Delivery Partner';
+
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+
+    for (const admin of admins) {
+      await createNotification({
+        userId: admin.id,
+        title: 'New Delivery KYC Submission',
+        body: `${partnerName} has submitted KYC documents for compliance review.`,
+        channel: 'IN_APP',
+        status: 'DELIVERED',
+        data: {
+          route: '/admin/delivery-partners',
+          type: 'ADMIN_KYC_PENDING',
+        },
+      });
+    }
+
+    await createNotification({
+      userId,
+      title: 'KYC Submitted — Under Review',
+      body: 'Your KYC documents have been successfully submitted and are now under review by the PartNexa compliance desk.',
+      channel: 'IN_APP',
+      status: 'DELIVERED',
+      data: {
+        route: '/delivery/kyc',
+        type: 'KYC_SUBMITTED',
+      },
+    });
+  } catch (err) {
+    console.warn('[DeliveryService] KYC submission notification warning:', err);
+  }
+
+  return getKycDetails(userId);
 };
 
 export const adminVerifyKyc = async (
@@ -318,10 +625,14 @@ export const adminVerifyKyc = async (
     throw AppError.badRequest('Verification status must be either APPROVED or REJECTED.');
   }
 
+  if (data.status === 'REJECTED' && !data.rejectionReason?.trim()) {
+    throw AppError.badRequest('A specific rejection reason is required when rejecting KYC (e.g. "RC image is unreadable").');
+  }
+
   const isApproved = data.status === 'APPROVED';
 
   // Transaction-safe execution updating KYC, documents, User role status, and Partner duty
-  const txResult = await prisma.$transaction(async (tx) => {
+  const txResult = await prisma.$transaction(async (tx: any) => {
     // 1. Update KYC container
     const updatedKyc = await tx.kYC.update({
       where: { userId },
@@ -348,6 +659,7 @@ export const adminVerifyKyc = async (
       where: { id: userId },
       data: {
         status: isApproved ? 'ACTIVE' : 'PENDING_VERIFICATION',
+        updatedAt: new Date(),
       },
     });
 
@@ -357,11 +669,11 @@ export const adminVerifyKyc = async (
       include: { user: true },
     });
 
-    if (partner && !isApproved) {
+    if (partner) {
       partner = await tx.deliveryPartner.update({
         where: { userId },
         data: {
-          isOnline: false,
+          isOnline: isApproved ? partner.isOnline : false,
           updatedAt: new Date(),
         },
         include: { user: true },
@@ -384,15 +696,16 @@ export const adminVerifyKyc = async (
   try {
     await createNotification({
       userId,
-      title: isApproved ? 'KYC Approved' : 'KYC Verification Update',
+      title: isApproved ? 'KYC Approved — Account Activated' : 'KYC Verification Rejected',
       body: isApproved
         ? 'Congratulations! Your delivery partner KYC has been approved. You are now authorized to accept delivery jobs.'
-        : `Your KYC submission was not approved: ${data.rejectionReason || 'Please review your uploaded documents.'}`,
+        : `Your KYC submission was rejected: ${data.rejectionReason || 'Please review your uploaded documents.'}. You can replace rejected documents and resubmit.`,
       channel: 'IN_APP',
       status: 'DELIVERED',
       data: {
-        route: '/delivery/profile',
+        route: '/delivery/kyc',
         type: isApproved ? 'KYC_APPROVED' : 'KYC_REJECTED',
+        rejectionReason: data.rejectionReason || null,
       },
     });
   } catch (err) {
@@ -407,10 +720,7 @@ export const adminVerifyKyc = async (
 // ============================================================================
 export const getDeliveryProfile = async (userId: string) => {
   const partner = await resolvePartnerByUser(userId);
-  const kyc = await prisma.kYC.findUnique({
-    where: { userId: partner.userId },
-    include: { documents: true },
-  });
+  const kyc = await getKycDetails(partner.userId);
 
   return {
     ...partner,
@@ -667,10 +977,12 @@ export const getDeliveryDashboard = async (userId: string) => {
 
   const allAssignments = rawAssignments.map(formatDeliveryAssignment);
 
-  // Available jobs: ASSIGNED and unclaimed or assigned to this partner
-  const availableJobs = allAssignments.filter(
-    (a: any) => a.status === 'ASSIGNED' && (a.deliveryPartnerId === null || a.deliveryPartnerId === partner.id)
-  );
+  // Available jobs: ASSIGNED and unclaimed or assigned to this partner (eligible only when activated)
+  const availableJobs = partner.isActivated
+    ? allAssignments.filter(
+        (a: any) => a.status === 'ASSIGNED' && (a.deliveryPartnerId === null || a.deliveryPartnerId === partner.id)
+      )
+    : [];
 
   // Partner's active in-progress trips
   const activeTrips = allAssignments.filter(
@@ -742,6 +1054,11 @@ export const getDeliveryDashboard = async (userId: string) => {
 // ============================================================================
 export const listAvailableJobs = async (userId: string) => {
   const partner = await resolvePartnerByUser(userId);
+
+  // Unapproved / unverified partners cannot view or claim open jobs
+  if (!partner.isActivated) {
+    return [];
+  }
 
   const rawAssignments = await prisma.deliveryAssignment.findMany({
     include: assignmentInclude,

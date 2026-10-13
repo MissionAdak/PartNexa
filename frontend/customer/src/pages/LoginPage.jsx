@@ -448,6 +448,39 @@ export const LoginPage = () => {
           </div>
         )}
 
+        {/* Delivery Partner Registration Banner */}
+        {selectedRole === 'DELIVERY_PARTNER' && (
+          <div
+            id="delivery-register-banner"
+            style={{
+              padding: '0.65rem 0.9rem',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.82rem',
+            }}
+          >
+            <span style={{ color: '#10b981', fontWeight: 600 }}>
+              🛵 New to PartNexa Delivery Fleet?
+            </span>
+            <Link
+              to="/delivery/register"
+              id="delivery-partner-register-banner-btn"
+              style={{
+                color: '#10b981',
+                fontWeight: 700,
+                textDecoration: 'underline',
+              }}
+            >
+              Register as Delivery Partner →
+            </Link>
+          </div>
+        )}
+
         {/* Login Form */}
         <form className="auth-form" onSubmit={handleSubmit} id="login-form">
           <div className="form-group" style={{ marginBottom: '1rem' }}>
@@ -666,6 +699,14 @@ export const LoginPage = () => {
             style={{ color: 'var(--color-primary, #0284c7)', fontWeight: 600, textDecoration: 'none' }}
           >
             Workshop Partner
+          </Link>
+          <span style={{ margin: '0 0.4rem' }}>•</span>
+          <Link
+            to="/delivery/register"
+            id="delivery-register-link"
+            style={{ color: '#10b981', fontWeight: 600, textDecoration: 'none' }}
+          >
+            Register as Delivery Partner
           </Link>
         </div>
       </div>

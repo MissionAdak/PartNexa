@@ -39,6 +39,20 @@ export const deliveryService = {
     return res.data?.data;
   },
 
+  uploadKycFile: async (formData) => {
+    const res = await api.post('/delivery/kyc/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data?.data;
+  },
+
+  removeKycDoc: async (docId) => {
+    const res = await api.delete(`/delivery/kyc/document/${docId}`);
+    return res.data?.data;
+  },
+
   submitKyc: async () => {
     const res = await api.post('/delivery/kyc/submit');
     return res.data?.data;
@@ -81,6 +95,11 @@ export const deliveryService = {
   updateJobStatus: async (id, status, notes) => {
     const res = await api.put(`/delivery/jobs/${id}/status`, { status, notes });
     return res.data?.data;
+  },
+
+  verifyInstallation: async (id, code, notes = '') => {
+    const res = await api.post(`/delivery/jobs/${id}/verify-installation`, { code, notes });
+    return res.data;
   },
 
   // Cash on Delivery

@@ -140,6 +140,16 @@ export const adminService = {
     return res.data.data;
   },
 
+  valueUsedPart: async (id, valuationAmount, notes) => {
+    const res = await api.patch(`/admin/used-parts/${id}/value`, { valuationAmount, notes });
+    return res.data.data;
+  },
+
+  payoutUsedPart: async (id, payoutReference) => {
+    const res = await api.patch(`/admin/used-parts/${id}/payout`, { payoutReference });
+    return res.data.data;
+  },
+
   updateUsedPart: async (id, data) => {
     const res = await api.patch(`/admin/used-parts/${id}`, data);
     return res.data.data;

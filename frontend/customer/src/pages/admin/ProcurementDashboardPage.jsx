@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import procurementService from '../../services/procurementService';
 import ProcurementCartDrawer from '../../components/admin/procurement/ProcurementCartDrawer';
@@ -6,9 +7,46 @@ import ReceiveStockModal from '../../components/admin/procurement/ReceiveStockMo
 import SupplierComparisonModal from '../../components/admin/procurement/SupplierComparisonModal';
 import AddSupplierModal from '../../components/admin/procurement/AddSupplierModal';
 import AddCatalogItemModal from '../../components/admin/procurement/AddCatalogItemModal';
+import SupplierLogo from '../../components/admin/procurement/SupplierLogo';
 
-export default function ProcurementDashboardPage() {
-  const [activeTab, setActiveTab] = useState('overview'); // overview | suppliers | catalog | pos | history
+export default function ProcurementDashboardPage({ initialTab }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Resolve active tab from prop, URL pathname, or search params
+  const resolveTab = () => {
+    if (initialTab) return initialTab;
+    const path = location.pathname.toLowerCase();
+    if (path.includes('/procurement/suppliers')) return 'suppliers';
+    if (path.includes('/procurement/catalog')) return 'catalog';
+    if (path.includes('/procurement/orders') || path.includes('/procurement/pos')) return 'pos';
+    if (path.includes('/procurement/history')) return 'history';
+    const tabParam = searchParams.get('tab');
+    if (['overview', 'suppliers', 'catalog', 'pos', 'history'].includes(tabParam)) return tabParam;
+    return 'overview';
+  };
+
+  const [activeTab, setActiveTab] = useState(resolveTab);
+
+  // Sync tab if route changes
+  useEffect(() => {
+    const nextTab = resolveTab();
+    if (nextTab !== activeTab) {
+      setActiveTab(nextTab);
+    }
+  }, [initialTab, location.pathname, searchParams]);
+
+  // URL tab switcher with clean URL navigation
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === 'overview') navigate('/admin/procurement', { replace: true });
+    else if (tabId === 'suppliers') navigate('/admin/procurement/suppliers', { replace: true });
+    else if (tabId === 'catalog') navigate('/admin/procurement/catalog', { replace: true });
+    else if (tabId === 'pos') navigate('/admin/procurement/orders', { replace: true });
+    else if (tabId === 'history') navigate('/admin/procurement/history', { replace: true });
+  };
+
   const [loading, setLoading] = useState(true);
 
   // Data states
@@ -22,7 +60,7 @@ export default function ProcurementDashboardPage() {
   const [categories, setCategories] = useState([]);
 
   // Catalog Filters
-  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogSearch, setCatalogSearch] = useState(() => searchParams.get('search') || '');
   const [selectedMake, setSelectedMake] = useState('ALL');
   const [selectedModel, setSelectedModel] = useState('ALL');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -184,36 +222,22 @@ export default function ProcurementDashboardPage() {
 
   // Helper for Supplier Initial Fallback Logo
   const renderSupplierLogo = (supplier) => {
-    if (supplier.logoUrl) {
-      return (
-        <img
-          src={supplier.logoUrl}
-          alt={supplier.name}
-          style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'contain', backgroundColor: '#FFFFFF', padding: '4px', border: '1px solid var(--border-color)' }}
-          onError={(e) => { e.target.style.display = 'none'; }}
-        />
+    return <SupplierLogo logoUrl={supplier?.logoUrl} name={supplier?.name} size={42} />;
+  };
+
+  // Quick PO status updater for lifecycle transitions
+  const handleUpdatePoStatus = async (poId, nextStatus) => {
+    try {
+      const updated = await procurementService.updatePurchaseOrderStatus(
+        poId,
+        nextStatus,
+        `Status updated to ${nextStatus} via Dashboard`
       );
+      toast.success(`Purchase Order status updated to ${nextStatus}!`);
+      setPurchaseOrders((prev) => prev.map((p) => (p.id === poId ? { ...p, status: updated.status } : p)));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update PO status.');
     }
-    const initials = supplier.name.slice(0, 2).toUpperCase();
-    return (
-      <div
-        style={{
-          width: '42px',
-          height: '42px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-          color: '#FFFFFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 800,
-          fontSize: '1rem',
-          flexShrink: 0,
-        }}
-      >
-        {initials}
-      </div>
-    );
   };
 
   // Helper for Status Badge Color
@@ -553,7 +577,7 @@ export default function ProcurementDashboardPage() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             style={{
               padding: '0.65rem 1.15rem',
               borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
@@ -941,24 +965,41 @@ export default function ProcurementDashboardPage() {
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Catalog: <strong>{supplier._count?.catalogItems || 0}</strong> parts
                   </span>
-                  <button
-                    onClick={() => {
-                      setSelectedSupplier(supplier.id);
-                      setActiveTab('catalog');
-                    }}
-                    style={{
-                      padding: '0.4rem 0.85rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--admin-blue)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--admin-blue)',
-                      fontSize: '0.78rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    View Catalog →
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+                    <button
+                      onClick={() => navigate(`/admin/procurement/suppliers/${supplier.id}`)}
+                      style={{
+                        padding: '0.4rem 0.65rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--bg-secondary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedSupplier(supplier.id);
+                        handleTabChange('catalog');
+                      }}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--admin-blue)',
+                        backgroundColor: 'transparent',
+                        color: 'var(--admin-blue)',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Catalog →
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1472,6 +1513,60 @@ export default function ProcurementDashboardPage() {
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                           Date: <strong>{new Date(po.createdAt).toLocaleDateString()}</strong>
                         </div>
+                        {/* View Order Detail */}
+                        <button
+                          onClick={() => navigate(`/admin/procurement/orders/${po.id}`)}
+                          style={{
+                            padding: '0.45rem 0.85rem',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'var(--bg-secondary)',
+                            color: 'var(--text-primary)',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          🔍 Details
+                        </button>
+
+                        {/* Quick Status Transition Actions */}
+                        {['SUBMITTED', 'SUPPLIER_CONFIRMED', 'PROCESSING'].includes(po.status) && (
+                          <button
+                            onClick={() => handleUpdatePoStatus(po.id, 'SHIPPED')}
+                            style={{
+                              padding: '0.45rem 0.75rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid #8B5CF6',
+                              backgroundColor: 'transparent',
+                              color: '#8B5CF6',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            📦 Mark Shipped
+                          </button>
+                        )}
+
+                        {po.status === 'SHIPPED' && (
+                          <button
+                            onClick={() => handleUpdatePoStatus(po.id, 'IN_TRANSIT')}
+                            style={{
+                              padding: '0.45rem 0.75rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid #0284C7',
+                              backgroundColor: 'transparent',
+                              color: '#0284C7',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            🚚 Mark In Transit
+                          </button>
+                        )}
+
                         {canReceive && (
                           <button
                             onClick={() => setReceiveModalPo(po)}

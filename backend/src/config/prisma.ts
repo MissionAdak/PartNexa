@@ -22,12 +22,18 @@ const getNormalizedDatabaseUrl = (): string | undefined => {
 
 try {
   const datasourceUrl = getNormalizedDatabaseUrl();
-  realPrisma = new PrismaClient({
-    ...(datasourceUrl && { datasourceUrl }),
-    log: config.env === 'development' ? ['error', 'warn'] : ['error'],
-  });
+  if (datasourceUrl) {
+    realPrisma = new PrismaClient({
+      datasourceUrl,
+      log: config.env === 'development' ? ['error', 'warn'] : ['error'],
+    });
+  } else {
+    // No database URL configured in environment, operating in in-memory mode
+    realPrisma = null;
+  }
 } catch (err: any) {
   console.error('❌ Failed to instantiate PrismaClient:', err.message);
+  realPrisma = null;
 }
 
 /**

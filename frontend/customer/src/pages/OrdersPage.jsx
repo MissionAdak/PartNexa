@@ -153,6 +153,8 @@ const OrdersPage = () => {
                               src={it.product.images[0].url}
                               alt=""
                               className="order-item-thumb"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : (
                             <div className="order-item-thumb">⚙️</div>

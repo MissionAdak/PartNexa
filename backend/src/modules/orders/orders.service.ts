@@ -12,6 +12,7 @@ import {
 import { InventorySyncEngine } from '../inventory/inventorySync.service';
 import { propagateOrderConfirmed } from './orderPropagation.service';
 import { getReturnWindowDays } from '../returns/returns.service';
+import { ensureServiceBookingForDifm } from '../services/installationCompletion.service';
 
 export const listCustomerOrders = async (userId: string) => {
   return prisma.order.findMany({
@@ -20,7 +21,13 @@ export const listCustomerOrders = async (userId: string) => {
       items: {
         include: {
           product: {
-            select: { name: true, slug: true, brand: true, partNumber: true, images: true },
+            select: {
+              name: true,
+              slug: true,
+              brand: true,
+              partNumber: true,
+              images: { select: { id: true, url: true, isPrimary: true }, take: 1 },
+            },
           },
           shop: { select: { name: true, city: true } },
         },
@@ -179,10 +186,43 @@ export const getOrderById = async (userId: string, orderId: string) => {
     };
   });
 
+  // Step 11: Installation Completion Confirmation Code Resolution
+  let installationConfirmationCode: string | null = null;
+  let installationCompleted = false;
+  let installationCompletedAt: Date | null = null;
+
+  if (order.difmRequest) {
+    let booking = order.difmRequest.serviceBooking;
+    if (!booking && order.difmRequest.shopId) {
+      try {
+        booking = await ensureServiceBookingForDifm(order.id);
+        if (booking) {
+          order.difmRequest.serviceBooking = booking;
+        }
+      } catch (e) {
+        console.warn('[Orders] Could not ensure service booking:', e);
+      }
+    }
+
+    if (booking) {
+      installationCompleted = Boolean(booking.isCompleted);
+      installationCompletedAt = booking.completedAt ? new Date(booking.completedAt) : null;
+      // Do not show before the installation assignment is valid, and only before completion
+      const isAssigned = Boolean(order.difmRequest.shopId);
+      const isValidStatus = ['ACCEPTED', 'SCHEDULED', 'IN_PROGRESS', 'CONFIRMED'].includes(order.difmRequest.status);
+      if (!booking.isCompleted && isAssigned && isValidStatus) {
+        installationConfirmationCode = booking.completionCode || null;
+      }
+    }
+  }
+
   return {
     ...order,
     deliveredAt,
     items,
+    installationConfirmationCode,
+    installationCompleted,
+    installationCompletedAt,
     returnEligibility: {
       isDelivered,
       isWithinWindow,
@@ -369,7 +409,8 @@ export const getCheckoutQuote = async (
 export const createOrderDraft = async (
   userId: string,
   data: {
-    addressId: string;
+    addressId?: string;
+    shippingAddressId?: string;
     difmType?: DIFMType | string;
     shopId?: string;
     paymentMethod: PaymentMethod | string;
@@ -393,12 +434,13 @@ export const createOrderDraft = async (
   }
 
   // Validate address
-  if (!data.addressId) {
+  const targetAddressId = data.addressId || data.shippingAddressId;
+  if (!targetAddressId) {
     throw AppError.badRequest('Please provide a delivery address ID.');
   }
 
   const address = await prisma.address.findFirst({
-    where: { id: data.addressId, userId },
+    where: { id: targetAddressId, userId },
   });
 
   if (!address) {
@@ -566,7 +608,7 @@ export const createOrderDraft = async (
       data: {
         orderNumber,
         userId,
-        addressId: data.addressId,
+        addressId: targetAddressId!,
         status: initialOrderStatus,
         paymentMethod: resolvedPaymentMethod,
         paymentStatus: initialPaymentStatus,

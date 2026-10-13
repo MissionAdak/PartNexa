@@ -42,13 +42,17 @@ const AGE_OPTIONS = [
 const STATUS_CONFIG = {
   DRAFT: { label: 'Draft', color: 'gray', bg: 'var(--color-gray-100)', text: 'var(--color-gray-700)' },
   SUBMITTED: { label: 'Submitted for Verification', color: 'blue', bg: 'rgba(2, 132, 199, 0.12)', text: '#0284c7' },
+  GARAGE_ASSIGNED: { label: 'Assigned to Partner Garage', color: 'purple', bg: 'rgba(147, 51, 234, 0.12)', text: '#9333ea' },
+  PART_RECEIVED: { label: 'Part Received at Garage', color: 'blue', bg: 'rgba(2, 132, 199, 0.12)', text: '#0284c7' },
+  INSPECTION_PENDING: { label: 'Technical Inspection Ongoing', color: 'amber', bg: 'rgba(245, 158, 11, 0.12)', text: '#f59e0b' },
+  OFFER_READY: { label: 'Inspection Complete - Offer Ready', color: 'emerald', bg: 'rgba(16, 185, 129, 0.15)', text: '#059669' },
   VERIFICATION_PENDING: { label: 'Pickup Scheduled', color: 'purple', bg: 'rgba(147, 51, 234, 0.12)', text: '#9333ea' },
   VERIFIED: { label: 'Physical Inspection Passed', color: 'green', bg: 'rgba(16, 185, 129, 0.12)', text: '#10b981' },
   REJECTED: { label: 'Inspection Rejected', color: 'red', bg: 'rgba(239, 68, 68, 0.12)', text: '#ef4444' },
-  VALUED: { label: 'Final Valuation Ready', color: 'cyan', bg: 'rgba(6, 182, 212, 0.12)', text: '#06b6d4' },
+  VALUED: { label: 'Resale Valuation Complete', color: 'cyan', bg: 'rgba(6, 182, 212, 0.12)', text: '#06b6d4' },
   PAYOUT_PENDING: { label: 'Payout Processing', color: 'amber', bg: 'rgba(245, 158, 11, 0.12)', text: '#f59e0b' },
   PAID: { label: 'Seller Paid Out', color: 'emerald', bg: 'rgba(5, 150, 105, 0.12)', text: '#059669' },
-  LISTED: { label: 'Re-listed on Marketplace', color: 'indigo', bg: 'rgba(99, 102, 241, 0.12)', text: '#6366f1' },
+  LISTED: { label: 'Listed as USED_VERIFIED', color: 'indigo', bg: 'rgba(99, 102, 241, 0.12)', text: '#6366f1' },
   SOLD: { label: 'Sold to Buyer', color: 'teal', bg: 'rgba(13, 148, 136, 0.12)', text: '#0d9488' },
   CANCELLED: { label: 'Listing Cancelled', color: 'gray', bg: 'rgba(156, 163, 175, 0.15)', text: '#9ca3af' },
 };
@@ -84,11 +88,17 @@ const SellUsedPartPage = () => {
     description: '',
     location: '',
     pickupAddress: '',
+    assignedShopId: '',
+    handoverMethod: 'DROPOFF', // 'DROPOFF' | 'PICKUP'
     payoutMethod: 'UPI',
     payoutUpiId: '',
     payoutBankAccount: '',
     images: [],
   });
+
+  // Partner Garages
+  const [partnerGarages, setPartnerGarages] = useState([]);
+  const [loadingGarages, setLoadingGarages] = useState(false);
 
   // Photo Upload State
   const [isUploading, setIsUploading] = useState(false);
@@ -99,6 +109,7 @@ const SellUsedPartPage = () => {
   const [myListings, setMyListings] = useState([]);
   const [loadingMyListings, setLoadingMyListings] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [respondingOfferId, setRespondingOfferId] = useState(null);
 
   // Public Marketplace State
   const [exploreListings, setExploreListings] = useState([]);
@@ -114,6 +125,27 @@ const SellUsedPartPage = () => {
   const [listingToCancel, setListingToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // Fetch partner garages
+  const fetchPartnerGarages = useCallback(async () => {
+    setLoadingGarages(true);
+    try {
+      const res = await usedPartsService.getPartnerGarages();
+      if (res.data?.data) {
+        setPartnerGarages(res.data.data);
+        if (res.data.data.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            assignedShopId: prev.assignedShopId || res.data.data[0].id,
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load partner garages:', err);
+    } finally {
+      setLoadingGarages(false);
+    }
+  }, []);
 
   // Fetch customer's own listings
   const fetchMyListings = useCallback(async () => {
@@ -152,9 +184,30 @@ const SellUsedPartPage = () => {
 
   useEffect(() => {
     document.title = 'Sell Used Parts & Salvage | PartSphere Circular Marketplace';
+    fetchPartnerGarages();
     fetchMyListings();
     fetchExploreListings();
-  }, [fetchMyListings, fetchExploreListings]);
+  }, [fetchPartnerGarages, fetchMyListings, fetchExploreListings]);
+
+  // Handle Offer Decision (Accept / Decline)
+  const handleOfferDecision = async (listingId, decision) => {
+    setRespondingOfferId(listingId);
+    try {
+      await usedPartsService.respondToOffer(listingId, decision);
+      if (decision === 'ACCEPTED') {
+        toast.success('Inspection offer accepted! Payout initiated and part listed as USED_VERIFIED on Marketplace.');
+      } else {
+        toast.info('Inspection offer declined. Garage has been notified for part return.');
+      }
+      await fetchMyListings();
+      await fetchExploreListings();
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to record decision.';
+      toast.error(msg);
+    } finally {
+      setRespondingOfferId(null);
+    }
+  };
 
   // Pre-fill primary vehicle if available
   useEffect(() => {
@@ -274,13 +327,15 @@ const SellUsedPartPage = () => {
         images: formData.images.length > 0 ? formData.images : SAMPLE_PART_PHOTOS.slice(0, 2),
         location: formData.location.trim(),
         pickupAddress: formData.pickupAddress?.trim() || formData.location.trim(),
+        assignedShopId: formData.assignedShopId || (partnerGarages[0]?.id) || undefined,
+        handoverMethod: formData.handoverMethod || 'DROPOFF',
         payoutMethod: formData.payoutMethod,
         payoutUpiId: formData.payoutUpiId?.trim() || undefined,
         payoutBankAccount: formData.payoutBankAccount?.trim() || undefined,
       };
 
       await usedPartsService.createListing(payload);
-      toast.success('Used-part listing submitted successfully! Pickup will be scheduled.');
+      toast.success('Used-part listing submitted! Assigned to partner garage for technical inspection.');
 
       // Refresh listings
       await fetchMyListings();
@@ -298,6 +353,8 @@ const SellUsedPartPage = () => {
         description: '',
         location: '',
         pickupAddress: '',
+        assignedShopId: partnerGarages[0]?.id || '',
+        handoverMethod: 'DROPOFF',
         payoutMethod: 'UPI',
         payoutUpiId: '',
         payoutBankAccount: '',
@@ -585,9 +642,96 @@ const SellUsedPartPage = () => {
                   </div>
                 </div>
 
-                {/* Section 3: Pricing & Instant Valuation Estimator */}
+                {/* Section 3: Verified Partner Garage & Handover Method */}
                 <div className="form-section">
-                  <h3 className="section-header">3. Expected Price & Valuation</h3>
+                  <h3 className="section-header">3. Choose Verified Partner Garage & Handover Method</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+                    PartNexa operates a garage-first resale process: every component is physically received and technically tested by a certified workshop technician before an official resale offer is issued.
+                  </p>
+
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <label className="input-label required">Select Partner Garage for Technical Inspection</label>
+                      <div className="garages-selection-grid">
+                        {loadingGarages ? (
+                          <div style={{ padding: '12px', color: 'var(--text-muted)' }}>Loading verified partner garages...</div>
+                        ) : partnerGarages.length === 0 ? (
+                          <div style={{ padding: '12px', color: 'var(--text-muted)' }}>No garages found in local area. Hub will auto-assign.</div>
+                        ) : (
+                          partnerGarages.map((garage) => {
+                            const isSelected = formData.assignedShopId === garage.id;
+                            return (
+                              <div
+                                key={garage.id}
+                                className={`garage-option-card ${isSelected ? 'selected' : ''}`}
+                                onClick={() => setFormData({ ...formData, assignedShopId: garage.id })}
+                              >
+                                <div className="garage-card-top">
+                                  <div className="garage-avatar">🔧</div>
+                                  <div className="garage-meta-info">
+                                    <h4 className="garage-name">{garage.shopName}</h4>
+                                    <div className="garage-address">📍 {garage.address}, {garage.city || 'Hub'}</div>
+                                  </div>
+                                  <div className="garage-radio-indicator">
+                                    {isSelected ? '✓ Selected' : 'Choose'}
+                                  </div>
+                                </div>
+                                <div className="garage-badges-row">
+                                  <span className="garage-verified-pill">⭐ Verified Partner</span>
+                                  {garage.rating && <span className="garage-rating-pill">⭐ {garage.rating}</span>}
+                                  {garage.phone && <span className="garage-phone-pill">📞 {garage.phone}</span>}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row" style={{ marginTop: '16px' }}>
+                    <div className="form-group full-width">
+                      <label className="input-label required">Handover Method</label>
+                      <div className="handover-toggle-group">
+                        <label className={`handover-btn ${formData.handoverMethod === 'DROPOFF' ? 'active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="handoverMethod"
+                            value="DROPOFF"
+                            checked={formData.handoverMethod === 'DROPOFF'}
+                            onChange={() => setFormData({ ...formData, handoverMethod: 'DROPOFF' })}
+                            style={{ display: 'none' }}
+                          />
+                          <span className="handover-icon">🏪</span>
+                          <div>
+                            <strong>Drop Off at Garage</strong>
+                            <div className="handover-sub">Deliver directly to selected workshop for same-day inspection</div>
+                          </div>
+                        </label>
+
+                        <label className={`handover-btn ${formData.handoverMethod === 'PICKUP' ? 'active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="handoverMethod"
+                            value="PICKUP"
+                            checked={formData.handoverMethod === 'PICKUP'}
+                            onChange={() => setFormData({ ...formData, handoverMethod: 'PICKUP' })}
+                            style={{ display: 'none' }}
+                          />
+                          <span className="handover-icon">🚚</span>
+                          <div>
+                            <strong>Request Pickup to Garage</strong>
+                            <div className="handover-sub">PartNexa courier collects component and transfers it to the garage</div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Pricing & Instant Valuation Estimator */}
+                <div className="form-section">
+                  <h3 className="section-header">4. Expected Price & Valuation</h3>
 
                   <div className="form-row two-cols">
                     <div className="form-group">
@@ -626,10 +770,10 @@ const SellUsedPartPage = () => {
                   </div>
                 </div>
 
-                {/* Section 4: Secure Photo Upload Dropzone */}
+                {/* Section 5: Secure Photo Upload Dropzone */}
                 <div className="form-section">
                   <div className="section-header-flex">
-                    <h3 className="section-header">4. Part Photos (Up to 6 Images)</h3>
+                    <h3 className="section-header">5. Part Photos (Up to 6 Images)</h3>
                     <button
                       type="button"
                       className="sample-photos-btn"
@@ -695,9 +839,9 @@ const SellUsedPartPage = () => {
                   )}
                 </div>
 
-                {/* Section 5: Pickup Location & Payout Method */}
+                {/* Section 6: Pickup Location & Payout Method */}
                 <div className="form-section">
-                  <h3 className="section-header">5. Doorstep Pickup & Payout Preference</h3>
+                  <h3 className="section-header">6. Logistics Location & Payout Method</h3>
 
                   <div className="form-row two-cols">
                     <div className="form-group">
@@ -1060,8 +1204,122 @@ const SellUsedPartPage = () => {
                               </span>
                             )}
                           </div>
+
+                          {/* Assigned Garage & Handover Info */}
+                          <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            🏪 Assigned Workshop: <strong>{listing.assignedShop?.shopName || listing.intake?.shop?.shopName || 'Partner Garage'}</strong>
+                            {listing.handoverMethod && <span> • Handover: {listing.handoverMethod === 'DROPOFF' ? 'Drop-Off at Garage' : 'Courier Pickup'}</span>}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Garage Technical Inspection & Valuation Resale Offer Card */}
+                      {listing.intake && (listing.status === 'OFFER_READY' || listing.intake.recommendedListingPrice > 0 || listing.intake.customerOfferStatus || listing.status === 'VALUED' || listing.status === 'PAYOUT_PENDING' || listing.status === 'LISTED') && (
+                        <div className="customer-offer-card">
+                          <div className="offer-card-header">
+                            <div className="offer-title-wrap">
+                              <h4>🔧 Garage Technical Inspection Complete</h4>
+                              <div className="offer-garage-name">
+                                Inspected by: <strong>{listing.assignedShop?.shopName || listing.intake.shop?.shopName || 'PartNexa Partner Garage'}</strong>
+                                {listing.intake.inspectorName && <span> • Technician: {listing.intake.inspectorName}</span>}
+                              </div>
+                            </div>
+                            <div className="offer-badges-right">
+                              <span className="offer-grade-badge">Grade {listing.intake.overallGrade || listing.conditionGrade || 'B'}</span>
+                              <span className={`offer-verdict-badge ${(listing.intake.technicalResult || 'PASSED').toLowerCase()}`}>
+                                Verdict: {listing.intake.technicalResult || 'PASSED'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Technical Checkpoints Breakdown */}
+                          <div className="offer-scores-grid">
+                            <div className="score-chip-mini">
+                              <span className="score-chip-label">Physical</span>
+                              <span className="score-chip-val">{listing.intake.physicalConditionRating || 4}/5</span>
+                            </div>
+                            <div className="score-chip-mini">
+                              <span className="score-chip-label">Functional</span>
+                              <span className="score-chip-val">{listing.intake.functionalTestRating || 5}/5</span>
+                            </div>
+                            <div className="score-chip-mini">
+                              <span className="score-chip-label">Wear Level</span>
+                              <span className="score-chip-val">{listing.intake.wearLevelRating || 3}/5</span>
+                            </div>
+                            <div className="score-chip-mini">
+                              <span className="score-chip-label">Safety</span>
+                              <span className="score-chip-val">{listing.intake.safetyConfidenceRating || 5}/5</span>
+                            </div>
+                          </div>
+
+                          {/* Technical Notes if any */}
+                          {listing.intake.technicianNotes && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', fontStyle: 'italic' }}>
+                              Technician Diagnostics: "{listing.intake.technicianNotes}"
+                            </div>
+                          )}
+
+                          {/* Pricing Summary */}
+                          <div className="offer-pricing-summary">
+                            {listing.intake.referenceNewPrice > 0 && (
+                              <div className="offer-price-col">
+                                <span className="offer-col-lbl">Equivalent Catalog New</span>
+                                <span className="offer-col-val" style={{ color: 'var(--text-muted)' }}>
+                                  ₹{listing.intake.referenceNewPrice.toLocaleString('en-IN')}
+                                </span>
+                              </div>
+                            )}
+                            <div className="offer-price-col">
+                              <span className="offer-col-lbl">Recommended Resale Price</span>
+                              <span className="offer-col-val">
+                                ₹{(listing.intake.recommendedListingPrice || listing.finalValuation || 2799).toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                            <div className="offer-price-col highlight-payout">
+                              <span className="offer-col-lbl">Expected Seller Payout</span>
+                              <span className="offer-col-val payout-big">
+                                ₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons or Decision State */}
+                          {(!listing.intake.customerOfferStatus || listing.intake.customerOfferStatus === 'PENDING') && listing.status === 'OFFER_READY' ? (
+                            <div className="offer-actions-bar">
+                              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginRight: 'auto' }}>
+                                Review the garage technical inspection report above. Choose an action:
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                                onClick={() => handleOfferDecision(listing.id, 'DECLINED')}
+                                loading={respondingOfferId === listing.id}
+                                id={`decline-offer-btn-${listing.id}`}
+                              >
+                                ✕ Decline Offer
+                              </Button>
+                              <Button
+                                variant="teal"
+                                size="sm"
+                                onClick={() => handleOfferDecision(listing.id, 'ACCEPTED')}
+                                loading={respondingOfferId === listing.id}
+                                id={`accept-offer-btn-${listing.id}`}
+                              >
+                                ✓ Accept Offer (₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')})
+                              </Button>
+                            </div>
+                          ) : listing.intake.customerOfferStatus === 'ACCEPTED' || ['PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(listing.status) ? (
+                            <div className="offer-accepted-banner">
+                              ✓ You accepted this offer of ₹{(listing.intake.recommendedSellerPayout || listing.payoutAmount || 2500).toLocaleString('en-IN')}. Payout record created & component published on Marketplace as <strong>USED_VERIFIED</strong>!
+                            </div>
+                          ) : (
+                            <div className="offer-declined-banner">
+                              ✕ You declined this offer. The component will be prepared for collection or return handover at {listing.assignedShop?.shopName || 'the workshop'}.
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Card Footer Actions */}
                       <div className="listing-card-actions">
@@ -1151,7 +1409,7 @@ const SellUsedPartPage = () => {
                         : `${import.meta.env.VITE_API_URL?.replace('/api','') || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://partnexa-api-wed5.onrender.com')}${item.images[0]}`
                       : 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600&auto=format&fit=crop&q=80';
 
-                  const price = item.finalValuation || item.expectedPrice || item.askingPrice || item.price || 2500;
+                  const price = item.finalValuation || item.intake?.recommendedListingPrice || item.expectedPrice || item.askingPrice || item.price || 2799;
 
                   return (
                     <div key={item.id} className="verified-catalog-card">
@@ -1165,31 +1423,36 @@ const SellUsedPartPage = () => {
                               'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600&auto=format&fit=crop&q=80';
                           }}
                         />
-                        <div className="verified-badge-tag">✓ PartSphere Verified</div>
-                        {item.conditionGrade && (
-                          <div className="condition-grade-tag">Grade {item.conditionGrade}</div>
-                        )}
+                        <div className="verified-badge-tag">🛡️ Verified by PartNexa Partner Garage</div>
+                        <div className="condition-grade-tag">
+                          Grade {item.conditionGrade || item.intake?.overallGrade || 'A'}
+                        </div>
                       </div>
 
                       <div className="catalog-body">
                         <span className="catalog-condition-pill">
-                          {item.condition?.replace(/_/g, ' ') || 'EXCELLENT'}
+                          USED_VERIFIED • {item.condition?.replace(/_/g, ' ') || 'EXCELLENT'}
                         </span>
                         <h4 className="catalog-title">{item.title}</h4>
-                        <div className="catalog-fitment">🚗 {item.vehicleModel || item.compatibility}</div>
+                        <div className="catalog-fitment">🚗 Compatible with: {item.vehicleModel || item.compatibility}</div>
                         {item.partNumber && <div className="catalog-pn">PN: {item.partNumber}</div>}
-                        <div className="catalog-location">📍 {item.location || 'Bengaluru Hub'}</div>
+                        <div className="catalog-location">
+                          📍 Inspected at: {item.assignedShop?.shopName || item.intake?.shop?.shopName || item.location || 'Partner Workshop Hub'}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#0d9488', margin: '4px 0', fontWeight: 600 }}>
+                          ✓ 100% Bench & Safety Tested • Mounting points intact
+                        </div>
 
                         <div className="catalog-footer">
                           <div className="catalog-price-wrap">
                             <span className="catalog-price">₹{Number(price).toLocaleString('en-IN')}</span>
-                            <span className="guarantee-text">30-Day Replacement Guarantee</span>
+                            <span className="guarantee-text">🛡️ 30-Day PartNexa Quality Warranty</span>
                           </div>
                           <Button
                             variant="teal"
                             size="sm"
                             onClick={() => {
-                              toast.success('Added to inspection request! Buyer checkout will link in Phase 2.');
+                              toast.success('Added to cart! Buyer checkout will link in Phase 2.');
                             }}
                           >
                             Buy Part
@@ -1206,13 +1469,13 @@ const SellUsedPartPage = () => {
       </div>
 
       {/* ==================================================================== */}
-      {/* LIFECYCLE TRACKER MODAL (10-STEP CIRCULAR FLOW)                     */}
+      {/* LIFECYCLE TRACKER MODAL (10-STEP GARAGE-FIRST CIRCULAR FLOW)         */}
       {/* ==================================================================== */}
       {isTrackerOpen && selectedListing && (
         <Modal
           isOpen={isTrackerOpen}
           onClose={() => setIsTrackerOpen(false)}
-          title="Circular Verification & Payout Lifecycle"
+          title="Garage-First Resale & Circular Lifecycle"
         >
           <div className="lifecycle-modal-content">
             {/* Header info */}
@@ -1258,18 +1521,19 @@ const SellUsedPartPage = () => {
                 </span>
               </div>
               <div className="val-strip-item">
-                <span className="strip-label">Final Valuation</span>
+                <span className="strip-label">Resale Listing Price</span>
                 <span className="strip-value highlight">
-                  {selectedListing.finalValuation
-                    ? `₹${selectedListing.finalValuation.toLocaleString('en-IN')}`
+                  {selectedListing.intake?.recommendedListingPrice || selectedListing.finalValuation
+                    ? `₹${(selectedListing.intake?.recommendedListingPrice || selectedListing.finalValuation).toLocaleString('en-IN')}`
                     : 'Pending Inspection'}
                 </span>
               </div>
               <div className="val-strip-item">
-                <span className="strip-label">Payout Status</span>
+                <span className="strip-label">Seller Payout</span>
                 <span className="strip-value payout">
-                  {selectedListing.payoutStatus || 'PENDING'}
-                  {selectedListing.payoutAmount > 0 && ` (₹${selectedListing.payoutAmount.toLocaleString('en-IN')})`}
+                  {selectedListing.intake?.recommendedSellerPayout || selectedListing.payoutAmount
+                    ? `₹${(selectedListing.intake?.recommendedSellerPayout || selectedListing.payoutAmount).toLocaleString('en-IN')}`
+                    : 'Awaiting Inspection'}
                 </span>
               </div>
             </div>
@@ -1280,81 +1544,66 @@ const SellUsedPartPage = () => {
                 {
                   step: 1,
                   title: '1. Create Used-Part Listing',
-                  desc: 'Listing created with vehicle specs, condition details, and expected price.',
+                  desc: 'Customer submits component details, vehicle compatibility, and photos.',
                   time: selectedListing.createdAt ? new Date(selectedListing.createdAt).toLocaleDateString() : 'Done',
                 },
                 {
                   step: 2,
-                  title: '2. Submitted for Verification',
-                  desc: 'Dispatched to the regional verification logistics queue.',
+                  title: '2. Partner Garage Selection & Handover',
+                  desc: `Assigned to ${selectedListing.assignedShop?.shopName || 'Partner Garage'} via ${selectedListing.handoverMethod === 'DROPOFF' ? 'Drop-Off' : 'Doorstep Pickup'}.`,
                   time: 'Completed',
                 },
                 {
                   step: 3,
-                  title: '3. Delivery Partner Pickup',
-                  desc: `Doorstep courier pickup from: ${selectedListing.pickupAddress || selectedListing.location}`,
-                  time: selectedListing.status === 'SUBMITTED' ? 'Scheduled within 24h' : 'Completed',
+                  title: '3. Workshop Receives Physical Part',
+                  desc: 'Part physically received and logged into workshop intake custody.',
+                  time: ['PART_RECEIVED', 'INSPECTION_PENDING', 'OFFER_READY', 'VERIFIED', 'VALUED', 'PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(selectedListing.status)
+                    ? 'Received'
+                    : 'In Transit',
                 },
                 {
                   step: 4,
-                  title: '4. Physical Verification',
-                  desc: selectedListing.verificationNotes || 'Certified garage technician tests electricals, tolerances & fitment.',
-                  time: ['VERIFIED', 'VALUED', 'PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(
-                    selectedListing.status
-                  )
-                    ? 'Passed'
-                    : 'Pending Pickup',
+                  title: '4. Structured Technical Inspection',
+                  desc: 'Technician conducts multi-point diagnostics: Physical, Functional, Wear, Safety, Bench test & verdict.',
+                  time: ['OFFER_READY', 'VERIFIED', 'VALUED', 'PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(selectedListing.status)
+                    ? 'Inspected'
+                    : 'Pending',
                 },
                 {
                   step: 5,
-                  title: '5. Condition Grade Awarded',
-                  desc: selectedListing.conditionGrade
-                    ? `Assigned Official Grade: ${selectedListing.conditionGrade} (Tested Genuine OEM)`
-                    : 'Awaiting lab diagnostics & wear assessment',
-                  time: selectedListing.conditionGrade ? 'Awarded' : 'Upcoming',
+                  title: '5. Backend Recommended Valuation',
+                  desc: 'Catalog new reference price matched, condition multiplier applied, and seller payout computed.',
+                  time: selectedListing.intake?.recommendedListingPrice ? 'Calculated' : 'Pending',
                 },
                 {
                   step: 6,
-                  title: '6. Approved / Rejected Decision',
-                  desc:
-                    selectedListing.status === 'REJECTED'
-                      ? `Inspection Failed: ${selectedListing.rejectionReason || 'Does not meet safety tolerances'}`
-                      : 'Quality tolerance check and clearance',
-                  time:
-                    selectedListing.status === 'REJECTED'
-                      ? 'Rejected'
-                      : ['VERIFIED', 'VALUED', 'PAID', 'LISTED'].includes(selectedListing.status)
-                      ? 'Approved'
-                      : 'Upcoming',
+                  title: '6. Admin Review & Exceptions',
+                  desc: 'System passes trusted garage inspections directly; admin reviews price overrides with reasons.',
+                  time: 'Verified',
                 },
                 {
                   step: 7,
-                  title: '7. Final Valuation Determination',
-                  desc: selectedListing.finalValuation
-                    ? `Final payout value established at ₹${selectedListing.finalValuation.toLocaleString('en-IN')}`
-                    : 'Calculated once condition grade is confirmed',
-                  time: selectedListing.finalValuation ? 'Confirmed' : 'Upcoming',
+                  title: '7. Customer Receives Offer',
+                  desc: `Resale offer of ₹${selectedListing.intake?.recommendedListingPrice || 2799} (Payout: ₹${selectedListing.intake?.recommendedSellerPayout || 2500}) presented to seller.`,
+                  time: ['OFFER_READY', 'PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(selectedListing.status) ? 'Offer Issued' : 'Pending',
                 },
                 {
                   step: 8,
-                  title: '8. Seller Payout Transfer',
-                  desc:
-                    selectedListing.payoutStatus === 'PAID'
-                      ? `Paid via ${selectedListing.payoutMethod || 'UPI'}. Ref: ${selectedListing.payoutTransactionRef || 'COMPLETED'}`
-                      : 'Automatic bank transfer triggered after approval',
-                  time: selectedListing.payoutStatus === 'PAID' ? 'Transferred' : 'Upcoming',
+                  title: '8. Customer Accepts Resale Offer',
+                  desc: 'Seller confirms offer; system creates payout entitlement and moves item to cataloging.',
+                  time: ['PAYOUT_PENDING', 'PAID', 'LISTED', 'SOLD'].includes(selectedListing.status) ? 'Accepted' : 'Awaiting Decision',
                 },
                 {
                   step: 9,
-                  title: '9. Partner Shop Receives Part',
-                  desc: 'Certified part added to inventory at partner workshop for customer installation or DIFM.',
-                  time: ['LISTED', 'SOLD'].includes(selectedListing.status) ? 'Stocked' : 'Upcoming',
+                  title: '9. Payout Initiated & Released',
+                  desc: `Payout of ₹${selectedListing.payoutAmount || selectedListing.intake?.recommendedSellerPayout || 0} routed via ${selectedListing.payoutMethod || 'UPI'}.`,
+                  time: selectedListing.payoutStatus === 'PAID' ? 'Transferred' : 'Processing',
                 },
                 {
                   step: 10,
-                  title: '10. Re-listed & Buyer Purchases',
-                  desc: 'Part published on PartSphere Verified Marketplace with 30-day warranty.',
-                  time: selectedListing.status === 'LISTED' ? 'Live on Store' : 'Pending',
+                  title: '10. Published as USED_VERIFIED on Marketplace',
+                  desc: 'Re-listed with inspection grade badge, diagnostic notes, and 30-day warranty seal.',
+                  time: ['LISTED', 'SOLD'].includes(selectedListing.status) ? 'Live on Store' : 'Pending',
                 },
               ].map((item) => {
                 const state = getLifecycleStepState(selectedListing, item.step);

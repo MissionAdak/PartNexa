@@ -102,6 +102,84 @@ export const DeliveryDashboardPage = () => {
         </div>
       </div>
 
+      {/* KYC Alert Banner for Unapproved/Pending Partners */}
+      {(!partner?.isActivated || dashboardData?.kycStatus !== 'APPROVED') && (
+        <div
+          id="dashboard-kyc-alert"
+          style={{
+            padding: '1.25rem',
+            borderRadius: '12px',
+            backgroundColor:
+              dashboardData?.kycStatus === 'PENDING'
+                ? 'rgba(234, 179, 8, 0.12)'
+                : dashboardData?.kycStatus === 'REJECTED'
+                ? 'rgba(239, 68, 68, 0.12)'
+                : 'rgba(59, 130, 246, 0.12)',
+            border: `1px solid ${
+              dashboardData?.kycStatus === 'PENDING'
+                ? 'rgba(234, 179, 8, 0.4)'
+                : dashboardData?.kycStatus === 'REJECTED'
+                ? 'rgba(239, 68, 68, 0.4)'
+                : 'rgba(59, 130, 246, 0.4)'
+            }`,
+            marginBottom: '1.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ fontSize: '2rem' }}>
+              {dashboardData?.kycStatus === 'PENDING' ? '⏳' : dashboardData?.kycStatus === 'REJECTED' ? '❌' : '⚠️'}
+            </span>
+            <div>
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: '1.05rem',
+                  color:
+                    dashboardData?.kycStatus === 'PENDING'
+                      ? '#eab308'
+                      : dashboardData?.kycStatus === 'REJECTED'
+                      ? '#ef4444'
+                      : '#3b82f6',
+                }}
+              >
+                {dashboardData?.kycStatus === 'PENDING'
+                  ? 'KYC Under Review'
+                  : dashboardData?.kycStatus === 'REJECTED'
+                  ? 'KYC Verification Rejected'
+                  : 'KYC Required'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                {dashboardData?.kycStatus === 'PENDING'
+                  ? 'Your KYC documents are under verification by the compliance desk. Delivery job claiming and online duty remain locked until approved.'
+                  : dashboardData?.kycStatus === 'REJECTED'
+                  ? 'Your KYC submission was rejected. Please review feedback remarks and resubmit valid documents.'
+                  : 'Complete KYC document submission to activate your Delivery Partner account and unlock live delivery orders.'}
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/delivery/kyc"
+            className="btn btn-primary btn-sm"
+            style={{
+              backgroundColor:
+                dashboardData?.kycStatus === 'PENDING'
+                  ? '#ca8a04'
+                  : dashboardData?.kycStatus === 'REJECTED'
+                  ? '#dc2626'
+                  : '#2563eb',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {dashboardData?.kycStatus === 'PENDING' ? 'View Review Status →' : 'Complete KYC Verification →'}
+          </Link>
+        </div>
+      )}
+
       {/* KPI Metrics Cards */}
       <div
         style={{
@@ -343,7 +421,30 @@ export const DeliveryDashboardPage = () => {
           </span>
         </div>
 
-        {availableJobs.length === 0 ? (
+        {!partner?.isActivated ? (
+          <div
+            id="job-claiming-locked-notice"
+            className="delivery-card"
+            style={{
+              textAlign: 'center',
+              padding: '2.5rem 1.5rem',
+              backgroundColor: 'rgba(234, 179, 8, 0.05)',
+              border: '1px dashed rgba(234, 179, 8, 0.4)',
+              borderRadius: '12px',
+            }}
+          >
+            <div style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>🔒</div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '0.35rem', color: '#eab308' }}>
+              Job Claiming Locked (KYC Approval Required)
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', maxWidth: '480px', margin: '0 auto 1.25rem' }}>
+              Order claiming is restricted to verified delivery partners. Complete your KYC documents to activate your rider profile.
+            </div>
+            <Link to="/delivery/kyc" className="btn btn-primary btn-sm">
+              Complete KYC Verification →
+            </Link>
+          </div>
+        ) : availableJobs.length === 0 ? (
           <div className="delivery-card" style={{ textAlign: 'center', padding: '2rem' }}>
             <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📭</div>
             <div style={{ fontWeight: 600 }}>No unassigned jobs currently in this radius.</div>

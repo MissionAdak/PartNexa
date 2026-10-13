@@ -185,7 +185,7 @@ const CartPage = () => {
                   <div key={item.id} className="cart-item-card" id={`cart-item-${item.id}`}>
                     <div className="cart-item-image-box">
                       {image ? (
-                        <img src={image} alt={product.name} className="cart-item-image" />
+                        <img src={image} alt={product.name} className="cart-item-image" loading="lazy" decoding="async" />
                       ) : (
                         <span className="cart-item-placeholder">⚙️</span>
                       )}

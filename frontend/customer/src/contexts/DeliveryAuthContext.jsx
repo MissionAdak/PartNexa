@@ -52,10 +52,8 @@ export const DeliveryAuthProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('partnexa_theme', theme);
     const handleThemeChange = (e) => {
-      if (e.detail) setTheme(e.detail);
+      if (e.detail && e.detail !== theme) setTheme(e.detail);
     };
     window.addEventListener('theme:change', handleThemeChange);
     return () => window.removeEventListener('theme:change', handleThemeChange);
@@ -64,6 +62,8 @@ export const DeliveryAuthProvider = ({ children }) => {
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('partnexa_theme', next);
     window.dispatchEvent(new CustomEvent('theme:change', { detail: next }));
   };
 

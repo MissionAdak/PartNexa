@@ -12,6 +12,7 @@ export const ServiceCalendarPage = () => {
   // Completion modal state
   const [completingJob, setCompletingJob] = useState(null);
   const [technicianNotes, setTechnicianNotes] = useState('');
+  const [confirmationCode, setConfirmationCode] = useState('');
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -38,16 +39,9 @@ export const ServiceCalendarPage = () => {
     try {
       const res = await shopService.updateJobStatus(jobId, newStatus, notes);
       toast.success(`Job updated to ${newStatus}`);
-      if (newStatus === 'COMPLETED') {
-        const comm = res.data?.commissionStatus;
-        if (comm?.releaseStatus === 'RELEASED') {
-          toast.success('🎉 Commission RELEASED! Service complete & customer payment cleared.');
-        } else if (comm?.releaseStatus === 'LOCKED_PENDING_PAYMENT') {
-          toast('⚠️ Service marked completed. Commission will be RELEASED once payment clears.', { icon: '⏳' });
-        }
-      }
       setCompletingJob(null);
       setTechnicianNotes('');
+      setConfirmationCode('');
       fetchJobs();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update job.');
@@ -56,8 +50,39 @@ export const ServiceCalendarPage = () => {
     }
   };
 
+  const handleVerifyAndComplete = async (e) => {
+    if (e) e.preventDefault();
+    if (!completingJob) return;
+
+    const codeClean = (confirmationCode || '').trim();
+    if (!codeClean || codeClean.length !== 6) {
+      toast.error('Please enter the 6-digit confirmation code provided by the customer.');
+      return;
+    }
+
+    setActionLoading(completingJob.id);
+    try {
+      const res = await shopService.verifyJobCompletion(completingJob.id, codeClean, technicianNotes);
+      toast.success('Installation completion verified successfully!');
+      if (res.data?.commission?.isReleased || res.data?.commission?.releaseStatus === 'RELEASED') {
+        toast.success('🎉 Commission RELEASED! Both service completion and payment conditions cleared.');
+      } else {
+        toast('⚠️ Service verified. Commission will be RELEASED once customer payment clears.', { icon: '⏳' });
+      }
+      setCompletingJob(null);
+      setConfirmationCode('');
+      setTechnicianNotes('');
+      fetchJobs();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Verification failed. Please check the code.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const openCompletionModal = (job) => {
     setCompletingJob(job);
+    setConfirmationCode('');
     setTechnicianNotes('All replacement parts installed, torqued, and verified functional. Road test completed.');
   };
 
@@ -340,61 +365,93 @@ export const ServiceCalendarPage = () => {
         </div>
       )}
 
-      {/* Completion Modal */}
+      {/* Completion Modal with Customer Confirmation Code */}
       {completingJob && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}>Complete Service Job</h2>
+            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🔐</span> Enter Customer Confirmation Code
+            </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-              Confirm technician completion for <strong>{completingJob.serviceName}</strong> (Job {completingJob.id}).
+              Confirm installation completion for <strong>{completingJob.serviceName}</strong> (Job #{completingJob.id?.substring(0, 8)}).
             </p>
 
-            <div className="form-group">
-              <label className="form-label">Technician Inspection & Service Notes</label>
-              <textarea
-                className="form-textarea"
-                rows={3}
-                value={technicianNotes}
-                onChange={(e) => setTechnicianNotes(e.target.value)}
-                placeholder="Details of fitment, torquing, fluids replenished, road test result..."
-              />
-            </div>
-
-            <div
-              style={{
-                background: 'var(--color-bg-elevated)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '0.85rem',
-                marginBottom: '1.5rem',
-                fontSize: '0.8rem',
-              }}
-            >
-              <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Commission Release Trigger:</div>
-              <div style={{ color: 'var(--color-text-secondary)' }}>
-                Upon marking completed, PartSphere checks whether customer payment has cleared. If cleared, ₹
-                {Math.round((completingJob.totalServiceAmount || 0) * (0.88)).toLocaleString('en-IN')} net earnings will be
-                immediately unlocked and credited to your released ledger balance.
+            <form onSubmit={handleVerifyAndComplete}>
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  6-Digit Customer Confirmation Code <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. 482193"
+                  value={confirmationCode}
+                  onChange={(e) => setConfirmationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  required
+                  autoFocus
+                  style={{
+                    fontSize: '1.5rem',
+                    letterSpacing: '0.3em',
+                    fontFamily: 'monospace',
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    padding: '0.65rem',
+                  }}
+                  id="verify-completion-code-input"
+                />
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: '0.4rem', marginBottom: 0 }}>
+                  Ask the customer for the 6-digit code displayed in their PartNexa order details.
+                </p>
               </div>
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button
-                type="button"
-                onClick={() => setCompletingJob(null)}
-                className="btn btn-secondary"
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label">Technician Inspection & Service Notes</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={technicianNotes}
+                  onChange={(e) => setTechnicianNotes(e.target.value)}
+                  placeholder="Details of fitment, torquing, road test result..."
+                />
+              </div>
+
+              <div
+                style={{
+                  background: 'var(--color-bg-elevated)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.85rem',
+                  marginBottom: '1.5rem',
+                  fontSize: '0.8rem',
+                }}
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleUpdateStatus(completingJob.id, 'COMPLETED', technicianNotes)}
-                disabled={actionLoading === completingJob.id}
-                className="btn btn-success"
-              >
-                {actionLoading === completingJob.id ? 'Processing...' : 'Confirm Job Completion'}
-              </button>
-            </div>
+                <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Commission Release Trigger:</div>
+                <div style={{ color: 'var(--color-text-secondary)' }}>
+                  Upon customer verification, PartNexa checks whether customer payment has cleared. If cleared, ₹
+                  {Math.round((completingJob.totalServiceAmount || 0) * 0.88).toLocaleString('en-IN')} net earnings will be
+                  immediately released to your ledger balance.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setCompletingJob(null)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading === completingJob.id || confirmationCode.length !== 6}
+                  className="btn btn-success"
+                  id="confirm-verify-completion-btn"
+                >
+                  {actionLoading === completingJob.id ? 'Verifying...' : 'Verify & Complete'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

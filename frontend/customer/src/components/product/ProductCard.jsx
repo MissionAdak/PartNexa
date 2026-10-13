@@ -63,6 +63,7 @@ export const ProductCard = ({ product }) => {
               alt={name}
               className="product-card-image"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="product-card-placeholder">

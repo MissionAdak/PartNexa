@@ -239,7 +239,7 @@ export const ProductDetailPage = () => {
                     id={`thumb-btn-${i}`}
                     aria-label={`View image ${i + 1}`}
                   >
-                    <img src={img.url} alt={img.altText || product.name} />
+                    <img src={img.url} alt={img.altText || product.name} loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>
@@ -252,7 +252,7 @@ export const ProductDetailPage = () => {
             <div className="product-meta-header">
               <div className="brand-group">
                 {product.brandLogo && (
-                  <img src={product.brandLogo} alt={product.brand} className="brand-logo-small" />
+                  <img src={product.brandLogo} alt={product.brand} className="brand-logo-small" loading="lazy" decoding="async" />
                 )}
                 <span className="product-brand-text">{product.brand}</span>
               </div>

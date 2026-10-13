@@ -129,27 +129,22 @@ export const ProductsPage = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Load categories and brands for sidebar
+  // Load categories and brands for sidebar in parallel
   useEffect(() => {
-    catalogService
-      .getCategories()
-      .then(({ data }) => {
-        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
-        setCategories(list);
-      })
-      .catch((err) => {
-        console.error('Failed to load categories:', err);
-        setCategories([]);
-      });
+    Promise.all([
+      catalogService.getCategories(),
+      catalogService.getBrands(),
+    ])
+      .then(([catRes, brandRes]) => {
+        const catList = Array.isArray(catRes?.data?.data) ? catRes.data.data : (Array.isArray(catRes?.data) ? catRes.data : []);
+        setCategories(catList);
 
-    catalogService
-      .getBrands()
-      .then(({ data }) => {
-        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
-        setBrands(list);
+        const brandList = Array.isArray(brandRes?.data?.data) ? brandRes.data.data : (Array.isArray(brandRes?.data) ? brandRes.data : []);
+        setBrands(brandList);
       })
       .catch((err) => {
-        console.error('Failed to load brands:', err);
+        console.error('Failed to load filter metadata:', err);
+        setCategories([]);
         setBrands([]);
       });
   }, []);

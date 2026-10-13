@@ -40,6 +40,11 @@ export const shopService = {
     return res.data;
   },
 
+  verifyJobCompletion: async (jobId, code, notes = '') => {
+    const res = await api.post(`/shops/portal/jobs/${jobId}/verify-completion`, { code, notes });
+    return res.data;
+  },
+
   // Commission System & Ledger
   getCommissionLedger: async () => {
     const res = await api.get('/shops/portal/commission');
@@ -62,9 +67,19 @@ export const shopService = {
     return res.data;
   },
 
-  // Used Part Intake
+  // Used Part Intake & Technical Inspection
   getUsedParts: async () => {
     const res = await api.get('/shops/portal/used-parts');
+    return res.data;
+  },
+
+  receiveUsedPart: async (intakeId) => {
+    const res = await api.patch(`/shops/portal/used-parts/${intakeId}/receive`);
+    return res.data;
+  },
+
+  submitTechnicalInspection: async (intakeId, data) => {
+    const res = await api.post(`/shops/portal/used-parts/${intakeId}/inspect`, data);
     return res.data;
   },
 

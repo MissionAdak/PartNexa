@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export const getBaseURL = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -17,6 +18,7 @@ const api = axios.create({
   baseURL: getBaseURL(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: false,
+  timeout: 30000,
 });
 
 // Dedicated client for token refresh to avoid triggering the 401 response interceptor recursively
@@ -24,6 +26,7 @@ const refreshClient = axios.create({
   baseURL: getBaseURL(),
   headers: { 'Content-Type': 'application/json' },
   withCredentials: false,
+  timeout: 30000,
 });
 
 // Attach access token to every request using unified storage convention
@@ -56,9 +59,40 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config?._coldStartRetried) {
+      toast.success('Connected to PartNexa services.', { id: 'cold-start-probe', duration: 2500 });
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) return Promise.reject(error);
+
+    // 1. Cold start detection & safe retry for idempotent GET requests
+    const isColdStartError =
+      (error.response?.status && [502, 503, 504].includes(error.response.status)) ||
+      error.code === 'ECONNABORTED' ||
+      error.message === 'Network Error';
+
+    const isGetRequest = (originalRequest.method || 'get').toLowerCase() === 'get';
+
+    if (isColdStartError && isGetRequest && !originalRequest.url?.includes('/auth/refresh')) {
+      const retryCount = originalRequest._coldStartRetryCount || 0;
+      if (retryCount < 2) {
+        originalRequest._coldStartRetryCount = retryCount + 1;
+        originalRequest._coldStartRetried = true;
+        const delayMs = retryCount === 0 ? 2500 : 4500;
+
+        toast.loading('Starting PartNexa cloud services... Retrying in a moment.', {
+          id: 'cold-start-probe',
+          duration: 5000,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return api(originalRequest);
+      }
+    }
 
     if (
       error.response?.status === 401 &&

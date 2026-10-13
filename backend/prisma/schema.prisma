@@ -865,17 +865,22 @@ model DIFMRequest {
 }
 
 model ServiceBooking {
-  id             String      @id @default(uuid())
-  difmRequestId  String      @unique
-  difmRequest    DIFMRequest @relation(fields: [difmRequestId], references: [id], onDelete: Cascade)
-  shopId         String
-  shop           Shop        @relation(fields: [shopId], references: [id], onDelete: Restrict)
-  scheduledSlot  String      // "10:00 AM - 12:00 PM"
-  completionCode String?     // OTP/PIN for customer signoff
-  isCompleted    Boolean     @default(false)
-  completedAt    DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                     String      @id @default(uuid())
+  difmRequestId          String      @unique
+  difmRequest            DIFMRequest @relation(fields: [difmRequestId], references: [id], onDelete: Cascade)
+  shopId                 String
+  shop                   Shop        @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  scheduledSlot          String      // "10:00 AM - 12:00 PM"
+  completionCode         String?     // OTP/PIN for customer signoff
+  completionCodeHash     String?     // Secure hash of 6-digit confirmation code
+  completionCodeAttempts Int         @default(0) // Failed attempt counter (max 5)
+  completionCodeLocked   Boolean     @default(false) // Locked if max attempts exceeded
+  isCompleted            Boolean     @default(false)
+  completedAt            DateTime?
+  completedByRole        String?     // 'SHOP' | 'DELIVERY_PARTNER'
+  completedById          String?     // User ID of technician/installer
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
   @@map("service_bookings")
 }
@@ -1004,6 +1009,7 @@ model Shop {
   shopJobs             ShopJob[]
   shopDeliveries       ShopDelivery[]
   usedPartIntakes      UsedPartIntake[]
+  assignedUsedParts    UsedPartListing[]     @relation("ShopAssignedUsedParts")
   shopTickets          ShopTicket[]
   serviceAppointments  ServiceAppointment[]
 
@@ -1190,14 +1196,22 @@ model UsedPartListing {
   isSold      Boolean                @default(false)
   soldAt      DateTime?
 
+  // Garage partner assignment & delivery method
+  assignedShopId String?
+  assignedShop   Shop?                  @relation("ShopAssignedUsedParts", fields: [assignedShopId], references: [id], onDelete: SetNull)
+  deliveryMethod String                 @default("DROP_OFF") // DROP_OFF | PICKUP
+  pickupAddress  String?
+
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
 
   verification UsedPartVerification?
   payout       UsedPartPayout?
+  intake       UsedPartIntake?
 
   @@index([sellerId, status])
   @@index([productId])
+  @@index([assignedShopId])
   @@map("used_part_listings")
 }
 
@@ -1347,22 +1361,69 @@ model ShopDelivery {
 }
 
 model UsedPartIntake {
-  id                  String    @id @default(uuid())
-  shopId              String
-  shop                Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  listingId           String?   // Optional link to UsedPartListing
-  partTitle           String
-  sellerName          String?
-  vehicleModel        String?
-  physicalCondition   String    @default("GOOD")    // GOOD | FAIR | DAMAGED
-  technicalTestStatus String    @default("NEEDS_TESTING")  // NEEDS_TESTING | PASSED | FAILED
-  technicianNotes     String?
-  status              String    @default("PENDING_INSPECTION")  // PENDING_INSPECTION | VERIFIED_ACCEPTED | REJECTED
+  id                      String           @id @default(uuid())
+  shopId                  String
+  shop                    Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  listingId               String?          @unique
+  listing                 UsedPartListing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  partTitle               String
+  sellerName              String?
+  vehicleModel            String?
+  partNumber              String?
+  vehicleCompatibility    String?
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  // Technical Assessment Ratings (1 to 5 scale)
+  physicalConditionRating Int              @default(4)
+  functionalTestRating    Int              @default(4)
+  wearLevelRating         Int              @default(3)
+  safetyConfidenceRating  Int              @default(5)
+  overallGrade            String           @default("B") // A | B | C | D
+
+  // Technical Checkpoints
+  visualDamage            String?
+  corrosionLevel          String?          @default("NONE") // NONE | MINOR | MODERATE | SEVERE
+  mountingPointsOk        Boolean          @default(true)
+  electricalWorking       Boolean          @default(true)
+  benchTestNotes          String?
+  safetyTestNotes         String?
+  repairRequired          Boolean          @default(false)
+  repairNotes             String?
+  photos                  String[]         @default([])
+  technicianNotes         String?
+  inspectorName           String?
+
+  // Overall Technical Verdict
+  technicalResult         String           @default("PASSED") // PASSED | REPAIR_REQUIRED | FAILED
+  inspectionScore         Float?           // Computed score 0 - 100
+
+  // Valuation & Offer Breakdown
+  referenceNewPrice       Decimal?         @db.Decimal(10, 2)
+  recommendedResaleMin    Decimal?         @db.Decimal(10, 2)
+  recommendedResaleMax    Decimal?         @db.Decimal(10, 2)
+  recommendedListingPrice Decimal?         @db.Decimal(10, 2)
+  recommendedSellerPayout Decimal?         @db.Decimal(10, 2)
+  adminOverridePrice      Decimal?         @db.Decimal(10, 2)
+  adminOverrideReason     String?
+
+  // Offer Decision
+  customerOfferStatus     String           @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  customerDecisionAt      DateTime?
+
+  // Workflow Status
+  status                  String           @default("GARAGE_ASSIGNED")
+  // GARAGE_ASSIGNED | PART_RECEIVED | INSPECTION_IN_PROGRESS | INSPECTION_COMPLETE | OFFER_PENDING_CUSTOMER | OFFER_ACCEPTED | OFFER_DECLINED | LISTED_ON_MARKETPLACE | REJECTED
+
+  // Legacy compatibility fields
+  physicalCondition       String           @default("GOOD")
+  technicalTestStatus     String           @default("NEEDS_TESTING")
+
+  receivedAt              DateTime?
+  inspectedAt             DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
 
   @@index([shopId, status])
+  @@index([listingId])
   @@map("used_part_intakes")
 }
 

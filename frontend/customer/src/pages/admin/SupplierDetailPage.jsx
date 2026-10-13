@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import procurementService from '../../services/procurementService';
 import ProcurementCartDrawer from '../../components/admin/procurement/ProcurementCartDrawer';
+import SupplierLogo from '../../components/admin/procurement/SupplierLogo';
 
 export default function SupplierDetailPage() {
   const { id } = useParams();
@@ -119,39 +120,7 @@ export default function SupplierDetailPage() {
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {supplier.logoUrl ? (
-              <img
-                src={supplier.logoUrl}
-                alt={supplier.name}
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  objectFit: 'contain',
-                  backgroundColor: '#FFFFFF',
-                  padding: '6px',
-                  border: '1px solid var(--border-color)',
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #0284C7, #0D9488)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: '1.5rem',
-                  flexShrink: 0,
-                }}
-              >
-                {initials}
-              </div>
-            )}
+            <SupplierLogo logoUrl={supplier.logoUrl} name={supplier.name} size={64} fontSize="1.5rem" />
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
