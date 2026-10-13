@@ -479,3 +479,22 @@ button, input, select, textarea {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-primary);
 }
+
+/* Delivery Sidebar Nav Links: Active & Hover State Rules */
+.delivery-sidebar-nav-link {
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.delivery-sidebar-nav-link:hover:not(.active) {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+.delivery-sidebar-nav-link.active {
+  color: var(--color-primary) !important;
+  background: var(--color-primary-glow) !important;
+  border: 1px solid var(--color-primary-glow) !important;
+}
+

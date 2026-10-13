@@ -186,12 +186,12 @@
   color: var(--color-text-secondary, #94A3B8);
 }
 
-.nav-link:hover {
+.nav-link:hover:not(.active) {
   color: var(--color-primary, #0284C7);
   background-color: var(--color-surface-hover, rgba(15, 23, 42, 0.05));
 }
 
-[data-theme="dark"] .nav-link:hover {
+[data-theme="dark"] .nav-link:hover:not(.active) {
   color: #38BDF8;
   background-color: rgba(255, 255, 255, 0.07);
 }
@@ -722,12 +722,12 @@
   color: #F8FAFC;
 }
 
-.mobile-link:hover {
+.mobile-link:hover:not(.active) {
   background-color: var(--color-surface-hover, rgba(15, 23, 42, 0.05));
   color: var(--color-primary, #0284C7);
 }
 
-[data-theme="dark"] .mobile-link:hover {
+[data-theme="dark"] .mobile-link:hover:not(.active) {
   background-color: rgba(255, 255, 255, 0.07);
   color: #38BDF8;
 }
@@ -774,30 +774,50 @@
 
 .mobile-auth-actions {
   display: flex;
-  gap: 0.5rem;
-  margin: 0.35rem 0;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
 }
 
 .mobile-auth-actions .btn {
   flex: 1;
   text-align: center;
   justify-content: center;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border-radius: var(--radius-md, 8px);
 }
 
 /* ============================================================================
-   RESPONSIVE BREAKPOINTS (1440px, 1280px, 1024px, 768px, 390px)
+   RESPONSIVE BREAKPOINTS (1920px, 1440px, 1280px, 1024px, 768px, 390px)
+   Zoom: 100%, 125%, 150%
+   Priority: Logo -> Navigation -> Active Vehicle -> Cart -> Notifications -> Account
+   Narrower widths: move secondary links & Login/Register into hamburger menu
    ============================================================================ */
 
-/* 1. Large Desktop (1440px+) */
-@media (min-width: 1200px) {
+/* 1. Ultra-Wide & Large Desktop (>= 1300px) */
+@media (min-width: 1300px) {
   .navbar-links {
     display: flex;
+    gap: 4px;
+  }
+  .nav-link-primary,
+  .nav-link-secondary {
+    display: inline-flex;
   }
   .hamburger {
     display: none;
   }
   .navbar-search-wrapper {
     display: block;
+    max-width: 240px;
+    min-width: 160px;
+  }
+  .navbar-auth-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .vehicle-pill-sub {
     display: block;
@@ -807,18 +827,34 @@
   }
 }
 
-/* 2. Standard Desktop / Laptops (1024px to 1199px)
-   Collapse secondary nav links into hamburger to guarantee ZERO overflow */
-@media (max-width: 1199px) and (min-width: 1024px) {
+/* 2. Standard Desktop & High-Zoom Desktop (1100px to 1299px)
+   Move Search & Secondary Nav Links into hamburger menu.
+   Primary nav links (Browse Parts, DIFM Services), Active Vehicle, Cart, Bell,
+   and Login/Register remain visible without crowding or overflow. */
+@media (max-width: 1299px) and (min-width: 1100px) {
   .navbar-links {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-link-primary {
+    display: inline-flex;
+    padding: 0.42rem 0.65rem;
+    font-size: 0.82rem;
+  }
+  /* Secondary nav links moved into hamburger drawer */
+  .nav-link-secondary {
     display: none;
   }
   .hamburger {
     display: flex;
   }
   .navbar-search-wrapper {
-    display: block;
-    max-width: 250px;
+    display: none; /* Moved into hamburger drawer */
+  }
+  .navbar-auth-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
   }
   .vehicle-pill-sub {
     display: none;
@@ -826,22 +862,25 @@
   .vehicle-pill-badge {
     display: inline-block;
   }
-  .user-name-label {
-    display: inline;
-  }
 }
 
-/* 3. Tablets (768px to 1023px)
-   Search collapses into hamburger drawer; vehicle indicator remains prioritized */
-@media (max-width: 1023px) and (min-width: 768px) {
+/* 3. Narrower Desktop, Tablets & High Zoom (768px to 1099px)
+   Effective viewport at 1280px @ 125% zoom (1024px), 1440px @ 150% zoom (960px).
+   All navigation links AND Login/Register move into hamburger menu.
+   Do NOT simply hide Register. Both are prominently in the hamburger menu! */
+@media (max-width: 1099px) and (min-width: 768px) {
   .navbar-links {
+    display: none;
+  }
+  .navbar-search-wrapper {
+    display: none;
+  }
+  /* Login/Register moved into hamburger menu */
+  .navbar-auth-group {
     display: none;
   }
   .hamburger {
     display: flex;
-  }
-  .navbar-search-wrapper {
-    display: none;
   }
   .vehicle-pill-sub {
     display: none;
@@ -864,8 +903,10 @@
   }
 }
 
-/* 4. Mobile Devices (<= 767px e.g. 390px)
-   Compact controls, essential items prioritized, zero overflow */
+/* 4. Mobile Devices (381px to 767px e.g. 390px iPhone)
+   Essential priority: Logo -> Vehicle -> Cart -> Notifications -> Hamburger
+   Login/Register and all secondary nav are in hamburger drawer.
+   Guarantees zero horizontal overflow! */
 @media (max-width: 767px) {
   .navbar-links {
     display: none;
@@ -882,7 +923,7 @@
   .navbar-inner {
     padding-left: 0.65rem;
     padding-right: 0.65rem;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
   .navbar-actions {
     gap: 0.35rem;
@@ -897,7 +938,7 @@
   .vehicle-pill {
     padding: 4px 8px;
     gap: 5px;
-    max-width: 120px;
+    max-width: 115px;
   }
   .vehicle-pill-sub {
     display: none;
@@ -906,7 +947,7 @@
     display: none;
   }
   .vehicle-pill-name {
-    max-width: 80px;
+    max-width: 75px;
     font-size: 0.72rem;
   }
   .vehicle-pill-icon {
@@ -935,22 +976,18 @@
     height: 28px;
     font-size: 0.75rem;
   }
-  #navbar-register-btn {
+  /* Move entire Login/Register group into hamburger menu; NEVER hide Register alone! */
+  .navbar-auth-group {
     display: none;
-  }
-  #navbar-login-btn {
-    padding: 0.25rem 0.55rem;
-    font-size: 0.75rem;
-    height: 32px;
   }
 }
 
 /* 5. Ultra-compact mobile screens (<= 380px)
-   Pill shrinks to icon button with active dot; guarantees NO viewport overflow */
+   Pill shrinks to icon button; guarantees zero horizontal overflow */
 @media (max-width: 380px) {
   .navbar-inner {
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
     gap: 0.25rem;
   }
   .navbar-actions {
@@ -960,8 +997,8 @@
     font-size: 1.05rem;
   }
   .logo-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
   .vehicle-pill {
     padding: 5px;
@@ -994,3 +1031,4 @@
     padding: 6px;
   }
 }
+

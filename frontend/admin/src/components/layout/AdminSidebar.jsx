@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import PartNexaLogo from '../common/PartNexaLogo';
 import {
   LayoutDashboard,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/', label: 'Overview Dashboard', icon: LayoutDashboard },
+  { path: '/', label: 'Overview Dashboard', icon: LayoutDashboard, end: true },
   { path: '/customers', label: 'Customers', icon: Users },
   { path: '/shops', label: 'Mechanical Workshops', icon: Wrench },
   { path: '/delivery-partners', label: 'Delivery Fleet & KYC', icon: Bike },
@@ -26,6 +26,16 @@ const navItems = [
 ];
 
 export default function AdminSidebar() {
+  const location = useLocation();
+
+  const isItemActive = (itemPath, isEnd) => {
+    const current = location.pathname;
+    if (isEnd || itemPath === '/') {
+      return current === '/' || current === '';
+    }
+    return current === itemPath || current.startsWith(`${itemPath}/`);
+  };
+
   return (
     <aside
       style={{
@@ -75,29 +85,34 @@ export default function AdminSidebar() {
           Operations & Control
         </div>
 
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/'}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.85rem',
-              padding: '0.7rem 0.85rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.88rem',
-              fontWeight: isActive ? 700 : 500,
-              color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
-              backgroundColor: isActive ? 'var(--color-primary-bg)' : 'transparent',
-              transition: 'all 0.15s ease',
-              borderLeft: isActive ? '3px solid var(--color-primary)' : '3px solid transparent',
-            })}
-          >
-            <item.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const active = isItemActive(item.path, item.end);
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.end || item.path === '/'}
+              className={`admin-sidebar-nav-link ${active ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.85rem',
+                padding: '0.7rem 0.85rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.88rem',
+                fontWeight: active ? 700 : 500,
+                color: active ? 'var(--color-primary)' : 'var(--text-secondary)',
+                backgroundColor: active ? 'var(--color-primary-bg)' : 'transparent',
+                transition: 'all 0.15s ease',
+                borderLeft: active ? '3px solid var(--color-primary)' : '3px solid transparent',
+                textDecoration: 'none',
+              }}
+            >
+              <item.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
       </div>
 
       {/* Environment Footer */}

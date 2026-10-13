@@ -1,10 +1,11 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import { LayoutDashboard, Package, Bike, Search, Banknote, ShieldCheck, Settings, Star } from 'lucide-react';
 
 export const DeliverySidebar = () => {
   const { partner, kyc } = useDeliveryAuth();
+  const location = useLocation();
 
   const navItems = [
     { label: 'Rider Dashboard', path: '/delivery', icon: LayoutDashboard, end: true },
@@ -15,6 +16,14 @@ export const DeliverySidebar = () => {
     { label: 'KYC & Verification', path: '/delivery/kyc', icon: ShieldCheck },
     { label: 'Vehicle & Profile', path: '/delivery/profile', icon: Settings },
   ];
+
+  const isItemActive = (itemPath, isEnd) => {
+    const current = location.pathname;
+    if (isEnd || itemPath === '/delivery' || itemPath === '/') {
+      return current === itemPath || current === `${itemPath}/`;
+    }
+    return current === itemPath || current.startsWith(`${itemPath}/`);
+  };
 
   return (
     <aside
@@ -82,12 +91,14 @@ export const DeliverySidebar = () => {
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
+            const active = isItemActive(item.path, item.end);
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.end}
-                style={({ isActive }) => ({
+                end={item.end || item.path === '/delivery' || item.path === '/'}
+                className={`delivery-sidebar-nav-link ${active ? 'active' : ''}`}
+                style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
@@ -95,11 +106,12 @@ export const DeliverySidebar = () => {
                   borderRadius: 'var(--radius-md)',
                   fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  background: isActive ? 'var(--color-primary-glow)' : 'transparent',
-                  border: isActive ? '1px solid var(--color-primary-glow)' : '1px solid transparent',
+                  color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  background: active ? 'var(--color-primary-glow)' : 'transparent',
+                  border: active ? '1px solid var(--color-primary-glow)' : '1px solid transparent',
                   transition: 'all var(--transition-fast)',
-                })}
+                  textDecoration: 'none',
+                }}
               >
                 <Icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
                 <span>{item.label}</span>

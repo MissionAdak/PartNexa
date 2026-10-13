@@ -433,3 +433,21 @@ input, select, textarea {
     transform: scale(1) translateY(0);
   }
 }
+
+/* Shop Sidebar Nav Links: Active & Hover State Rules */
+.shop-sidebar-nav-link {
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.shop-sidebar-nav-link:hover:not(.active) {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.shop-sidebar-nav-link.active {
+  color: #FFFFFF !important;
+  background-color: var(--color-primary) !important;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3) !important;
+}
+

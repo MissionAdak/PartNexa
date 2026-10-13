@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useShopAuth } from '../contexts/ShopAuthContext';
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
 
 export const ShopSidebar = () => {
   const { shop } = useShopAuth();
+  const location = useLocation();
 
   const links = [
     { to: '/', label: 'Shop Dashboard', icon: LayoutDashboard, end: true },
@@ -24,6 +25,14 @@ export const ShopSidebar = () => {
     { to: '/tickets', label: 'Support Tickets', icon: Ticket },
     { to: '/profile', label: 'Workshop Profile', icon: Settings },
   ];
+
+  const isItemActive = (linkTo, isEnd) => {
+    const current = location.pathname;
+    if (isEnd || linkTo === '/') {
+      return current === '/' || current === '';
+    }
+    return current === linkTo || current.startsWith(`${linkTo}/`);
+  };
 
   return (
     <aside
@@ -45,29 +54,34 @@ export const ShopSidebar = () => {
           Operations & DIFM
         </div>
 
-        {links.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.end}
-            style={({ isActive }) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.7rem 0.9rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-              fontWeight: isActive ? 600 : 500,
-              color: isActive ? '#FFFFFF' : 'var(--color-text-secondary)',
-              backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
-              boxShadow: isActive ? '0 2px 10px rgba(2, 132, 199, 0.3)' : 'none',
-              transition: 'all var(--transition-fast)',
-            })}
-          >
-            <link.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
-            <span>{link.label}</span>
-          </NavLink>
-        ))}
+        {links.map((link) => {
+          const active = isItemActive(link.to, link.end);
+          return (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end || link.to === '/'}
+              className={`shop-sidebar-nav-link ${active ? 'active' : ''}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.7rem 0.9rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.875rem',
+                fontWeight: active ? 600 : 500,
+                color: active ? '#FFFFFF' : 'var(--color-text-secondary)',
+                backgroundColor: active ? 'var(--color-primary)' : 'transparent',
+                boxShadow: active ? '0 2px 10px rgba(2, 132, 199, 0.3)' : 'none',
+                transition: 'all var(--transition-fast)',
+                textDecoration: 'none',
+              }}
+            >
+              <link.icon size={18} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              <span>{link.label}</span>
+            </NavLink>
+          );
+        })}
       </div>
 
       {/* Workshop Summary Footer Card */}

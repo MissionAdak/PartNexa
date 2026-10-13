@@ -20,6 +20,7 @@ const NAV_ITEMS = [
     name: 'Browse Parts',
     path: '/customer/products',
     id: 'nav-browse-parts',
+    isPrimary: true,
     isActive: (pathname) =>
       pathname.startsWith('/customer/products') ||
       pathname.startsWith('/products'),
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
     name: 'DIFM Services',
     path: '/customer/services',
     id: 'nav-services',
+    isPrimary: true,
     isActive: (pathname) =>
       pathname.startsWith('/customer/services') ||
       pathname.startsWith('/services'),
@@ -36,6 +38,7 @@ const NAV_ITEMS = [
     name: 'Subscriptions',
     path: '/customer/subscriptions',
     id: 'nav-subscriptions',
+    isPrimary: false,
     isActive: (pathname) =>
       pathname.startsWith('/customer/subscriptions') ||
       pathname.startsWith('/customer/my-subscriptions') ||
@@ -46,6 +49,7 @@ const NAV_ITEMS = [
     name: 'Sell Used Part',
     path: '/customer/sell-used-parts',
     id: 'nav-sell-used-parts',
+    isPrimary: false,
     isActive: (pathname) =>
       pathname.startsWith('/customer/sell-used-parts') ||
       pathname.startsWith('/sell-used-parts'),
@@ -54,6 +58,7 @@ const NAV_ITEMS = [
     name: 'My Vehicles',
     path: '/customer/vehicles',
     id: 'nav-vehicles',
+    isPrimary: false,
     isActive: (pathname) =>
       pathname.startsWith('/customer/vehicles') ||
       pathname.startsWith('/customer/garage') ||
@@ -284,7 +289,7 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 id={item.id}
-                className={`nav-link ${active ? 'active' : ''}`}
+                className={`nav-link ${item.isPrimary ? 'nav-link-primary' : 'nav-link-secondary'} ${active ? 'active' : ''}`}
                 aria-current={active ? 'page' : undefined}
                 role="menuitem"
               >
@@ -518,7 +523,7 @@ const Navbar = () => {
                   Login
                 </Link>
                 <Link to="/register" className="btn btn-primary btn-block" id="mobile-register-btn">
-                  Create Account
+                  Register
                 </Link>
               </div>
             )}

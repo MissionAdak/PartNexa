@@ -467,3 +467,29 @@ input:focus, select:focus, textarea:focus {
   box-shadow: none !important;
   width: 100%;
 }
+
+/* Sidebar Navigation Items: Active & Hover State Rules */
+.admin-sidebar-nav-link {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.admin-sidebar-nav-link:hover:not(.active) {
+  color: var(--text-primary) !important;
+  background-color: var(--color-surface-hover, rgba(15, 23, 42, 0.05)) !important;
+  border-left-color: rgba(15, 23, 42, 0.2) !important;
+}
+
+[data-theme="dark"] .admin-sidebar-nav-link:hover:not(.active) {
+  color: #F8FAFC !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-left-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.admin-sidebar-nav-link.active {
+  font-weight: 700 !important;
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-bg) !important;
+  border-left: 3px solid var(--color-primary) !important;
+}
+
