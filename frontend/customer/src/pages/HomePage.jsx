@@ -257,8 +257,14 @@ const HomePage = () => {
         const catList = Array.isArray(catRes?.data?.data) ? catRes.data.data : (Array.isArray(catRes?.data) ? catRes.data : []);
         setCategories(catList.slice(0, 10));
 
-        const prodList = Array.isArray(prodRes?.data?.data) ? prodRes.data.data : (Array.isArray(prodRes?.data) ? prodRes.data : []);
-        setFeaturedProducts(prodList);
+        const prodList = Array.isArray(prodRes?.data?.data)
+          ? prodRes.data.data
+          : Array.isArray(prodRes?.data?.products)
+          ? prodRes.data.products
+          : Array.isArray(prodRes?.data)
+          ? prodRes.data
+          : [];
+        setFeaturedProducts(prodList.slice(0, 8));
       })
       .catch((err) => {
         console.error('Failed to load home page content:', err);
@@ -361,10 +367,10 @@ const HomePage = () => {
             </Link>
           </div>
 
-          <div className="grid-products">
+          <div className="featured-products-grid grid-products">
             {loadingProducts
-              ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-              : (Array.isArray(featuredProducts) ? featuredProducts : []).map((product) => (
+              ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : (Array.isArray(featuredProducts) ? featuredProducts : []).slice(0, 8).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))
             }

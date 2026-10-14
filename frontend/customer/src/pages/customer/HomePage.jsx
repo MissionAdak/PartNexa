@@ -249,23 +249,26 @@ const HomePage = () => {
   useEffect(() => {
     document.title = 'PartNexa — Automotive Spare Parts & Services';
 
-    catalogService.getCategories()
-      .then(({ data }) => {
-        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
-        setCategories(list.slice(0, 10));
-      })
-      .catch((err) => {
-        console.error('Failed to fetch categories:', err);
-        setCategories([]);
-      });
+    Promise.all([
+      catalogService.getCategories(),
+      catalogService.listProducts({ limit: 8, sortBy: 'createdAt', sortOrder: 'desc' }),
+    ])
+      .then(([catRes, prodRes]) => {
+        const catList = Array.isArray(catRes?.data?.data) ? catRes.data.data : (Array.isArray(catRes?.data) ? catRes.data : []);
+        setCategories(catList.slice(0, 10));
 
-    catalogService.listProducts({ limit: 8, sortBy: 'createdAt', sortOrder: 'desc' })
-      .then(({ data }) => {
-        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
-        setFeaturedProducts(list);
+        const prodList = Array.isArray(prodRes?.data?.data)
+          ? prodRes.data.data
+          : Array.isArray(prodRes?.data?.products)
+          ? prodRes.data.products
+          : Array.isArray(prodRes?.data)
+          ? prodRes.data
+          : [];
+        setFeaturedProducts(prodList.slice(0, 8));
       })
       .catch((err) => {
-        console.error('Failed to fetch featured products:', err);
+        console.error('Failed to load home page content:', err);
+        setCategories([]);
         setFeaturedProducts([]);
       })
       .finally(() => setLoadingProducts(false));
@@ -364,10 +367,10 @@ const HomePage = () => {
             </Link>
           </div>
 
-          <div className="grid-products">
+          <div className="featured-products-grid grid-products">
             {loadingProducts
-              ? Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={i} />)
-              : (Array.isArray(featuredProducts) ? featuredProducts : []).map((product) => (
+              ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : (Array.isArray(featuredProducts) ? featuredProducts : []).slice(0, 8).map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))
             }

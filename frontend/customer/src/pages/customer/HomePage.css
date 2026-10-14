@@ -239,9 +239,58 @@
 .category-name { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
 .category-count { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 
-/* Featured Section */
-.featured-section {}
-.empty-products { text-align: center; padding: var(--space-12); color: var(--color-text-muted); }
+/* Featured Section Grid */
+.featured-section {
+  padding: var(--space-12) 0;
+}
+
+.featured-section .container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.featured-products-grid,
+.featured-section .grid-products {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure individual product cards are constrained to their grid cell */
+.featured-products-grid .product-card,
+.featured-section .grid-products .product-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.empty-products {
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--color-text-muted);
+  grid-column: 1 / -1;
+}
+
+/* Responsive Grid Rules */
+@media (max-width: 1199px) {
+  .featured-products-grid,
+  .featured-section .grid-products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .featured-products-grid,
+  .featured-section .grid-products {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
 
 /* DIFM Banner */
 .difm-banner {

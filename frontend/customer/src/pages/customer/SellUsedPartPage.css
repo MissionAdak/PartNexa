@@ -16,68 +16,99 @@
 }
 
 /* --------------------------------------------------------------------------
-   Hero Section & Navigation Tabs
+   Hero Section & Navigation Tabs (Automotive Clean Aesthetic)
    -------------------------------------------------------------------------- */
 .sell-hero {
-  background: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 50%, #E0F2FE 100%);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 50px 0 36px 0;
+  background: linear-gradient(135deg, #F8FAFC 0%, #EEF6FB 55%, #EAF4F8 100%);
+  border-bottom: 1px solid #E2E8F0;
+  color: var(--text-primary, #0F172A);
+  padding: 44px 0 34px 0;
   margin-bottom: 32px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  position: relative;
+}
+
+.sell-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #0284C7 50%, transparent 100%);
+  opacity: 0.55;
 }
 
 [data-theme="dark"] .sell-hero {
-  background: linear-gradient(135deg, #032a20 0%, #0a4742 45%, #083344 100%);
+  background: linear-gradient(135deg, #0B1320 0%, #0D1B2A 60%, #0F2038 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
-  color: #FFFFFF;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .sell-hero::before {
+  background: linear-gradient(90deg, transparent 0%, #38BDF8 50%, transparent 100%);
+  opacity: 0.4;
 }
 
 .sell-hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(13, 148, 136, 0.12);
-  color: #0F766E;
-  padding: 6px 16px;
+  gap: 7px;
+  background: #E0F2FE;
+  color: #0369A1;
+  padding: 6px 14px;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   margin-bottom: 16px;
-  border: 1px solid rgba(13, 148, 136, 0.25);
+  border: 1px solid rgba(2, 132, 199, 0.22);
   letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.06);
+  transition: all 0.2s ease;
+}
+
+.sell-hero-badge .badge-icon {
+  color: #0284C7;
+  display: inline-flex;
+  align-items: center;
 }
 
 [data-theme="dark"] .sell-hero-badge {
-  background: rgba(255, 255, 255, 0.18);
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(2, 132, 199, 0.12);
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .sell-hero-badge .badge-icon {
+  color: #38BDF8;
 }
 
 .sell-hero-title {
+  font-family: var(--font-display, 'Outfit', 'Inter', sans-serif);
   font-size: 2.35rem;
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: 12px;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  color: #0F172A;
 }
 
 [data-theme="dark"] .sell-hero-title {
-  color: #FFFFFF;
+  color: #F8FAFC;
 }
 
 .sell-hero-desc {
-  font-size: 1.05rem;
-  color: var(--text-secondary);
+  font-size: 1.025rem;
+  color: #475569;
   max-width: 680px;
   line-height: 1.6;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 [data-theme="dark"] .sell-hero-desc {
-  color: #E2E8F0;
+  color: #94A3B8;
 }
 
 /* Nav Tabs */
@@ -85,60 +116,152 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  padding-top: 10px;
+  padding-top: 4px;
 }
 
 .nav-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  padding: 10px 20px;
-  border-radius: var(--radius-lg, 10px);
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
+  padding: 10px 18px;
+  border-radius: var(--radius-lg, 12px);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
   transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] .nav-tab-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #E2E8F0;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .nav-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .nav-tab-btn.active {
-  background: #ffffff;
-  color: #0f766e;
-  border-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-weight: 700;
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF;
+  border-color: #0284C7;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.32);
+  font-weight: 600;
+}
+
+.nav-tab-btn.active:hover {
+  background: linear-gradient(135deg, #0369A1 0%, #075985 100%);
+  border-color: #0369A1;
+  color: #FFFFFF;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
 }
 
 [data-theme="dark"] .nav-tab-btn.active {
-  background: #0d9488;
-  color: #ffffff;
-  border-color: #14b8a6;
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF;
+  border-color: #38BDF8;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+}
+
+[data-theme="dark"] .nav-tab-btn.active:hover {
+  background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+  border-color: #7DD3FC;
+  color: #0B1320;
 }
 
 .tab-counter-badge {
-  background: #0f766e;
-  color: #ffffff;
+  background: #E2E8F0;
+  color: #334155;
   font-size: 0.75rem;
   padding: 2px 7px;
   border-radius: 9999px;
-  font-weight: 800;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.nav-tab-btn:hover .tab-counter-badge {
+  background: #CBD5E1;
+  color: #0F172A;
 }
 
 .nav-tab-btn.active .tab-counter-badge {
-  background: #0f766e;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .tab-counter-badge {
+  background: rgba(255, 255, 255, 0.12);
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .nav-tab-btn:hover .tab-counter-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .nav-tab-btn.active .tab-counter-badge {
-  background: #042f2e;
-  color: #2dd4bf;
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+/* Hero Responsive */
+@media (max-width: 768px) {
+  .sell-hero {
+    padding: 34px 0 24px 0;
+    margin-bottom: 24px;
+  }
+  .sell-hero-title {
+    font-size: 1.85rem;
+  }
+  .sell-hero-desc {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+  .marketplace-nav-tabs {
+    gap: 8px;
+  }
+  .nav-tab-btn {
+    padding: 8px 14px;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sell-hero {
+    padding: 28px 0 20px 0;
+  }
+  .sell-hero-title {
+    font-size: 1.55rem;
+  }
+  .sell-hero-badge {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+  .marketplace-nav-tabs {
+    flex-direction: column;
+    width: 100%;
+  }
+  .nav-tab-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* --------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, CheckCircle2, X, Search, Check, Star } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
@@ -18,6 +18,7 @@ const conditionClass = {
 
 export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const [imgError, setImgError] = useState(false);
   const {
     id,
     slug,
@@ -58,20 +59,21 @@ export const ProductCard = ({ product }) => {
       <Link to={`/products/${slug || id}`} className="product-card-link-wrapper">
         {/* Image & Badges */}
         <div className="product-card-image-wrapper">
-          {primaryImage ? (
+          {imgError || !primaryImage ? (
+            <div className="product-card-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
+              </svg>
+            </div>
+          ) : (
             <img
               src={primaryImage}
               alt={name}
               className="product-card-image"
               loading="lazy"
               decoding="async"
+              onError={() => setImgError(true)}
             />
-          ) : (
-            <div className="product-card-placeholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-              </svg>
-            </div>
           )}
 
           {/* Condition Badge */}
@@ -195,12 +197,12 @@ export const ProductCard = ({ product }) => {
 };
 
 export const ProductCardSkeleton = () => (
-  <div className="product-card" style={{ padding: '16px' }}>
-    <div className="skeleton" style={{ height: '170px', borderRadius: '12px', marginBottom: '12px' }} />
+  <div className="product-card product-card-skeleton" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+    <div className="skeleton" style={{ height: '190px', width: '100%', borderRadius: '12px', marginBottom: '12px' }} />
     <div className="skeleton" style={{ height: '14px', width: '40%', marginBottom: '8px' }} />
     <div className="skeleton" style={{ height: '20px', width: '85%', marginBottom: '8px' }} />
     <div className="skeleton" style={{ height: '16px', width: '50%', marginBottom: '14px' }} />
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px' }}>
       <div className="skeleton" style={{ height: '24px', width: '35%' }} />
       <div className="skeleton" style={{ height: '32px', width: '30%', borderRadius: '6px' }} />
     </div>
