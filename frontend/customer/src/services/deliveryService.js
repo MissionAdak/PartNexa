@@ -53,8 +53,8 @@ export const deliveryService = {
     return res.data?.data;
   },
 
-  submitKyc: async () => {
-    const res = await api.post('/delivery/kyc/submit');
+  submitKyc: async (data = {}) => {
+    const res = await api.post('/delivery/kyc/submit', data);
     return res.data?.data;
   },
 

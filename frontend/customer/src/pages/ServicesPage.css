@@ -3,16 +3,19 @@
 }
 
 .services-hero {
-  background: linear-gradient(135deg, var(--color-navy-900) 0%, var(--color-primary-900) 100%);
-  color: #fff;
-  padding: 60px 0;
-  margin-bottom: 48px;
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 45%, #F8FAFC 100%);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 56px 0 48px;
+  margin-bottom: 40px;
   position: relative;
   overflow: hidden;
 }
 
 [data-theme="dark"] .services-hero {
   background: linear-gradient(135deg, #090d16 0%, #0d2238 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
 }
 
 .services-hero-content {
@@ -25,12 +28,18 @@
   gap: 6px;
   padding: 6px 14px;
   border-radius: 20px;
-  background: rgba(2, 132, 199, 0.2);
-  border: 1px solid rgba(2, 132, 199, 0.4);
+  background: rgba(2, 132, 199, 0.1);
+  border: 1px solid rgba(2, 132, 199, 0.25);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-primary-300);
+  color: var(--color-primary-dark);
   margin-bottom: 16px;
+}
+
+[data-theme="dark"] .services-hero-badge {
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid rgba(2, 132, 199, 0.4);
+  color: var(--color-primary-300);
 }
 
 .services-hero-title {
@@ -39,13 +48,22 @@
   line-height: 1.2;
   margin-bottom: 16px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .services-hero-title {
+  color: #FFFFFF;
 }
 
 .services-hero-desc {
-  font-size: 1.1rem;
-  color: #94A3B8;
+  font-size: 1.05rem;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 24px;
+}
+
+[data-theme="dark"] .services-hero-desc {
+  color: #94A3B8;
 }
 
 /* Service Category Cards */
@@ -85,9 +103,9 @@
 }
 
 .service-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--color-teal-400);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--color-teal);
+  box-shadow: var(--shadow-md);
 }
 
 .service-card-top {
@@ -257,8 +275,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #FEF08A;
-  color: #854D0E;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
   padding: 4px 8px;
   border-radius: 6px;
   font-weight: 700;
@@ -266,8 +285,9 @@
 }
 
 [data-theme="dark"] .shop-rating-pill {
-  background: #854D0E;
-  color: #FEF08A;
+  background: rgba(245, 158, 11, 0.18);
+  color: #FCD34D;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .shop-card-stats {

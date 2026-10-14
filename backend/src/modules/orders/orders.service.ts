@@ -697,13 +697,15 @@ export const createOrderDraft = async (
     );
   }
 
-  // Trigger real-time platform propagation for immediately confirmed COD orders
+  // Trigger real-time platform propagation for immediately confirmed COD orders asynchronously
   if (!isOnlinePayment) {
-    try {
-      await propagateOrderConfirmed(newOrder.id);
-    } catch (propErr) {
-      console.warn('Order propagation warning for COD order:', propErr);
-    }
+    setImmediate(async () => {
+      try {
+        await propagateOrderConfirmed(newOrder.id);
+      } catch (propErr) {
+        console.warn('Background order propagation warning for COD order:', propErr);
+      }
+    });
   }
 
   return getOrderById(userId, newOrder.id);

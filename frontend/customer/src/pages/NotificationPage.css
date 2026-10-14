@@ -172,8 +172,15 @@
 
 .notification-card.unread {
   background: var(--color-bg-card, #ffffff);
-  border-color: rgba(2, 132, 199, 0.35);
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.4);
+  border-left: 4px solid var(--color-primary, #0284c7);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+
+[data-theme="dark"] .notification-card.unread {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.4);
+  border-left: 4px solid var(--color-primary-light, #38bdf8);
 }
 
 /* Category Badge Column */

@@ -92,7 +92,7 @@ export const MyTripsPage = () => {
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
             You do not have any trips matching this filter.
           </div>
-          <Link to="/jobs/available" className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Link to="/delivery/jobs/available" className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
             Browse Available Jobs Feed <ArrowRight size={14} strokeWidth={1.75} />
           </Link>
         </div>
@@ -141,7 +141,7 @@ export const MyTripsPage = () => {
                   <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--color-emerald)' }}>
                     ₹{trip.deliveryFee}
                   </span>
-                  <Link to={`/jobs/${trip.id}`} className="btn btn-secondary btn-sm">
+                  <Link to={`/delivery/jobs/${trip.id}`} className="btn btn-secondary btn-sm">
                     Open Navigation Map →
                   </Link>
                 </div>
@@ -203,7 +203,7 @@ export const MyTripsPage = () => {
 
                   {trip.type === 'USED_PART_PICKUP' && (
                     <Link
-                      to={`/jobs/${trip.id}/inspect`}
+                      to={`/delivery/jobs/${trip.id}/inspect`}
                       className="btn btn-primary btn-sm"
                       style={{ background: '#9333EA', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                     >

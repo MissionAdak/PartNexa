@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow15" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow15" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow15)" />
+  <ellipse cx="250" cy="425" rx="160" ry="20" fill="#0F172A" opacity="0.14" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow15)">
+    <!-- Looped Serpentine Belt Silhouette in Studio Perspective -->
+    <path d="M 120 180 C 120 120, 380 120, 380 180 C 380 230, 290 260, 290 320 C 290 370, 210 370, 210 320 C 210 260, 120 230, 120 180 Z" fill="none" stroke="#0F172A" stroke-width="32" stroke-linejoin="round" />
+
+    <!-- Multi-V Ribs Pattern along the belt -->
+    <path d="M 120 180 C 120 120, 380 120, 380 180 C 380 230, 290 260, 290 320 C 290 370, 210 370, 210 320 C 210 260, 120 230, 120 180 Z" fill="none" stroke="#334155" stroke-width="26" stroke-linejoin="round" />
+
+    <path d="M 120 180 C 120 120, 380 120, 380 180 C 380 230, 290 260, 290 320 C 290 370, 210 370, 210 320 C 210 260, 120 230, 120 180 Z" fill="none" stroke="#64748B" stroke-width="4" stroke-dasharray="8 6" />
+
+    <!-- Technical Specification Printed Text Badge -->
+    <rect x="220" y="125" width="70" height="18" rx="3" fill="#F59E0B" />
+    <rect x="225" y="131" width="60" height="6" rx="2" fill="#0F172A" />
+  </g>
+</svg>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
-import { Search, CheckCircle2, Check, X } from 'lucide-react';
+import { Search, CheckCircle2, Check, X, Camera, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 
 export const UsedPartInspectionPage = () => {
   const { id } = useParams();
@@ -24,10 +24,7 @@ export const UsedPartInspectionPage = () => {
   // Condition Grading (A+, A, B, C, D)
   const [conditionGrade, setConditionGrade] = useState('A');
   const [notes, setNotes] = useState('');
-  const [photos, setPhotos] = useState([
-    'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?w=600',
-    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600',
-  ]);
+  const [photos, setPhotos] = useState([]);
 
   const [inspectionCompleted, setInspectionCompleted] = useState(false);
   const [inspectionResultData, setInspectionResultData] = useState(null);
@@ -59,16 +56,26 @@ export const UsedPartInspectionPage = () => {
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const gradeMultipliers = {
-    'A+': 0.90,
-    'A': 0.80,
-    'B': 0.70,
-    'C': 0.55,
-    'D': 0.00,
+  const handlePhotoUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPhotos((prev) => [...prev, event.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const expectedPrice = Number(job?.items?.[0]?.expectedPrice || 2600);
-  const calculatedValuation = Math.round(expectedPrice * (gradeMultipliers[conditionGrade] || 0.75));
+  const removePhoto = (index) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleCompleteVerification = async (result) => {
     try {
@@ -78,16 +85,15 @@ export const UsedPartInspectionPage = () => {
         inspectionChecklist: checklist,
         photos,
         result,
-        notes: notes || (result === 'APPROVED' ? `Doorstep inspection verified Grade ${conditionGrade}.` : 'Doorstep inspection failed quality threshold.'),
-        calculatedValuation,
+        notes: notes || (result === 'APPROVED' ? `Doorstep intake verified Grade ${conditionGrade}. Custody transferred for partner garage bench testing.` : 'Doorstep intake rejected due to physical defects.'),
       });
 
       setInspectionCompleted(true);
       setInspectionResultData(res);
       if (result === 'APPROVED') {
-        toast.success(`Doorstep inspection APPROVED! Seller payout of ₹${calculatedValuation} triggered.`);
+        toast.success('Doorstep intake verified! Component custody transferred for partner garage bench testing.');
       } else {
-        toast.error('Part rejected based on doorstep inspection.');
+        toast.error('Part rejected at doorstep pickup.');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Verification recording failed.');
@@ -102,7 +108,7 @@ export const UsedPartInspectionPage = () => {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
           <Search size={44} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} />
         </div>
-        <div>Loading doorstep inspection checklist...</div>
+        <div>Loading doorstep intake checklist...</div>
       </div>
     );
   }
@@ -110,8 +116,8 @@ export const UsedPartInspectionPage = () => {
   return (
     <div className="delivery-container">
       <div style={{ marginBottom: '1.25rem' }}>
-        <Link to={`/jobs/${id}`} style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
-          ← Back to Trip Navigation
+        <Link to={`/delivery/jobs/${id}`} style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          <ArrowLeft size={14} /> Back to Trip Navigation
         </Link>
       </div>
 
@@ -119,12 +125,12 @@ export const UsedPartInspectionPage = () => {
       <div style={{ marginBottom: '1.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.25rem' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-            Used-Part Doorstep Physical Verification
+            Used-Part Doorstep Physical Intake & Chain of Custody
           </h1>
-          <span className="delivery-badge badge-usedpart">INSPECTION CONSOLE</span>
+          <span className="delivery-badge badge-usedpart">DOORSTEP INTAKE</span>
         </div>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-          Perform technical condition grading, photo audit, and payout trigger at seller doorstep.
+          Perform visual intake checklist, capture condition photos, and confirm custody handover for Partner Garage bench testing.
         </p>
       </div>
 
@@ -139,16 +145,16 @@ export const UsedPartInspectionPage = () => {
               {job?.items?.[0]?.title || 'Used Vehicle Component'}
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-              Seller: <strong>{job?.pickupLocation?.name}</strong> • Seller Asking: <strong>₹{expectedPrice}</strong>
+              Seller: <strong>{job?.pickupLocation?.name}</strong> • Pickup Hub: <strong>{job?.dropLocation?.name || 'Partner Garage Hub'}</strong>
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)' }}>
-              Estimated Valuation
+              Destination Protocol
             </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#9333EA' }}>
-              ₹{calculatedValuation}
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#9333EA' }}>
+              Partner Garage Bench Inspection
             </div>
           </div>
         </div>
@@ -168,13 +174,13 @@ export const UsedPartInspectionPage = () => {
             <CheckCircle2 size={32} strokeWidth={1.75} style={{ color: 'var(--color-emerald)', flexShrink: 0 }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--color-emerald)' }}>
-                Doorstep Verification Completed: {inspectionResultData?.verificationResult || 'APPROVED'}
+                Doorstep Custody Handover: {inspectionResultData?.verificationResult || 'APPROVED'}
               </div>
               <div style={{ fontSize: '0.85rem' }}>
-                Condition Grade: <strong>Grade {inspectionResultData?.conditionGrade || conditionGrade}</strong> • Seller Payout Triggered: <strong>₹{calculatedValuation}</strong>
+                Visual Grade: <strong>Grade {inspectionResultData?.conditionGrade || conditionGrade}</strong> • Chain of Custody Confirmed
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                Destination Shop Manifest created for Apex Auto Care intake.
+                Component ready for transport to partner garage for bench testing & final valuation.
               </div>
             </div>
           </div>
@@ -225,19 +231,19 @@ export const UsedPartInspectionPage = () => {
       {/* Step 2: Condition Grading */}
       <div className="delivery-card" style={{ marginBottom: '1.75rem' }}>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.35rem' }}>
-          2. Doorstep Condition Grading
+          2. Doorstep Visual Condition Assessment
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-          Select the verified physical condition grade to calculate final seller payout:
+          Select the initial visual condition grade (bench testing will be performed at the partner garage):
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
           {[
-            { grade: 'A+', label: 'Grade A+ (Mint)', mult: '90%' },
-            { grade: 'A', label: 'Grade A (Very Good)', mult: '80%' },
-            { grade: 'B', label: 'Grade B (Good)', mult: '70%' },
-            { grade: 'C', label: 'Grade C (Fair)', mult: '55%' },
-            { grade: 'D', label: 'Grade D (Defective)', mult: '0%' },
+            { grade: 'A+', label: 'Grade A+ (Mint)' },
+            { grade: 'A', label: 'Grade A (Very Good)' },
+            { grade: 'B', label: 'Grade B (Good)' },
+            { grade: 'C', label: 'Grade C (Fair)' },
+            { grade: 'D', label: 'Grade D (Defective)' },
           ].map((item) => (
             <button
               key={item.grade}
@@ -246,45 +252,94 @@ export const UsedPartInspectionPage = () => {
               className={`grade-pill ${conditionGrade === item.grade ? 'selected' : ''}`}
             >
               <div style={{ fontSize: '1.1rem' }}>{item.grade}</div>
-              <div style={{ fontSize: '0.7rem', opacity: 0.85 }}>{item.mult} Value</div>
+              <div style={{ fontSize: '0.7rem', opacity: 0.85 }}>{item.label}</div>
             </button>
           ))}
         </div>
 
         <div style={{ padding: '0.85rem 1rem', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
-          Selected: <strong>Grade {conditionGrade}</strong> • Payout Multiplier: <strong>{gradeMultipliers[conditionGrade] * 100}%</strong> • Final Seller Payout: <strong style={{ color: '#9333EA', fontSize: '1.05rem' }}>₹{calculatedValuation}</strong>
+          Assessed: <strong>Grade {conditionGrade}</strong> • Protocol: <strong>Doorstep Intake Custody Recorded</strong>
         </div>
       </div>
 
       {/* Step 3: Photographic Proof Audit */}
       <div className="delivery-card" style={{ marginBottom: '1.75rem' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-          3. Photographic Evidence
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-          {photos.map((url, i) => (
-            <div key={i} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-              <img
-                src={url}
-                alt={`Proof ${i + 1}`}
-                style={{ width: '100%', height: '140px', objectFit: 'cover' }}
-              />
-              <div style={{ padding: '0.4rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, background: 'var(--color-surface)' }}>
-                {i === 0 ? 'Front / Lens Angle' : 'Mount Tabs & Serial Tag'}
-              </div>
-            </div>
-          ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>
+              3. Doorstep Photographic Evidence
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+              Capture clear photos of the part, serial number tag, and any pre-existing blemishes.
+            </p>
+          </div>
+          <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+            <Camera size={14} /> Add Photos
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoUpload}
+              style={{ display: 'none' }}
+            />
+          </label>
         </div>
+
+        {photos.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+            <ImageIcon size={32} style={{ color: 'var(--color-text-muted)', margin: '0 auto 0.5rem' }} />
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              No photos attached yet. Click "Add Photos" to capture part photos before pickup.
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+            {photos.map((url, i) => (
+              <div key={i} style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)', position: 'relative' }}>
+                <img
+                  src={url}
+                  alt={`Proof ${i + 1}`}
+                  style={{ width: '100%', height: '140px', objectFit: 'cover' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => removePhoto(i)}
+                  style={{
+                    position: 'absolute',
+                    top: '6px',
+                    right: '6px',
+                    background: 'rgba(0,0,0,0.6)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                  title="Remove photo"
+                >
+                  <X size={14} />
+                </button>
+                <div style={{ padding: '0.4rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, background: 'var(--color-surface)' }}>
+                  Intake Photo #{i + 1}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Verification Notes */}
       <div className="delivery-card" style={{ marginBottom: '2rem' }}>
-        <label className="form-label">Inspection Notes & Physical Remarks</label>
+        <label className="form-label">Intake Remarks & Condition Observations</label>
         <textarea
           className="form-textarea"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="e.g. Tab clips in pristine state, zero lens scuffing. Verified with seller Aarav Sharma."
+          placeholder="e.g. Part collected from seller in good physical condition. Serial tag intact. Transporting to partner garage."
         />
       </div>
 
@@ -298,10 +353,10 @@ export const UsedPartInspectionPage = () => {
             style={{ background: '#9333EA', padding: '0.85rem 1.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
             {submitting ? (
-              'Processing Payout...'
+              'Recording Intake...'
             ) : (
               <>
-                <Check size={16} strokeWidth={2} /> Approve Inspection & Trigger ₹{calculatedValuation} Payout
+                <Check size={16} strokeWidth={2} /> Confirm Physical Intake & Transfer Custody
               </>
             )}
           </button>
@@ -315,7 +370,7 @@ export const UsedPartInspectionPage = () => {
           </button>
         </div>
       ) : (
-        <Link to={`/jobs/${id}`} className="btn btn-primary" style={{ padding: '0.85rem 1.75rem' }}>
+        <Link to={`/delivery/jobs/${id}`} className="btn btn-primary" style={{ padding: '0.85rem 1.75rem' }}>
           Return to Navigation & Transport to Hub →
         </Link>
       )}

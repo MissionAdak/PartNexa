@@ -190,7 +190,7 @@ export const AvailableJobsPage = () => {
                 >
                   Accept & Claim Job
                 </button>
-                <Link to={`/jobs/${job.id}`} className="btn btn-secondary">
+                <Link to={`/delivery/jobs/${job.id}`} className="btn btn-secondary">
                   Details
                 </Link>
               </div>

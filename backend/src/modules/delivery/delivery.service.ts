@@ -1,16 +1,30 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../../config/prisma';
 import AppError from '../../utils/AppError';
-import { generateAccessToken } from '../../utils/jwt';
-import { KYCDocumentType, OrderStatus, PaymentStatus, DeliveryAssignmentStatus, UsedPartStatus, PayoutStatus } from '@prisma/client';
-import { InventorySyncEngine } from '../inventory/inventorySync.service';
+import { generateAccessToken, generateRefreshToken } from '../../utils/jwt';
+import {
+  KYCDocumentType,
+  OrderStatus,
+  PaymentStatus,
+  DeliveryAssignmentStatus,
+  UsedPartStatus,
+  PayoutStatus,
+} from '@prisma/client';
 import { createNotification } from '../notifications/notifications.service';
+import {
+  saveKycDocumentFile,
+  createSignedKycUrl,
+  retrieveKycFileBuffer,
+  deleteKycDocumentFile,
+} from './deliveryKycStorage.service';
+
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ============================================================================
 // HELPER: RESOLVE PARTNER FROM USER
 // ============================================================================
 export const resolvePartnerByUser = async (userId: string) => {
-  let partner = await prisma.deliveryPartner.findUnique({
+  const partner = await prisma.deliveryPartner.findUnique({
     where: { userId },
     include: {
       user: {
@@ -28,30 +42,12 @@ export const resolvePartnerByUser = async (userId: string) => {
   });
 
   if (!partner) {
-    // If demo partner fallback
-    partner = await prisma.deliveryPartner.findFirst({
-      where: { id: 'partner-1' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-            status: true,
-            kyc: true,
-          },
-        },
-      },
-    });
+    throw AppError.notFound('No delivery partner profile associated with this account. Please register first.');
   }
 
-  if (!partner) {
-    throw AppError.notFound('No delivery partner profile associated with this account.');
-  }
-
-  const isApproved = (partner.user as any)?.status === 'ACTIVE' && (partner.user as any)?.kyc?.status === 'APPROVED';
+  const isApproved =
+    (partner.user as any)?.status === 'ACTIVE' &&
+    (partner.user as any)?.kyc?.status === 'APPROVED';
 
   return {
     ...partner,
@@ -59,6 +55,17 @@ export const resolvePartnerByUser = async (userId: string) => {
     verificationStatus: (partner.user as any)?.kyc?.status || 'NOT_SUBMITTED',
   };
 };
+
+// Helper to sanitize user object
+const safeUser = (user: any) => ({
+  id: user.id,
+  email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  phone: user.phone,
+  role: user.role,
+  status: user.status,
+});
 
 // ============================================================================
 // 1. ONBOARDING & AUTHENTICATION
@@ -148,8 +155,6 @@ export const registerDeliveryPartner = async (data: {
       vehicleNum: data.vehicleNum ? data.vehicleNum.trim().toUpperCase() : null,
       licenseNumber: data.licenseNumber ? data.licenseNumber.trim().toUpperCase() : null,
       isOnline: false,
-      currentLat: 12.9716,
-      currentLng: 77.5946,
       rating: 5.0,
       totalDeliveries: 0,
     },
@@ -165,9 +170,9 @@ export const registerDeliveryPartner = async (data: {
           phone: data.phone.trim(),
           line1: data.address?.trim() || 'Operational Base',
           line2: data.emergencyContact ? `Emergency Contact: ${data.emergencyContact.trim()}` : null,
-          city: data.city?.trim() || data.preferredCity?.trim() || 'Bengaluru',
-          state: data.state?.trim() || 'Karnataka',
-          pincode: data.postalCode?.trim() || '560001',
+          city: data.city?.trim() || data.preferredCity?.trim() || 'Operational Area',
+          state: data.state?.trim() || 'State',
+          pincode: data.postalCode?.trim() || '000000',
           landmark: data.preferredCity ? `Preferred Zone: ${data.preferredCity.trim()}` : null,
           isDefault: true,
         },
@@ -185,31 +190,39 @@ export const registerDeliveryPartner = async (data: {
     },
   });
 
-  const token = generateAccessToken({
+  // 9. Generate secure shared-platform tokens
+  const accessToken = generateAccessToken({
     id: newUser.id,
     email: newUser.email,
     role: newUser.role,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
   });
 
+  const refreshToken = generateRefreshToken({ id: newUser.id });
+  try {
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: newUser.id,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+  } catch (tErr) {
+    console.warn('[registerDeliveryPartner] Refresh token persistence warning:', tErr);
+  }
+
   return {
-    user: {
-      id: newUser.id,
-      email: newUser.email,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      phone: newUser.phone,
-      role: newUser.role,
-      status: newUser.status,
-    },
+    user: safeUser(newUser),
     partner: {
       ...newPartner,
       isActivated: false,
       verificationStatus: 'NOT_SUBMITTED',
     },
     kyc: newKyc,
-    token,
-    accessToken: token,
-    refreshToken: token,
+    token: accessToken,
+    accessToken,
+    refreshToken,
   };
 };
 
@@ -219,7 +232,7 @@ export const loginDeliveryPartner = async (data: { email: string; password: stri
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: data.email.toLowerCase() },
+    where: { email: data.email.toLowerCase().trim() },
   });
 
   if (!user) {
@@ -231,9 +244,10 @@ export const loginDeliveryPartner = async (data: { email: string; password: stri
     throw AppError.unauthorized('Invalid email or password.');
   }
 
-  const partner = await prisma.deliveryPartner.findFirst({
+  // Strictly resolve the authenticated user's own delivery partner profile
+  const partner = await prisma.deliveryPartner.findUnique({
     where: { userId: user.id },
-  }) || (user.role === 'DELIVERY_PARTNER' ? await prisma.deliveryPartner.findFirst({ where: { id: 'partner-1' } }) : null);
+  });
 
   if (!partner) {
     throw AppError.forbidden('No delivery partner profile is registered for this account.');
@@ -242,43 +256,44 @@ export const loginDeliveryPartner = async (data: { email: string; password: stri
   const kyc = await prisma.kYC.findUnique({
     where: { userId: user.id },
     include: { documents: true },
-  }) || await prisma.kYC.findFirst({ where: { userId: 'rider-user-1' }, include: { documents: true } });
+  });
 
-  const token = generateAccessToken({
+  const accessToken = generateAccessToken({
     id: user.id,
     email: user.email,
     role: user.role,
+    firstName: user.firstName,
+    lastName: user.lastName,
   });
 
+  const refreshToken = generateRefreshToken({ id: user.id });
+  try {
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+  } catch (tErr) {
+    console.warn('[loginDeliveryPartner] Refresh token persistence warning:', tErr);
+  }
+
+  const isApproved = user.status === 'ACTIVE' && (kyc as any)?.status === 'APPROVED';
+
   return {
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phone: user.phone,
-      role: user.role,
-      status: user.status,
-    },
+    user: safeUser(user),
     partner: {
       ...partner,
-      isActivated: user.status === 'ACTIVE' && (kyc as any)?.status === 'APPROVED',
+      isActivated: isApproved,
       verificationStatus: (kyc as any)?.status || 'NOT_SUBMITTED',
     },
     kyc,
-    token,
-    accessToken: token,
-    refreshToken: token,
+    token: accessToken,
+    accessToken,
+    refreshToken,
   };
 };
-
-import {
-  saveKycDocumentFile,
-  createSignedKycUrl,
-  retrieveKycFileBuffer,
-  MAX_FILE_SIZE_BYTES,
-  ALLOWED_MIME_TYPES,
-} from './deliveryKycStorage.service';
 
 // ============================================================================
 // 2. KYC UPLOAD & ADMIN VERIFICATION
@@ -290,7 +305,6 @@ export const getKycDetails = async (userId: string) => {
   });
 
   if (!kyc) {
-    // If not found, return empty unsubmitted record
     return {
       status: 'NOT_SUBMITTED',
       documents: [],
@@ -300,77 +314,20 @@ export const getKycDetails = async (userId: string) => {
     };
   }
 
-  // Attach signed short-lived URLs and resolve display document type
-  const documentsWithSignedUrls = (kyc.documents || []).map((doc: any) => {
-    const signedUrl = createSignedKycUrl(doc.objectKey);
-    let resolvedType = doc.documentType;
-    if (doc.documentType === 'OTHER') {
-      const match = doc.objectKey.match(/kyc_([A-Z_]+)_\d+/i);
-      if (match && match[1]) {
-        resolvedType = match[1].toUpperCase();
-      }
-    }
-    return {
-      ...doc,
-      documentType: resolvedType,
-      fileUrl: signedUrl,
-    };
-  });
+  // Generate fresh, short-lived signed URLs for each private document
+  const documentsWithSignedUrls = await Promise.all(
+    (kyc.documents || []).map(async (doc: any) => {
+      const signedUrl = await createSignedKycUrl(doc.objectKey);
+      return {
+        ...doc,
+        fileUrl: signedUrl,
+      };
+    })
+  );
 
   return {
     ...kyc,
     documents: documentsWithSignedUrls,
-  };
-};
-
-export const uploadKycDocument = async ({
-  userId,
-  documentType,
-  objectKey,
-  fileUrl,
-  mimeType,
-  panNumber,
-  aadharNumber,
-}: {
-  userId: string;
-  documentType: KYCDocumentType;
-  objectKey?: string;
-  fileUrl?: string;
-  mimeType?: string;
-  panNumber?: string;
-  aadharNumber?: string;
-}) => {
-  // Ensure KYC container exists
-  const kyc = await prisma.kYC.upsert({
-    where: { userId },
-    create: {
-      userId,
-      status: 'NOT_SUBMITTED',
-      panNumber: panNumber || null,
-      aadharNumber: aadharNumber || null,
-    },
-    update: {
-      ...(panNumber && { panNumber }),
-      ...(aadharNumber && { aadharNumber }),
-    },
-  });
-
-  const doc = await prisma.kYCDocument.create({
-    data: {
-      kycId: kyc.id,
-      documentType,
-      objectKey: objectKey || `kyc/${userId}/${documentType.toLowerCase()}_${Date.now()}.jpg`,
-      fileUrl: fileUrl || `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600`,
-      mimeType: mimeType || 'image/jpeg',
-      verificationStatus: 'PENDING',
-    },
-  });
-
-  const updatedKyc = await getKycDetails(userId);
-
-  return {
-    document: doc,
-    kyc: updatedKyc,
   };
 };
 
@@ -379,6 +336,7 @@ export const uploadKycDocumentFile = async ({
   documentType,
   file,
   idNumber,
+  licenseNumber,
   vehicleType,
   vehicleNum,
 }: {
@@ -386,6 +344,7 @@ export const uploadKycDocumentFile = async ({
   documentType: string;
   file: Express.Multer.File;
   idNumber?: string;
+  licenseNumber?: string;
   vehicleType?: string;
   vehicleNum?: string;
 }) => {
@@ -393,49 +352,65 @@ export const uploadKycDocumentFile = async ({
     throw AppError.badRequest('Please select a file to upload.');
   }
 
-  // Check if KYC is currently locked under review
+  // Normalize document type
+  const validTypes: string[] = [
+    'AADHAAR_CARD',
+    'PAN_CARD',
+    'PASSPORT',
+    'VOTER_ID',
+    'DRIVING_LICENSE',
+    'VEHICLE_RC',
+    'PROFILE_PHOTO',
+    'VEHICLE_PHOTO',
+    'INSURANCE',
+    'OTHER',
+  ];
+
+  const normalizedDocType = documentType.toUpperCase();
+  const prismaDocType: KYCDocumentType = validTypes.includes(normalizedDocType)
+    ? (normalizedDocType as KYCDocumentType)
+    : KYCDocumentType.OTHER;
+
+  // Check if KYC is locked under review
   const existingKyc = await prisma.kYC.findUnique({
     where: { userId },
     include: { documents: true },
   });
 
   if (existingKyc?.status === 'PENDING') {
-    throw AppError.badRequest('Your KYC is currently under review by compliance. Documents are locked until review is completed.');
+    throw AppError.badRequest(
+      'Your KYC is currently under review by compliance. Documents are locked until review is completed.'
+    );
   }
 
-  // 1. Process and securely store file (validates size, mime, magic bytes, assigns safe name)
+  // 1. Process and securely store file (validates size, mime, magic bytes, uploads to Supabase)
   const savedFile = await saveKycDocumentFile({
     userId,
-    documentType,
+    documentType: prismaDocType,
     file,
   });
 
-  // 2. Generate signed URL for immediate preview
-  const signedUrl = createSignedKycUrl(savedFile.objectKey);
-
-  // 3. Map documentType to valid Prisma enum
-  const validPrismaEnums: string[] = ['PAN_CARD', 'AADHAAR_CARD', 'DRIVING_LICENSE', 'SHOP_REGISTRATION', 'GST_CERTIFICATE', 'VEHICLE_RC', 'OTHER'];
-  const prismaDocType = (validPrismaEnums.includes(documentType) ? documentType : 'OTHER') as KYCDocumentType;
-
-  // 4. Upsert KYC record
+  // 2. Ensure KYC container exists
   const kyc = await prisma.kYC.upsert({
     where: { userId },
     create: {
       userId,
       status: 'NOT_SUBMITTED',
-      aadharNumber: idNumber || null,
+      panNumber: prismaDocType === 'PAN_CARD' ? idNumber : null,
+      aadharNumber: prismaDocType === 'AADHAAR_CARD' ? idNumber : null,
     },
     update: {
-      ...(idNumber && { aadharNumber: idNumber }),
+      ...(prismaDocType === 'PAN_CARD' && idNumber && { panNumber: idNumber }),
+      ...(prismaDocType === 'AADHAAR_CARD' && idNumber && { aadharNumber: idNumber }),
       ...(existingKyc?.status === 'REJECTED' && { status: 'NOT_SUBMITTED', rejectionReason: null }),
     },
   });
 
-  // 5. If partner previously uploaded a document of this type, replace it
-  const cleanTypePattern = documentType.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
-  const existingDoc = (existingKyc?.documents || []).find((d: any) =>
-    d.documentType === prismaDocType && d.objectKey.toUpperCase().includes(cleanTypePattern)
-  );
+  // 3. Storage Cleanup: if a document of this type already exists, delete old private object
+  const existingDoc = (existingKyc?.documents || []).find((d: any) => d.documentType === prismaDocType);
+  if (existingDoc && existingDoc.objectKey && existingDoc.objectKey !== savedFile.objectKey) {
+    await deleteKycDocumentFile(existingDoc.objectKey);
+  }
 
   let doc;
   if (existingDoc) {
@@ -443,8 +418,9 @@ export const uploadKycDocumentFile = async ({
       where: { id: existingDoc.id },
       data: {
         objectKey: savedFile.objectKey,
-        fileUrl: signedUrl,
+        fileUrl: savedFile.fileUrl,
         mimeType: savedFile.mimeType,
+        fileSize: savedFile.fileSize,
         verificationStatus: 'PENDING',
         rejectionReason: null,
       },
@@ -455,35 +431,35 @@ export const uploadKycDocumentFile = async ({
         kycId: kyc.id,
         documentType: prismaDocType,
         objectKey: savedFile.objectKey,
-        fileUrl: signedUrl,
+        fileUrl: savedFile.fileUrl,
         mimeType: savedFile.mimeType,
+        fileSize: savedFile.fileSize,
         verificationStatus: 'PENDING',
       },
     });
   }
 
-  // 6. Update vehicle details on partner if supplied
-  if (vehicleType || vehicleNum) {
-    const existingPartner = await prisma.deliveryPartner.findUnique({ where: { userId } });
-    if (existingPartner) {
-      await prisma.deliveryPartner.update({
-        where: { id: existingPartner.id },
-        data: {
-          ...(vehicleType && { vehicleType }),
-          ...(vehicleNum && { vehicleNum }),
-          updatedAt: new Date(),
-        },
-      });
-    }
+  // 4. Persist Driving Licence number and Vehicle details on DeliveryPartner
+  const cleanLicenseNum = licenseNumber?.trim() || (prismaDocType === 'DRIVING_LICENSE' && idNumber ? idNumber.trim() : undefined);
+  const cleanVehicleNum = vehicleNum?.trim() || (prismaDocType === 'VEHICLE_RC' && idNumber ? idNumber.trim() : undefined);
+
+  const existingPartner = await prisma.deliveryPartner.findUnique({ where: { userId } });
+  if (existingPartner) {
+    await prisma.deliveryPartner.update({
+      where: { id: existingPartner.id },
+      data: {
+        ...(cleanLicenseNum && { licenseNumber: cleanLicenseNum.toUpperCase() }),
+        ...(cleanVehicleNum && { vehicleNum: cleanVehicleNum.toUpperCase() }),
+        ...(vehicleType && { vehicleType }),
+        updatedAt: new Date(),
+      },
+    });
   }
 
   const updatedKyc = await getKycDetails(userId);
+
   return {
-    document: {
-      ...doc,
-      fileUrl: signedUrl,
-      documentType,
-    },
+    document: doc,
     kyc: updatedKyc,
   };
 };
@@ -507,6 +483,9 @@ export const removeKycDocument = async (userId: string, docId: string) => {
     throw AppError.notFound('KYC document not found.');
   }
 
+  // Delete physical object from Supabase / local storage
+  await deleteKycDocumentFile(doc.objectKey);
+
   await prisma.kYCDocument.delete({
     where: { id: docId },
   });
@@ -524,15 +503,15 @@ export const getKycDocumentFileStream = async (user: any, docId: string) => {
     throw AppError.notFound('Document not found.');
   }
 
-  // Security Access Check: Only Admin or the owning partner
-  const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+  // Strict Authorization: Only Admin or the owning partner
+  const isAdmin = user.role === 'ADMIN' || (user.role as string) === 'SUPER_ADMIN';
   const isOwner = doc.kyc?.userId === user.id;
 
   if (!isAdmin && !isOwner) {
     throw AppError.forbidden('Forbidden: You do not have permission to access this private KYC document.');
   }
 
-  const fileResult = retrieveKycFileBuffer(doc.objectKey);
+  const fileResult = await retrieveKycFileBuffer(doc.objectKey);
   if (!fileResult) {
     throw AppError.notFound('Document file data not found on secure storage.');
   }
@@ -544,7 +523,19 @@ export const getKycDocumentFileStream = async (user: any, docId: string) => {
   };
 };
 
-export const submitKycForReview = async (userId: string) => {
+/**
+ * Validates and submits KYC for compliance review.
+ * Enforces all 5 required document categories before allowing submission:
+ * 1. Identity Proof (AADHAAR_CARD, PAN_CARD, PASSPORT, VOTER_ID)
+ * 2. Driving Licence (DRIVING_LICENSE)
+ * 3. Vehicle RC (VEHICLE_RC)
+ * 4. Profile Photograph (PROFILE_PHOTO)
+ * 5. Vehicle Photograph (VEHICLE_PHOTO)
+ */
+export const submitKycForReview = async (
+  userId: string,
+  extraData?: { licenseNumber?: string; vehicleNum?: string }
+) => {
   const kyc = await prisma.kYC.findUnique({
     where: { userId },
     include: { documents: true },
@@ -552,6 +543,43 @@ export const submitKycForReview = async (userId: string) => {
 
   if (!kyc || !kyc.documents || kyc.documents.length === 0) {
     throw AppError.badRequest('Please upload required KYC documents before submitting for review.');
+  }
+
+  const uploadedTypes = new Set(kyc.documents.map((d: any) => d.documentType));
+
+  const identityTypes = ['AADHAAR_CARD', 'PAN_CARD', 'PASSPORT', 'VOTER_ID'];
+  const hasIdentityProof = identityTypes.some((t) => uploadedTypes.has(t as any));
+  const hasDrivingLicense = uploadedTypes.has(KYCDocumentType.DRIVING_LICENSE);
+  const hasVehicleRc = uploadedTypes.has(KYCDocumentType.VEHICLE_RC);
+  const hasProfilePhoto = uploadedTypes.has(KYCDocumentType.PROFILE_PHOTO);
+  const hasVehiclePhoto = uploadedTypes.has(KYCDocumentType.VEHICLE_PHOTO);
+
+  const missingCategories: string[] = [];
+  if (!hasIdentityProof) missingCategories.push('Identity Proof (Aadhaar / PAN / Passport / Voter ID)');
+  if (!hasDrivingLicense) missingCategories.push('Driving Licence');
+  if (!hasVehicleRc) missingCategories.push('Vehicle RC');
+  if (!hasProfilePhoto) missingCategories.push('Profile Photograph');
+  if (!hasVehiclePhoto) missingCategories.push('Vehicle Photograph');
+
+  if (missingCategories.length > 0) {
+    throw AppError.badRequest(
+      `Cannot submit KYC for review. Missing ${missingCategories.length} required document(s): ${missingCategories.join(', ')}. All 5 required documents must be uploaded.`
+    );
+  }
+
+  // Update Driving Licence and Vehicle registration if supplied
+  if (extraData?.licenseNumber || extraData?.vehicleNum) {
+    const partner = await prisma.deliveryPartner.findUnique({ where: { userId } });
+    if (partner) {
+      await prisma.deliveryPartner.update({
+        where: { id: partner.id },
+        data: {
+          ...(extraData.licenseNumber && { licenseNumber: extraData.licenseNumber.trim().toUpperCase() }),
+          ...(extraData.vehicleNum && { vehicleNum: extraData.vehicleNum.trim().toUpperCase() }),
+          updatedAt: new Date(),
+        },
+      });
+    }
   }
 
   const updatedKyc = await prisma.kYC.update({
@@ -572,7 +600,7 @@ export const submitKycForReview = async (userId: string) => {
     },
   });
 
-  // Notify Admins and Partner
+  // Notify Admins
   try {
     const partner = await prisma.deliveryPartner.findUnique({
       where: { userId },
@@ -589,7 +617,7 @@ export const submitKycForReview = async (userId: string) => {
       await createNotification({
         userId: admin.id,
         title: 'New Delivery KYC Submission',
-        body: `${partnerName} has submitted KYC documents for compliance review.`,
+        body: `${partnerName} has submitted all 5 required KYC documents for compliance review.`,
         channel: 'IN_APP',
         status: 'DELIVERED',
         data: {
@@ -602,7 +630,7 @@ export const submitKycForReview = async (userId: string) => {
     await createNotification({
       userId,
       title: 'KYC Submitted — Under Review',
-      body: 'Your KYC documents have been successfully submitted and are now under review by the PartNexa compliance desk.',
+      body: 'Your 5 required KYC documents have been submitted and are now queued for Admin verification.',
       channel: 'IN_APP',
       status: 'DELIVERED',
       data: {
@@ -611,14 +639,19 @@ export const submitKycForReview = async (userId: string) => {
       },
     });
   } catch (err) {
-    console.warn('[DeliveryService] KYC submission notification warning:', err);
+    console.warn('[DeliveryService] KYC notification warning:', err);
   }
 
   return getKycDetails(userId);
 };
 
+/**
+ * Admin verification endpoint: approves or rejects delivery partner KYC.
+ * Stores the actual Admin User ID in reviewedBy.
+ */
 export const adminVerifyKyc = async (
   userId: string,
+  adminUserId: string,
   data: { status: 'APPROVED' | 'REJECTED'; rejectionReason?: string }
 ) => {
   if (!['APPROVED', 'REJECTED'].includes(data.status)) {
@@ -626,21 +659,23 @@ export const adminVerifyKyc = async (
   }
 
   if (data.status === 'REJECTED' && !data.rejectionReason?.trim()) {
-    throw AppError.badRequest('A specific rejection reason is required when rejecting KYC (e.g. "RC image is unreadable").');
+    throw AppError.badRequest(
+      'A specific rejection reason is required when rejecting KYC (e.g. "RC image is unreadable").'
+    );
   }
 
   const isApproved = data.status === 'APPROVED';
 
   // Transaction-safe execution updating KYC, documents, User role status, and Partner duty
   const txResult = await prisma.$transaction(async (tx: any) => {
-    // 1. Update KYC container
+    // 1. Update KYC container with real Admin User ID
     const updatedKyc = await tx.kYC.update({
       where: { userId },
       data: {
         status: data.status,
-        rejectionReason: isApproved ? null : data.rejectionReason || 'Documents did not meet criteria.',
+        rejectionReason: isApproved ? null : data.rejectionReason || 'Documents did not meet compliance criteria.',
         reviewedAt: new Date(),
-        reviewedBy: 'admin-compliance-desk',
+        reviewedBy: adminUserId || 'admin',
       },
       include: { documents: true },
     });
@@ -663,7 +698,7 @@ export const adminVerifyKyc = async (
       },
     });
 
-    // 4. Update Partner: If rejected, ensure partner cannot stay online
+    // 4. Update Partner: If rejected, force partner offline
     let partner = await tx.deliveryPartner.findUnique({
       where: { userId },
       include: { user: true },
@@ -698,7 +733,7 @@ export const adminVerifyKyc = async (
       userId,
       title: isApproved ? 'KYC Approved — Account Activated' : 'KYC Verification Rejected',
       body: isApproved
-        ? 'Congratulations! Your delivery partner KYC has been approved. You are now authorized to accept delivery jobs.'
+        ? 'Congratulations! Your delivery partner KYC has been approved. You are now authorized to go online and accept delivery jobs.'
         : `Your KYC submission was rejected: ${data.rejectionReason || 'Please review your uploaded documents.'}. You can replace rejected documents and resubmit.`,
       channel: 'IN_APP',
       status: 'DELIVERED',
@@ -749,7 +784,9 @@ export const toggleDutyStatus = async (userId: string, isOnline: boolean) => {
   const partner = await resolvePartnerByUser(userId);
 
   if (isOnline && !partner.isActivated) {
-    throw AppError.badRequest('Cannot go online. Your profile is pending KYC verification and admin activation.');
+    throw AppError.badRequest(
+      'Cannot go online. Your profile is pending KYC verification and Admin activation.'
+    );
   }
 
   const updated = await prisma.deliveryPartner.update({
@@ -795,6 +832,12 @@ export const assignmentInclude = {
       },
     },
   },
+  usedPartListing: {
+    include: {
+      seller: { select: { id: true, firstName: true, lastName: true, phone: true } },
+      assignedShop: true,
+    },
+  },
 };
 
 export const formatDeliveryAssignment = (assignment: any) => {
@@ -811,13 +854,18 @@ export const formatDeliveryAssignment = (assignment: any) => {
     Boolean(assignment.returnRequestId) ||
     assignment.notes?.includes('[RETURN_PICKUP]');
 
+  const isUsedPart =
+    assignment.type === 'USED_PART_PICKUP' ||
+    Boolean(assignment.usedPartListingId) ||
+    assignment.notes?.includes('Used-Part') ||
+    assignment.notes?.includes('USED_PART');
+
   // Derive type
   const type = isReturn
     ? 'RETURN_PICKUP'
-    : assignment.type ||
-      (assignment.usedPartListingId || assignment.notes?.includes('Used-Part') || assignment.notes?.includes('USED_PART')
-        ? 'USED_PART_PICKUP'
-        : 'CUSTOMER_DELIVERY');
+    : isUsedPart
+    ? 'USED_PART_PICKUP'
+    : assignment.type || 'CUSTOMER_DELIVERY';
 
   // Derive order number
   const orderNumber =
@@ -826,50 +874,69 @@ export const formatDeliveryAssignment = (assignment: any) => {
     assignment.notes?.match(/PS-\d+-\d+/)?.[0] ||
     `ORD-${assignment.id.slice(0, 8).toUpperCase()}`;
 
-  // Derive Pickup Location
-  const pickupLocation = isReturn
-    ? (assignment.pickupLocation || {
-        name: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Doorstep (Return)'),
-        address: address ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}` : 'Customer Pickup Address',
-        contactPerson: address?.fullName || 'Customer',
-        phone: address?.phone || order?.user?.phone || '+91 91234 56789',
-        lat: address?.latitude || 12.9352,
-        lng: address?.longitude || 77.6245,
-      })
-    : (assignment.pickupLocation || {
-        name: shop?.name || 'PartNexa Central Logistics Hub',
-        address:
-          shop?.addressLine1 || shop?.address
-            ? `${shop.addressLine1 || shop.address}, ${shop.city || 'Bengaluru'}`
-            : 'Indiranagar 100ft Rd, HAL 2nd Stage, Bengaluru, Karnataka 560038',
-        contactPerson: shop?.ownerName || shop?.name || 'Hub Dispatch Manager',
-        phone: shop?.phone || '+91 98765 43210',
-        lat: shop?.latitude || 12.9716,
-        lng: shop?.longitude || 77.6412,
-      });
+  // Derive Pickup Location (Real data only, no fabricated phone numbers or hub addresses)
+  let pickupLocation: any;
+  if (isReturn) {
+    pickupLocation = {
+      name: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Doorstep (Return)'),
+      address: address ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}` : 'Customer Pickup Address',
+      contactPerson: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer'),
+      phone: address?.phone || order?.user?.phone || null,
+      lat: address?.latitude || null,
+      lng: address?.longitude || null,
+    };
+  } else if (isUsedPart && assignment.usedPartListing) {
+    const listing = assignment.usedPartListing;
+    pickupLocation = {
+      name: listing.seller ? `${listing.seller.firstName || ''} ${listing.seller.lastName || ''}`.trim() : 'Seller Doorstep',
+      address: listing.pickupAddress || 'Seller pickup address',
+      contactPerson: listing.seller ? `${listing.seller.firstName || ''} ${listing.seller.lastName || ''}`.trim() : 'Seller',
+      phone: listing.seller?.phone || null,
+      lat: null,
+      lng: null,
+    };
+  } else {
+    pickupLocation = {
+      name: shop?.name || 'Partner Dispatch Hub',
+      address: shop?.addressLine1 || shop?.address ? `${shop.addressLine1 || shop.address}, ${shop.city || ''}` : 'Pickup Location unavailable',
+      contactPerson: shop?.ownerName || shop?.name || 'Hub Manager',
+      phone: shop?.phone || null,
+      lat: shop?.latitude || null,
+      lng: shop?.longitude || null,
+    };
+  }
 
   // Derive Drop Destination
-  const dropLocation = isReturn
-    ? (assignment.dropLocation || {
-        name: 'PartNexa Central Quality Inspection Hub',
-        address: 'Indiranagar 100ft Rd, Central Logistics Hub, Bengaluru, Karnataka 560038',
-        contactPerson: 'Returns Quality Officer',
-        phone: '+91 98765 00000',
-        lat: 12.9716,
-        lng: 77.6412,
-      })
-    : (assignment.dropLocation || {
-        name:
-          address?.fullName ||
-          (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Drop Point'),
-        address: address
-          ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}`
-          : 'Customer Delivery Address',
-        contactPerson: address?.fullName || 'Customer',
-        phone: address?.phone || order?.user?.phone || '+91 91234 56789',
-        lat: 12.9352,
-        lng: 77.6245,
-      });
+  let dropLocation: any;
+  if (isReturn) {
+    dropLocation = {
+      name: 'PartNexa Returns Inspection Center',
+      address: 'Central Logistics Hub',
+      contactPerson: 'Returns Quality Officer',
+      phone: null,
+      lat: null,
+      lng: null,
+    };
+  } else if (isUsedPart && assignment.usedPartListing?.assignedShop) {
+    const garage = assignment.usedPartListing.assignedShop;
+    dropLocation = {
+      name: garage.name || 'Partner Garage for Bench Inspection',
+      address: garage.addressLine1 || garage.address ? `${garage.addressLine1 || garage.address}, ${garage.city || ''}` : 'Partner Garage',
+      contactPerson: garage.ownerName || 'Garage Inspection Desk',
+      phone: garage.phone || null,
+      lat: garage.latitude || null,
+      lng: garage.longitude || null,
+    };
+  } else {
+    dropLocation = {
+      name: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer Destination'),
+      address: address ? `${address.line1 || ''}, ${address.city || ''}, ${address.pincode || ''}` : 'Customer Delivery Address',
+      contactPerson: address?.fullName || (order?.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'Customer'),
+      phone: address?.phone || order?.user?.phone || null,
+      lat: address?.latitude || null,
+      lng: address?.longitude || null,
+    };
+  }
 
   // Derive COD collection status
   const codAmountToCollect = isCod ? totalAmount : 0;
@@ -877,10 +944,7 @@ export const formatDeliveryAssignment = (assignment: any) => {
   if (!codStatus) {
     if (!isCod) {
       codStatus = 'NOT_APPLICABLE';
-    } else if (
-      assignment.notes?.includes('[COD_RECONCILED]') ||
-      assignment.codStatus === 'RECONCILED'
-    ) {
+    } else if (assignment.notes?.includes('[COD_RECONCILED]')) {
       codStatus = 'RECONCILED';
     } else if (
       assignment.notes?.includes('[COD_COLLECTED]') ||
@@ -899,19 +963,14 @@ export const formatDeliveryAssignment = (assignment: any) => {
     ? codAmountToCollect
     : 0;
 
-  // Navigation telemetry
-  const navigationInfo = assignment.navigationInfo || {
-    currentDistance:
-      assignment.status === 'DELIVERED'
-        ? 'Delivered'
-        : assignment.status === 'IN_TRANSIT'
-        ? '1.2 km away'
-        : `${assignment.distanceKm || 3.8} km to destination`,
-    etaMinutes: assignment.status === 'DELIVERED' ? 0 : assignment.status === 'IN_TRANSIT' ? 4 : 12,
+  // Real telemetry or clear uncalculated indicators (never fabricate speeds/ETAs)
+  const navigationInfo = {
+    currentDistance: assignment.distanceKm ? `${assignment.distanceKm} km` : 'Distance not calculated',
+    etaMinutes: assignment.status === 'DELIVERED' ? 0 : null,
     routeSummary:
       assignment.status === 'DELIVERED'
         ? 'Delivery completed'
-        : `En route to ${dropLocation.name} (${dropLocation.address.slice(0, 30)}...)`,
+        : `En route to ${dropLocation.name}`,
   };
 
   const items =
@@ -923,7 +982,16 @@ export const formatDeliveryAssignment = (assignment: any) => {
       quantity: it.quantity,
       price: Number(it.unitPrice),
     })) ||
-    [];
+    (assignment.usedPartListing
+      ? [
+          {
+            id: assignment.usedPartListing.id,
+            title: assignment.usedPartListing.title,
+            condition: assignment.usedPartListing.condition,
+            price: Number(assignment.usedPartListing.askingPrice),
+          },
+        ]
+      : []);
 
   return {
     id: assignment.id,
@@ -932,9 +1000,9 @@ export const formatDeliveryAssignment = (assignment: any) => {
     deliveryPartnerId: assignment.deliveryPartnerId,
     type,
     status: assignment.status,
-    deliveryFee: Number(assignment.deliveryFee || 50),
-    distanceKm: Number(assignment.distanceKm || 3.8),
-    paymentMethod: order?.paymentMethod || (isCod ? 'CASH_ON_DELIVERY' : 'RAZORPAY'),
+    deliveryFee: Number(assignment.deliveryFee || 0),
+    distanceKm: assignment.distanceKm ? Number(assignment.distanceKm) : null,
+    paymentMethod: order?.paymentMethod || (isCod ? 'CASH_ON_DELIVERY' : 'ONLINE'),
     paymentStatus: order?.paymentStatus || 'PENDING',
     codAmountToCollect,
     codAmountCollected,
@@ -950,68 +1018,82 @@ export const formatDeliveryAssignment = (assignment: any) => {
     deliveredAt: assignment.deliveredAt,
     createdAt: assignment.createdAt,
     updatedAt: assignment.updatedAt,
-    order: order
-      ? {
-          ...order,
-          orderNumber,
-        }
-      : null,
-    deliveryPartner: assignment.deliveryPartner,
   };
 };
 
 // ============================================================================
-// 4. DELIVERY DASHBOARD & METRICS
+// 4. DELIVERY DASHBOARD & METRICS (SCALABLE PRISMA WHERE QUERIES)
 // ============================================================================
 export const getDeliveryDashboard = async (userId: string) => {
   const partner = await resolvePartnerByUser(userId);
 
-  const [rawAssignments, partnerReconciliations, kyc] = await Promise.all([
-    prisma.deliveryAssignment.findMany({
-      include: assignmentInclude,
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.cODReconciliation.findMany({ where: { deliveryPartnerId: partner.id } }),
-    prisma.kYC.findUnique({ where: { userId: partner.userId }, include: { documents: true } }),
-  ]);
+  // Use targeted Prisma WHERE queries instead of fetching all assignments across the database
+  const [activeTripsRaw, completedTripsRaw, availableJobsRaw, usedPartPickupsRaw, codUnreconciledRaw, kyc] =
+    await Promise.all([
+      // Partner's active trips
+      prisma.deliveryAssignment.findMany({
+        where: {
+          deliveryPartnerId: partner.id,
+          status: { in: ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'] },
+        },
+        include: assignmentInclude,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      // Partner's recent completed deliveries
+      prisma.deliveryAssignment.findMany({
+        where: {
+          deliveryPartnerId: partner.id,
+          status: 'DELIVERED',
+        },
+        include: assignmentInclude,
+        orderBy: { deliveredAt: 'desc' },
+        take: 10,
+      }),
+      // Available unclaimed jobs (only eligible if partner is activated and online)
+      partner.isActivated && partner.isOnline
+        ? prisma.deliveryAssignment.findMany({
+            where: {
+              status: 'ASSIGNED',
+              OR: [{ deliveryPartnerId: null }, { deliveryPartnerId: partner.id }],
+            },
+            include: assignmentInclude,
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          })
+        : Promise.resolve([]),
+      // Used part pickups for this partner
+      prisma.deliveryAssignment.findMany({
+        where: {
+          deliveryPartnerId: partner.id,
+          type: 'USED_PART_PICKUP',
+        },
+        include: assignmentInclude,
+      }),
+      // Unreconciled collected COD cash jobs
+      prisma.deliveryAssignment.findMany({
+        where: {
+          deliveryPartnerId: partner.id,
+          status: 'DELIVERED',
+          OR: [{ codStatus: 'COLLECTED' }, { notes: { contains: '[COD_COLLECTED]' } }],
+          NOT: { notes: { contains: '[COD_RECONCILED]' } },
+        },
+        include: assignmentInclude,
+      }),
+      // Partner KYC record
+      prisma.kYC.findUnique({ where: { userId: partner.userId }, include: { documents: true } }),
+    ]);
 
-  const allAssignments = rawAssignments.map(formatDeliveryAssignment);
+  const activeTrips = activeTripsRaw.map(formatDeliveryAssignment);
+  const completedTrips = completedTripsRaw.map(formatDeliveryAssignment);
+  const availableJobs = availableJobsRaw.map(formatDeliveryAssignment);
+  const usedPartPickups = usedPartPickupsRaw.map(formatDeliveryAssignment);
+  const codUnreconciledJobs = codUnreconciledRaw.map(formatDeliveryAssignment);
 
-  // Available jobs: ASSIGNED and unclaimed or assigned to this partner (eligible only when activated)
-  const availableJobs = partner.isActivated
-    ? allAssignments.filter(
-        (a: any) => a.status === 'ASSIGNED' && (a.deliveryPartnerId === null || a.deliveryPartnerId === partner.id)
-      )
-    : [];
-
-  // Partner's active in-progress trips
-  const activeTrips = allAssignments.filter(
-    (a: any) => a.deliveryPartnerId === partner.id && ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'].includes(a.status)
-  );
-
-  // Partner's completed deliveries
-  const completedTrips = allAssignments.filter(
-    (a: any) => a.deliveryPartnerId === partner.id && a.status === 'DELIVERED'
-  );
-
-  // Used-Part Pickups
-  const usedPartPickups = allAssignments.filter(
-    (a: any) => a.deliveryPartnerId === partner.id && a.type === 'USED_PART_PICKUP'
-  );
-
-  // COD Cash Calculations
-  const codUnreconciledJobs = allAssignments.filter(
-    (a: any) =>
-      a.deliveryPartnerId === partner.id &&
-      a.codStatus === 'COLLECTED' &&
-      !a.notes?.includes('[COD_RECONCILED]')
-  );
   const pendingCashInHand = codUnreconciledJobs.reduce(
     (sum: number, j: any) => sum + Number(j.codAmountCollected || 0),
     0
   );
 
-  // Total earnings estimate
   const totalTripEarnings = completedTrips.reduce(
     (sum: number, j: any) => sum + Number(j.deliveryFee || 0),
     0
@@ -1055,46 +1137,45 @@ export const getDeliveryDashboard = async (userId: string) => {
 export const listAvailableJobs = async (userId: string) => {
   const partner = await resolvePartnerByUser(userId);
 
-  // Unapproved / unverified partners cannot view or claim open jobs
-  if (!partner.isActivated) {
+  // Unapproved or offline partners cannot view available jobs
+  if (!partner.isActivated || !partner.isOnline) {
     return [];
   }
 
   const rawAssignments = await prisma.deliveryAssignment.findMany({
+    where: {
+      status: 'ASSIGNED',
+      OR: [{ deliveryPartnerId: null }, { deliveryPartnerId: partner.id }],
+    },
     include: assignmentInclude,
     orderBy: { createdAt: 'desc' },
   });
 
-  const allAssignments = rawAssignments.map(formatDeliveryAssignment);
-  const available = allAssignments.filter(
-    (a: any) => a.status === 'ASSIGNED' && (a.deliveryPartnerId === null || a.deliveryPartnerId === partner.id)
-  );
-
-  return available;
+  return rawAssignments.map(formatDeliveryAssignment);
 };
 
 export const listMyJobs = async (userId: string, filter?: { status?: string; type?: string }) => {
   const partner = await resolvePartnerByUser(userId);
 
+  const whereClause: any = { deliveryPartnerId: partner.id };
+  if (filter?.status) {
+    if (filter.status === 'ACTIVE') {
+      whereClause.status = { in: ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'] };
+    } else {
+      whereClause.status = filter.status;
+    }
+  }
+  if (filter?.type) {
+    whereClause.type = filter.type;
+  }
+
   const rawAssignments = await prisma.deliveryAssignment.findMany({
-    where: { deliveryPartnerId: partner.id },
+    where: whereClause,
     include: assignmentInclude,
     orderBy: { createdAt: 'desc' },
   });
 
-  let myJobs = rawAssignments.map(formatDeliveryAssignment);
-  if (filter?.status) {
-    if (filter.status === 'ACTIVE') {
-      myJobs = myJobs.filter((a: any) => ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT'].includes(a.status));
-    } else {
-      myJobs = myJobs.filter((a: any) => a.status === filter.status);
-    }
-  }
-  if (filter?.type) {
-    myJobs = myJobs.filter((a: any) => a.type === filter.type);
-  }
-
-  return myJobs;
+  return rawAssignments.map(formatDeliveryAssignment);
 };
 
 export const getJobById = async (userId: string, jobId: string) => {
@@ -1109,7 +1190,7 @@ export const getJobById = async (userId: string, jobId: string) => {
     throw AppError.notFound('Delivery job not found.');
   }
 
-  // STRICT ACCESS CONTROL
+  // STRICT ACCESS CONTROL: Only assigned partner or open unclaimed job
   if (rawAssignment.deliveryPartnerId && rawAssignment.deliveryPartnerId !== partner.id) {
     throw AppError.forbidden("Forbidden: You do not have permission to access another delivery partner's job.");
   }
@@ -1124,7 +1205,7 @@ export const acceptJob = async (userId: string, jobId: string) => {
     throw AppError.badRequest('Cannot accept jobs. Your account must be KYC verified and activated by Admin.');
   }
   if (!partner.isOnline) {
-    throw AppError.badRequest('Please toggle your status to ONLINE before accepting delivery jobs.');
+    throw AppError.badRequest('You must be online (On Duty) to accept delivery jobs.');
   }
 
   const assignment = await prisma.deliveryAssignment.findUnique({
@@ -1135,7 +1216,6 @@ export const acceptJob = async (userId: string, jobId: string) => {
     throw AppError.notFound('Delivery job not found.');
   }
 
-  // STRICT ACCESS CONTROL:
   if (assignment.deliveryPartnerId && assignment.deliveryPartnerId !== partner.id) {
     throw AppError.forbidden('Forbidden: This job has already been claimed by another delivery partner.');
   }
@@ -1153,7 +1233,6 @@ export const acceptJob = async (userId: string, jobId: string) => {
     },
   });
 
-  // If connected to an order, push tracking update using valid OrderStatus enum
   if (assignment.orderId) {
     await prisma.orderTracking.create({
       data: {
@@ -1172,6 +1251,12 @@ export const acceptJob = async (userId: string, jobId: string) => {
   return formatDeliveryAssignment(updatedRaw);
 };
 
+/**
+ * Strict Job Status State Machine:
+ * Enforces: ASSIGNED -> ACCEPTED -> PICKED_UP -> IN_TRANSIT -> DELIVERED
+ * Disallows invalid jumps (e.g. ACCEPTED -> DELIVERED)
+ * Idempotently protects against repeated DELIVERED -> DELIVERED increments
+ */
 export const updateJobStatus = async (
   userId: string,
   jobId: string,
@@ -1188,21 +1273,45 @@ export const updateJobStatus = async (
     throw AppError.notFound('Delivery job not found.');
   }
 
-  // STRICT ACCESS CONTROL:
+  // STRICT ACCESS CONTROL
   if (assignment.deliveryPartnerId !== partner.id) {
     throw AppError.forbidden('Forbidden: You cannot modify a job assigned to another delivery partner.');
+  }
+
+  // Idempotency check: if already DELIVERED
+  if (assignment.status === 'DELIVERED') {
+    if (status === 'DELIVERED') {
+      return formatDeliveryAssignment(assignment);
+    }
+    throw AppError.badRequest('Delivery job is already completed and marked DELIVERED.');
+  }
+
+  // State Machine Validation:
+  const allowedTransitions: Record<string, string[]> = {
+    ASSIGNED: ['ACCEPTED'],
+    ACCEPTED: ['PICKED_UP'],
+    PICKED_UP: ['IN_TRANSIT'],
+    IN_TRANSIT: ['DELIVERED'],
+  };
+
+  const allowedNext = allowedTransitions[assignment.status] || [];
+  if (!allowedNext.includes(status)) {
+    throw AppError.badRequest(
+      `Invalid status transition from ${assignment.status} to ${status}. Allowed sequence: ACCEPTED -> PICKED_UP -> IN_TRANSIT -> DELIVERED.`
+    );
   }
 
   const updatePayload: any = {
     status,
     ...(notes && { notes }),
+    updatedAt: new Date(),
   };
 
   if (status === 'PICKED_UP') {
     updatePayload.pickedUpAt = new Date();
   } else if (status === 'DELIVERED') {
     updatePayload.deliveredAt = new Date();
-    // Increment total deliveries for partner
+    // Increment total deliveries for partner exactly once
     await prisma.deliveryPartner.update({
       where: { id: partner.id },
       data: { totalDeliveries: (partner.totalDeliveries || 0) + 1 },
@@ -1214,7 +1323,7 @@ export const updateJobStatus = async (
     data: updatePayload,
   });
 
-  // Check if this is a Reverse Return Pickup
+  // Handle Reverse Return Pickups
   const isReturnJob =
     assignment.type === 'RETURN_PICKUP' ||
     Boolean(assignment.returnRequestId) ||
@@ -1223,7 +1332,7 @@ export const updateJobStatus = async (
   if (isReturnJob) {
     const returnReqId = assignment.returnRequestId;
     const returnReq = await prisma.returnRequest.findFirst({
-      where: returnReqId ? { id: returnReqId } : { orderId: assignment.orderId },
+      where: returnReqId ? { id: returnReqId } : { orderId: assignment.orderId! },
       include: { order: true, orderItem: { include: { product: true } } },
     });
 
@@ -1288,6 +1397,7 @@ export const updateJobStatus = async (
     if (status === 'DELIVERED') {
       const order = await prisma.order.findUnique({ where: { id: assignment.orderId } });
       const isCod = order?.paymentMethod === 'CASH_ON_DELIVERY';
+
       await prisma.order.update({
         where: { id: assignment.orderId },
         data: {
@@ -1296,6 +1406,7 @@ export const updateJobStatus = async (
           ...(isCod && { paymentStatus: PaymentStatus.CAPTURED }),
         },
       });
+
       if (isCod) {
         try {
           await prisma.payment.updateMany({
@@ -1304,6 +1415,7 @@ export const updateJobStatus = async (
           });
         } catch {}
       }
+
       await prisma.orderTracking.create({
         data: {
           orderId: assignment.orderId,
@@ -1311,7 +1423,7 @@ export const updateJobStatus = async (
           message: 'Package successfully delivered to customer doorstep by delivery partner.',
         },
       });
-      // Customer notification for Delivered
+
       if (order?.userId) {
         try {
           await createNotification({
@@ -1420,58 +1532,80 @@ export const recordCodCollection = async (userId: string, jobId: string, amount?
     throw AppError.notFound('Delivery job not found.');
   }
 
-  // STRICT ACCESS CONTROL:
+  // STRICT ACCESS CONTROL
   if (assignment.deliveryPartnerId !== partner.id) {
     throw AppError.forbidden("Forbidden: You cannot collect cash for another delivery partner's job.");
   }
 
-  const collectedAmount = Number(amount || assignment.order?.total || 0);
+  // Verify COD applicability
+  if (assignment.order?.paymentMethod !== 'CASH_ON_DELIVERY') {
+    throw AppError.badRequest('This job does not require Cash on Delivery collection.');
+  }
 
-  // Update assignment notes with COD collected tag
+  const expectedAmount = Number(assignment.order?.total || 0);
+
+  // Validate exact amount matches order total if amount was supplied by frontend
+  if (amount !== undefined && amount !== null) {
+    const submittedAmount = Number(amount);
+    if (Math.abs(submittedAmount - expectedAmount) > 0.01) {
+      throw AppError.badRequest(
+        `Submitted COD amount ₹${submittedAmount} does not match order outstanding COD amount ₹${expectedAmount}.`
+      );
+    }
+  }
+
+  // Idempotency: If COD is already collected, return current state without double-counting
+  if (assignment.codStatus === 'COLLECTED' || assignment.notes?.includes('[COD_COLLECTED]')) {
+    return formatDeliveryAssignment(assignment);
+  }
+
+  // Update assignment notes and COD fields
   const currentNotes = assignment.notes || '';
   const updatedNotes = currentNotes.includes('[COD_COLLECTED]')
     ? currentNotes
-    : `${currentNotes} [COD_COLLECTED: ₹${collectedAmount}]`.trim();
+    : `${currentNotes} [COD_COLLECTED: ₹${expectedAmount}]`.trim();
 
   await prisma.deliveryAssignment.update({
     where: { id: jobId },
     data: {
+      codStatus: 'COLLECTED',
+      codAmountCollected: expectedAmount,
       notes: updatedNotes,
       updatedAt: new Date(),
     },
   });
 
-  // Mark Customer Order as CAPTURED
+  // Mark Customer Order payment as CAPTURED
   if (assignment.orderId) {
-    await prisma.order.update({
-      where: { id: assignment.orderId },
-      data: { paymentStatus: PaymentStatus.CAPTURED },
-    });
-
-    // Update payment record
-    await prisma.payment.updateMany({
-      where: { orderId: assignment.orderId },
-      data: {
-        status: PaymentStatus.CAPTURED,
-        codCollectedAt: new Date(),
-        codCollectedBy: partner.id,
-      },
-    });
-
-    // Release mechanical shop commission if service completed
-    const comm = await prisma.commissionLedger.findFirst({
-      where: { orderId: assignment.orderId },
-    });
-    if (comm) {
-      const isCompleted = comm.serviceStatus === 'COMPLETED';
-      await prisma.commissionLedger.update({
-        where: { id: comm.id },
-        data: {
-          paymentStatus: 'CAPTURED',
-          releaseStatus: isCompleted ? 'RELEASED' : 'LOCKED_PENDING_COMPLETION',
-          payoutStatus: isCompleted ? 'RELEASED' : 'PENDING',
-        },
+    try {
+      await prisma.order.update({
+        where: { id: assignment.orderId },
+        data: { paymentStatus: PaymentStatus.CAPTURED },
       });
+    } catch (ordErr) {
+      console.warn('[recordCodCollection] Order status update notice:', ordErr);
+    }
+
+    try {
+      if (typeof (prisma.payment as any)?.updateMany === 'function') {
+        await prisma.payment.updateMany({
+          where: { orderId: assignment.orderId },
+          data: {
+            status: PaymentStatus.CAPTURED,
+            codCollectedAt: new Date(),
+          },
+        });
+      } else if (typeof (prisma.payment as any)?.findFirst === 'function') {
+        const p = await prisma.payment.findFirst({ where: { orderId: assignment.orderId } });
+        if (p) {
+          await prisma.payment.update({
+            where: { id: p.id },
+            data: { status: PaymentStatus.CAPTURED, codCollectedAt: new Date() },
+          });
+        }
+      }
+    } catch (payErr) {
+      console.warn('[recordCodCollection] Payment record update notice:', payErr);
     }
   }
 
@@ -1487,58 +1621,91 @@ export const reconcileCodCash = async (
   userId: string,
   data: {
     amount?: number;
+    depositAmount?: number;
+    jobIds?: string[];
     depositReference?: string;
     hubLocation?: string;
+    depositCenter?: string;
     depositMethod?: string;
+    receivingOfficer?: string;
+    receivedBy?: string;
     notes?: string;
   }
 ) => {
   const partner = await resolvePartnerByUser(userId);
 
-  const rawAssignments = await prisma.deliveryAssignment.findMany({
-    where: { deliveryPartnerId: partner.id },
+  // Retrieve collected, unreconciled jobs
+  let collectedJobs = await prisma.deliveryAssignment.findMany({
+    where: {
+      deliveryPartnerId: partner.id,
+      status: 'DELIVERED',
+      OR: [{ codStatus: 'COLLECTED' }, { notes: { contains: '[COD_COLLECTED]' } }],
+      NOT: { notes: { contains: '[COD_RECONCILED]' } },
+    },
     include: assignmentInclude,
   });
-  const allAssignments = rawAssignments.map(formatDeliveryAssignment);
-  const collectedJobs = allAssignments.filter(
-    (a: any) => a.codStatus === 'COLLECTED' && !a.notes?.includes('[COD_RECONCILED]')
-  );
 
-  const totalCollected = collectedJobs.reduce((sum: number, j: any) => sum + Number(j.codAmountCollected || 0), 0);
-  const reconcileAmount = Number(data.amount || totalCollected || partner.cashInHand || 0);
-
-  if (reconcileAmount <= 0) {
-    throw AppError.badRequest('No pending cash collected to reconcile with hub.');
+  // If specific jobs were passed, reconcile only those jobs
+  if (data.jobIds && data.jobIds.length > 0) {
+    const selectedIds = new Set(data.jobIds);
+    collectedJobs = collectedJobs.filter((j: any) => selectedIds.has(j.id));
   }
 
-  // Create reconciliation record
+  if (collectedJobs.length === 0) {
+    throw AppError.badRequest('No unreconciled collected COD jobs found to settle.');
+  }
+
+  const totalCalculated = collectedJobs.reduce((sum: number, j: any) => {
+    const jobCollected = j.codAmountCollected ? Number(j.codAmountCollected) : Number(j.order?.total || 0);
+    return sum + jobCollected;
+  }, 0);
+
+  // Strict Accounting: If deposit amount is specified, verify it matches the total of selected jobs
+  const specifiedAmount = data.depositAmount !== undefined ? data.depositAmount : data.amount;
+  if (specifiedAmount !== undefined && specifiedAmount !== null) {
+    const depositAmount = Number(specifiedAmount);
+    if (Math.abs(depositAmount - totalCalculated) > 0.01) {
+      throw AppError.badRequest(
+        `Deposit amount ₹${depositAmount} does not match total outstanding cash for the selected jobs (₹${totalCalculated}). Complete settlement is required.`
+      );
+    }
+  }
+
+  const settleAmount = specifiedAmount !== undefined ? Number(specifiedAmount) : totalCalculated;
+
+  // Create authoritative reconciliation record
   const recon = await prisma.cODReconciliation.create({
     data: {
       deliveryPartnerId: partner.id,
-      totalAmount: reconcileAmount,
-      orderCount: collectedJobs.length || 1,
+      totalAmount: settleAmount,
+      orderCount: collectedJobs.length,
       status: 'RECONCILED',
       depositMethod: data.depositMethod || 'CASH_AT_HUB',
-      depositReference: data.depositReference || `HUB-DEP-${Date.now().toString().slice(-5)}`,
-      hubLocation: data.hubLocation || 'Indiranagar Central Logistics Hub',
-      receivedBy: 'Finance Desk Officer',
-      notes: data.notes || 'Full cash reconciliation verified and settled.',
+      depositReference: data.depositReference || `HUB-DEP-${Date.now().toString().slice(-6)}`,
+      hubLocation: data.depositCenter || data.hubLocation || 'Authorized Logistics Hub',
+      receivedBy: data.receivingOfficer || data.receivedBy || 'Authorized Hub Cashier',
+      notes: data.notes || `Reconciliation settled for ${collectedJobs.length} delivery jobs.`,
     },
   });
 
-  // Tag assignments as RECONCILED in notes
+  // Tag assignments as RECONCILED in both codStatus and notes
   for (const job of collectedJobs) {
     const curNotes = job.notes || '';
     await prisma.deliveryAssignment.update({
       where: { id: job.id },
-      data: { notes: `${curNotes} [COD_RECONCILED]`.trim() },
+      data: {
+        codStatus: 'RECONCILED',
+        notes: `${curNotes} [COD_RECONCILED]`.trim(),
+        updatedAt: new Date(),
+      },
     });
   }
 
   return {
     reconciliation: recon,
+    depositAmount: settleAmount,
     settledJobsCount: collectedJobs.length,
-    newCashInHand: Math.max(0, (partner.cashInHand || 0) - reconcileAmount),
+    settledAmount: settleAmount,
   };
 };
 
@@ -1546,22 +1713,22 @@ export const listReconciliations = async (userId: string) => {
   const partner = await resolvePartnerByUser(userId);
   return prisma.cODReconciliation.findMany({
     where: { deliveryPartnerId: partner.id },
+    orderBy: { createdAt: 'desc' },
   });
 };
 
 // ============================================================================
-// 7. USED-PART DOORSTEP VERIFICATION & INTAKE
+// 7. USED-PART DOORSTEP PICKUP & CHAIN OF CUSTODY (GARAGE-FIRST WORKFLOW)
 // ============================================================================
 export const performUsedPartVerification = async (
   userId: string,
   jobId: string,
   data: {
-    conditionGrade: string; // 'A+', 'A', 'B', 'C', 'D'
-    inspectionChecklist: Record<string, boolean>;
+    conditionGrade?: string;
+    inspectionChecklist?: Record<string, boolean>;
     photos?: string[];
     result: 'APPROVED' | 'REJECTED';
     notes?: string;
-    calculatedValuation?: number;
   }
 ) => {
   const partner = await resolvePartnerByUser(userId);
@@ -1575,87 +1742,37 @@ export const performUsedPartVerification = async (
     throw AppError.notFound('Delivery job not found.');
   }
 
-  // STRICT ACCESS CONTROL:
+  // STRICT ACCESS CONTROL
   if (rawAssignment.deliveryPartnerId !== partner.id) {
     throw AppError.forbidden("Forbidden: You cannot perform inspection on another partner's job.");
   }
 
   const isApproved = data.result === 'APPROVED';
 
-  // 1. Update Used Part Listing if exists
-  if ((rawAssignment as any).usedPartListingId) {
-    const listingId = (rawAssignment as any).usedPartListingId;
-    const valuation = Number(data.calculatedValuation || 2400);
+  // In the Garage-First workflow: Delivery Partner only handles physical pickup and chain of custody
+  // Final certified rating and valuation belong to the Workshop / Partner Garage
+  if (rawAssignment.usedPartListingId) {
     try {
-      const listing = await prisma.usedPartListing.findUnique({
-        where: { id: listingId },
-        include: { verification: true, payout: true },
+      await prisma.usedPartListing.update({
+        where: { id: rawAssignment.usedPartListingId },
+        data: {
+          status: isApproved ? UsedPartStatus.PENDING_VERIFICATION : UsedPartStatus.REJECTED,
+          updatedAt: new Date(),
+        },
       });
-
-      if (listing) {
-        await prisma.usedPartListing.update({
-          where: { id: listingId },
-          data: {
-            status: isApproved ? UsedPartStatus.VERIFIED : UsedPartStatus.REJECTED,
-            resalePrice: isApproved ? valuation : null,
-            updatedAt: new Date(),
-          },
-        });
-
-        const ratingMap: Record<string, number> = {
-          'A+': 10,
-          A: 9,
-          B: 7,
-          C: 5,
-          D: 3,
-        };
-
-        await prisma.usedPartVerification.upsert({
-          where: { listingId },
-          create: {
-            listingId,
-            conditionRating: ratingMap[data.conditionGrade] || 8,
-            notes: data.notes || `Doorstep inspection completed (Grade: ${data.conditionGrade}).`,
-            approvedAt: isApproved ? new Date() : null,
-            rejectedAt: !isApproved ? new Date() : null,
-            rejectionReason: !isApproved ? (data.notes || 'Inspection criteria not met.') : null,
-          },
-          update: {
-            conditionRating: ratingMap[data.conditionGrade] || 8,
-            notes: data.notes || `Doorstep inspection completed (Grade: ${data.conditionGrade}).`,
-            approvedAt: isApproved ? new Date() : null,
-            rejectedAt: !isApproved ? new Date() : null,
-            rejectionReason: !isApproved ? (data.notes || 'Inspection criteria not met.') : null,
-          },
-        });
-
-        if (isApproved) {
-          await prisma.usedPartPayout.upsert({
-            where: { listingId },
-            create: {
-              listingId,
-              sellerId: listing.sellerId,
-              amount: Math.round(valuation * 0.9),
-              status: PayoutStatus.PENDING,
-            },
-            update: {
-              amount: Math.round(valuation * 0.9),
-            },
-          });
-        }
-      }
     } catch (upErr) {
-      console.warn('Used part listing sync warning:', upErr);
+      console.warn('[UsedPartPickup] Listing update notice:', upErr);
     }
   }
 
-  // 2. Update Assignment status safely without unknown columns
+  // Update assignment status
   const updatedAssignment = await prisma.deliveryAssignment.update({
     where: { id: jobId },
     data: {
       status: isApproved ? DeliveryAssignmentStatus.PICKED_UP : DeliveryAssignmentStatus.FAILED,
       pickedUpAt: isApproved ? new Date() : null,
-      notes: `${rawAssignment.notes || ''} [Condition: ${data.conditionGrade}, Result: ${data.result}]`.trim(),
+      notes: `${rawAssignment.notes || ''} [Doorstep Handover: ${isApproved ? 'VERIFIED' : 'REJECTED'}${data.notes ? ` - ${data.notes}` : ''}]`.trim(),
+      updatedAt: new Date(),
     },
     include: assignmentInclude,
   });
@@ -1663,9 +1780,7 @@ export const performUsedPartVerification = async (
   return {
     assignment: formatDeliveryAssignment(updatedAssignment),
     verificationResult: data.result,
-    conditionGrade: data.conditionGrade,
-    sellerPayoutTriggered: isApproved,
-    inventoryUpdateEventTriggered: isApproved,
+    custodyTransferred: isApproved,
+    destination: 'Partner Garage for Bench Testing & Final Valuation',
   };
 };
-

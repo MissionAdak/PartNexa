@@ -113,6 +113,7 @@ enum DeliveryAssignmentStatus {
 enum DeliveryAssignmentType {
   OUTBOUND
   RETURN_PICKUP
+  USED_PART_PICKUP
 }
 
 enum ReturnStatus {
@@ -148,10 +149,15 @@ enum KYCStatus {
 enum KYCDocumentType {
   PAN_CARD
   AADHAAR_CARD
+  PASSPORT
+  VOTER_ID
   DRIVING_LICENSE
   SHOP_REGISTRATION
   GST_CERTIFICATE
   VEHICLE_RC
+  PROFILE_PHOTO
+  VEHICLE_PHOTO
+  INSURANCE
   OTHER
 }
 
@@ -1038,6 +1044,7 @@ model DeliveryPartner {
   updatedAt       DateTime             @updatedAt
 
   assignments     DeliveryAssignment[]
+  reconciliations CODReconciliation[]
 
   @@index([isOnline])
   @@map("delivery_partners")
@@ -1069,6 +1076,7 @@ model KYCDocument {
   objectKey          String          // Secure S3/Supabase Storage object path (no raw files in DB!)
   fileUrl            String          // Pre-signed or CDN accessible link
   mimeType           String          // image/jpeg, application/pdf
+  fileSize           Int?            @default(0)
   verificationStatus KYCStatus       @default(PENDING)
   rejectionReason    String?
   createdAt          DateTime        @default(now())
@@ -1080,14 +1088,18 @@ model KYCDocument {
 
 model DeliveryAssignment {
   id                String                   @id @default(uuid())
-  orderId           String
-  order             Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId           String?
+  order             Order?                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   deliveryPartnerId String?
   deliveryPartner   DeliveryPartner?         @relation(fields: [deliveryPartnerId], references: [id], onDelete: Restrict)
   status            DeliveryAssignmentStatus @default(ASSIGNED)
   type              DeliveryAssignmentType   @default(OUTBOUND)
   returnRequestId   String?
   returnRequest     ReturnRequest?           @relation(fields: [returnRequestId], references: [id], onDelete: SetNull)
+  usedPartListingId String?
+  usedPartListing   UsedPartListing?         @relation(fields: [usedPartListingId], references: [id], onDelete: SetNull)
+  codStatus         String?                  @default("PENDING")
+  codAmountCollected Decimal?                @default(0) @db.Decimal(10, 2)
   assignedAt        DateTime                 @default(now())
   acceptedAt        DateTime?
   pickedUpAt        DateTime?
@@ -1101,7 +1113,27 @@ model DeliveryAssignment {
 
   @@index([deliveryPartnerId, status])
   @@index([orderId])
+  @@index([usedPartListingId])
   @@map("delivery_assignments")
+}
+
+model CODReconciliation {
+  id                String          @id @default(uuid())
+  deliveryPartnerId String
+  deliveryPartner   DeliveryPartner @relation(fields: [deliveryPartnerId], references: [id], onDelete: Cascade)
+  totalAmount       Decimal         @db.Decimal(10, 2)
+  orderCount        Int             @default(0)
+  status            String          @default("RECONCILED")
+  depositMethod     String          @default("CASH_AT_HUB")
+  depositReference  String?
+  hubLocation       String?
+  receivedBy        String?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([deliveryPartnerId])
+  @@map("cod_reconciliations")
 }
 
 // ============================================================
@@ -1208,6 +1240,7 @@ model UsedPartListing {
   verification UsedPartVerification?
   payout       UsedPartPayout?
   intake       UsedPartIntake?
+  assignments  DeliveryAssignment[]
 
   @@index([sellerId, status])
   @@index([productId])

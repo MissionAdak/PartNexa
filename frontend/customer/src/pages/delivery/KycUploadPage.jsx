@@ -16,11 +16,10 @@ import {
   AlertCircle,
   Check,
   Lock,
-  SlidersHorizontal,
   X,
   Search,
   Upload,
-  Clock,
+  RefreshCw,
 } from 'lucide-react';
 
 export const KycUploadPage = () => {
@@ -34,6 +33,7 @@ export const KycUploadPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingDocType, setUploadingDocType] = useState(null);
+  const [uploadState, setUploadState] = useState({}); // docType -> { status: 'UPLOADING' | 'FAILED' | 'SUCCESS', error?: string }
   const [previewModalUrl, setPreviewModalUrl] = useState(null);
 
   // Form Fields
@@ -44,11 +44,71 @@ export const KycUploadPage = () => {
   const [vehicleType, setVehicleType] = useState('BIKE');
   const [vehicleNum, setVehicleNum] = useState('');
 
-  // Local pending file buffers before or during uploads
-  // Keyed by documentType: { file, previewUrl, isPdf, name, size }
-  const [localFiles, setLocalFiles] = useState({});
-
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  const fetchKyc = async () => {
+    try {
+      setLoading(true);
+      const data = await deliveryService.getKyc();
+      setKycData(data);
+      if (data?.panNumber) {
+        setIdNumber(data.panNumber);
+        setIdDocType('PAN_CARD');
+      } else if (data?.aadharNumber) {
+        setIdNumber(data.aadharNumber);
+        setIdDocType('AADHAAR_CARD');
+      }
+      if (partner) {
+        setFullName(`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || partner?.user?.firstName || '');
+        if (partner?.vehicleType) setVehicleType(partner.vehicleType);
+        if (partner?.vehicleNum) setVehicleNum(partner.vehicleNum);
+        if (partner?.licenseNumber) setDlNumber(partner.licenseNumber);
+      }
+    } catch (err) {
+      toast.error('Failed to load KYC verification status.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchKyc();
+  }, []);
+
+  const status = kycData?.status || 'NOT_SUBMITTED';
+  const isLocked = status === 'PENDING' || status === 'APPROVED';
+  const serverDocs = kycData?.documents || [];
+
+  // Helper to mask identifier numbers for privacy
+  const maskIdentifier = (val) => {
+    if (!val) return '';
+    const clean = val.replace(/\s+/g, '');
+    if (clean.length <= 4) return clean;
+    return '•••• •••• ' + clean.slice(-4);
+  };
+
+  // Required 5 Document Categories Validation
+  const identityTypes = ['AADHAAR_CARD', 'PAN_CARD', 'PASSPORT', 'VOTER_ID', 'OTHER'];
+  const hasIdentityDoc = serverDocs.some((d) => identityTypes.includes(d.documentType));
+  const hasDrivingLicenseDoc = serverDocs.some((d) => d.documentType === 'DRIVING_LICENSE');
+  const hasVehicleRcDoc = serverDocs.some((d) => d.documentType === 'VEHICLE_RC');
+  const hasProfilePhotoDoc = serverDocs.some(
+    (d) => d.documentType === 'PROFILE_PHOTO' || d.objectKey?.toUpperCase().includes('PROFILE_PHOTO')
+  );
+  const hasVehiclePhotoDoc = serverDocs.some(
+    (d) => d.documentType === 'VEHICLE_PHOTO' || d.objectKey?.toUpperCase().includes('VEHICLE_PHOTO')
+  );
+
+  const requiredAuditList = [
+    { key: 'IDENTITY', label: 'Identity Proof (Aadhaar / PAN / Passport / Voter ID)', completed: hasIdentityDoc, step: 2, icon: FileText },
+    { key: 'DL', label: 'Driving Licence (DL)', completed: hasDrivingLicenseDoc, step: 3, icon: CreditCard },
+    { key: 'RC', label: 'Vehicle Registration Certificate (RC)', completed: hasVehicleRcDoc, step: 4, icon: FileCheck },
+    { key: 'PROFILE', label: 'Profile Photograph (Face)', completed: hasProfilePhotoDoc, step: 5, icon: User },
+    { key: 'VEHICLE_PHOTO', label: 'Vehicle Photograph (Plate)', completed: hasVehiclePhotoDoc, step: 5, icon: Bike },
+  ];
+
+  const completedRequiredCount = requiredAuditList.filter((r) => r.completed).length;
+  const isAllRequiredCompleted = completedRequiredCount === 5;
 
   const docDefinitions = [
     {
@@ -57,16 +117,16 @@ export const KycUploadPage = () => {
       label: 'Profile Photograph',
       icon: User,
       required: true,
-      description: 'Clear frontal photo of your face without sunglasses or helmet.',
+      description: 'Clear frontal photograph of your face without sunglasses or helmet.',
       accept: 'image/jpeg,image/png,image/webp',
     },
     {
-      type: 'AADHAAR_CARD',
+      type: idDocType,
       step: 2,
-      label: 'Identity Proof (Aadhaar / Govt ID)',
+      label: `Identity Proof (${idDocType === 'PAN_CARD' ? 'PAN Card' : idDocType === 'PASSPORT' ? 'Passport' : idDocType === 'VOTER_ID' ? 'Voter ID' : 'Aadhaar Card'})`,
       icon: FileText,
       required: true,
-      description: 'Official Government ID proof (Aadhaar, Passport, or Voter ID).',
+      description: 'Official Government ID proof (Aadhaar, PAN, Passport, or Voter ID).',
       accept: 'image/jpeg,image/png,image/webp,application/pdf',
     },
     {
@@ -93,7 +153,7 @@ export const KycUploadPage = () => {
       label: 'Vehicle Photograph',
       icon: Bike,
       required: true,
-      description: 'Photo of the vehicle showing the number plate clearly.',
+      description: 'Photograph of the vehicle showing the registration number plate clearly.',
       accept: 'image/jpeg,image/png,image/webp',
     },
     {
@@ -107,41 +167,7 @@ export const KycUploadPage = () => {
     },
   ];
 
-  const fetchKyc = async () => {
-    try {
-      setLoading(true);
-      const data = await deliveryService.getKyc();
-      setKycData(data);
-      if (data?.aadharNumber) setIdNumber(data.aadharNumber);
-      if (partner) {
-        setFullName(`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || partner?.user?.firstName || '');
-        if (partner?.vehicleType) setVehicleType(partner.vehicleType);
-        if (partner?.vehicleNum) setVehicleNum(partner.vehicleNum);
-      }
-    } catch (err) {
-      toast.error('Failed to load KYC verification status.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchKyc();
-  }, []);
-
-  const status = kycData?.status || 'NOT_SUBMITTED';
-  const isLocked = status === 'PENDING' || status === 'APPROVED';
-  const serverDocs = kycData?.documents || [];
-
-  // Helper to mask identifier numbers for privacy
-  const maskIdentifier = (val) => {
-    if (!val) return '';
-    const clean = val.replace(/\s+/g, '');
-    if (clean.length <= 4) return clean;
-    return '•••• •••• ' + clean.slice(-4);
-  };
-
-  // Handle local file picking & backend upload
+  // Handle local file selection & backend upload
   const handleFileSelect = async (docType, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -152,35 +178,38 @@ export const KycUploadPage = () => {
       return;
     }
 
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-    const previewUrl = URL.createObjectURL(file);
-
-    setLocalFiles((prev) => ({
+    setUploadState((prev) => ({
       ...prev,
-      [docType]: {
-        file,
-        previewUrl,
-        isPdf,
-        name: file.name,
-        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-      },
+      [docType]: { status: 'UPLOADING' },
     }));
 
-    // Auto-upload immediately to backend
     setUploadingDocType(docType);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('documentType', docType);
     if (idNumber) formData.append('idNumber', idNumber);
+    if (dlNumber) formData.append('licenseNumber', dlNumber);
     if (vehicleType) formData.append('vehicleType', vehicleType);
     if (vehicleNum) formData.append('vehicleNum', vehicleNum);
 
     try {
       await deliveryService.uploadKycFile(formData);
       toast.success(`${docType.replace('_', ' ')} uploaded successfully!`);
+      setUploadState((prev) => {
+        const copy = { ...prev };
+        delete copy[docType];
+        return copy;
+      });
       await fetchKyc();
       await refreshProfile();
     } catch (err) {
+      setUploadState((prev) => ({
+        ...prev,
+        [docType]: {
+          status: 'FAILED',
+          error: err.response?.data?.message || 'Upload failed. Please retry.',
+        },
+      }));
       toast.error(err.response?.data?.message || 'File upload failed. Please try again.');
     } finally {
       setUploadingDocType(null);
@@ -194,9 +223,11 @@ export const KycUploadPage = () => {
       return;
     }
 
-    // Check if doc exists on server
     const serverDoc = serverDocs.find(
-      (d) => d.documentType === docType || d.objectKey?.toUpperCase().includes(docType.toUpperCase())
+      (d) =>
+        d.documentType === docType ||
+        (identityTypes.includes(docType) && identityTypes.includes(d.documentType)) ||
+        d.objectKey?.toUpperCase().includes(docType.toUpperCase())
     );
 
     if (serverDoc) {
@@ -205,12 +236,11 @@ export const KycUploadPage = () => {
         toast.success('Document removed.');
         await fetchKyc();
       } catch (err) {
-        toast.error('Failed to remove document from server.');
+        toast.error('Failed to remove document from storage.');
       }
     }
 
-    // Clean local state
-    setLocalFiles((prev) => {
+    setUploadState((prev) => {
       const copy = { ...prev };
       delete copy[docType];
       return copy;
@@ -218,15 +248,19 @@ export const KycUploadPage = () => {
   };
 
   const handleSubmitForReview = async () => {
-    if (serverDocs.length < 3) {
-      toast.error('Please upload at least Identity Proof, Driving Licence, and Vehicle RC before submitting.');
+    if (!isAllRequiredCompleted) {
+      const missing = requiredAuditList.filter((r) => !r.completed).map((r) => r.label);
+      toast.error(`Missing required documents (${5 - completedRequiredCount}/5): ${missing.join(', ')}`);
       return;
     }
 
     try {
       setSubmitting(true);
-      await deliveryService.submitKyc();
-      toast.success('KYC documents submitted for Admin review!');
+      await deliveryService.submitKyc({
+        licenseNumber: dlNumber,
+        vehicleNum: vehicleNum,
+      });
+      toast.success('All 5 KYC documents submitted for compliance review!');
       await fetchKyc();
       await refreshProfile();
       setCurrentStep(6);
@@ -234,18 +268,6 @@ export const KycUploadPage = () => {
       toast.error(err.response?.data?.message || 'Could not submit KYC documents.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // Admin Verification Simulator for rapid test feedback
-  const handleAdminVerify = async (newStatus, reason) => {
-    try {
-      await deliveryService.adminVerifyKyc(newStatus, reason, user?.id);
-      toast.success(`Admin verification updated to: ${newStatus}!`);
-      await fetchKyc();
-      await refreshProfile();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Admin verification update failed.');
     }
   };
 
@@ -295,7 +317,7 @@ export const KycUploadPage = () => {
               Registration Completed! Welcome to PartNexa Fleet.
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #94a3b8)', marginTop: '0.2rem' }}>
-              Complete the verification steps below to submit your compliance documents for admin review and unlock active delivery orders.
+              Complete the verification steps below to submit your 5 required compliance documents for admin review and unlock active delivery orders.
             </div>
           </div>
         </div>
@@ -307,7 +329,7 @@ export const KycUploadPage = () => {
           Delivery Partner KYC Verification
         </h1>
         <p style={{ color: 'var(--color-text-muted, #94a3b8)', fontSize: '0.9rem' }}>
-          Submit identity and vehicle registration records for administrative compliance review. All files are stored privately in encrypted cloud storage.
+          Submit identity and vehicle registration records for administrative compliance review. Stored securely in private storage.
         </p>
       </div>
 
@@ -364,54 +386,51 @@ export const KycUploadPage = () => {
                     : '#0284c7',
               }}
             >
-              {status === 'NOT_SUBMITTED' ? 'Not Submitted' : status === 'PENDING' ? 'Under Review' : status}
+              {status === 'NOT_SUBMITTED' ? 'Documents Required' : status.replace('_', ' ')}
             </span>
           </div>
 
-          <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-            {status === 'APPROVED' && (
-              <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} strokeWidth={2} /> Congratulations! Your KYC documents are APPROVED. You are authorized to go online and accept delivery jobs.
-              </span>
-            )}
-            {status === 'PENDING' && (
-              <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                <Clock size={16} strokeWidth={1.75} /> Your documents have been submitted and are currently Under Review by the PartNexa Compliance Desk.
-              </span>
-            )}
-            {status === 'NOT_SUBMITTED' && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                <AlertTriangle size={16} strokeWidth={1.75} style={{ color: '#f59e0b' }} /> Please complete the verification steps below and upload clear copies of all required documents.
-              </span>
-            )}
-            {status === 'REJECTED' && (
-              <div style={{ color: '#ef4444' }}>
-                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <AlertCircle size={16} strokeWidth={1.75} /> Your KYC was rejected.
-                </strong>
-                <div style={{ marginTop: '0.25rem', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-                  Reason: <em>"{kycData?.rejectionReason || 'Please replace unclear documents and resubmit.'}"</em>
-                </div>
-                <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  You can replace the rejected documents below and submit your KYC again for review.
-                </div>
-              </div>
-            )}
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #cbd5e1)' }}>
+            {status === 'APPROVED' &&
+              'Your profile is fully verified and active. You are eligible to go online and claim available delivery jobs.'}
+            {status === 'PENDING' &&
+              'Your documents are under review by the PartNexa compliance desk. Verification typically completes within 24 hours.'}
+            {status === 'REJECTED' &&
+              `Verification was rejected: "${kycData?.rejectionReason || 'Please replace unreadable or expired documents.'}". Replace rejected files and resubmit.`}
+            {status === 'NOT_SUBMITTED' &&
+              'Please complete all steps below and upload the 5 required documents to submit your KYC for compliance approval.'}
           </div>
         </div>
 
-        {/* Quick Duty Link if Approved */}
-        {status === 'APPROVED' && (
-          <button
-            onClick={() => navigate('/delivery/dashboard')}
-            className="btn btn-primary btn-sm"
-          >
-            Go to Duty Dashboard →
-          </button>
-        )}
+        {/* Progress Pill: X / 5 Required Documents Completed */}
+        <div
+          style={{
+            padding: '0.65rem 1rem',
+            borderRadius: '8px',
+            backgroundColor: isAllRequiredCompleted ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-tertiary, #334155)',
+            border: `1px solid ${isAllRequiredCompleted ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-color)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+          }}
+        >
+          {isAllRequiredCompleted ? (
+            <CheckCircle2 size={20} strokeWidth={2} style={{ color: '#10b981' }} />
+          ) : (
+            <AlertCircle size={20} strokeWidth={2} style={{ color: '#f59e0b' }} />
+          )}
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: isAllRequiredCompleted ? '#10b981' : 'var(--text-primary)' }}>
+              {completedRequiredCount} / 5 required documents completed
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              {isAllRequiredCompleted ? 'Ready for compliance submission' : `${5 - completedRequiredCount} document(s) pending`}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Progress Steps Indicator */}
+      {/* Stepper Tabs */}
       <div
         style={{
           display: 'flex',
@@ -423,7 +442,7 @@ export const KycUploadPage = () => {
           paddingBottom: '0.5rem',
         }}
       >
-        {steps.map((st, idx) => {
+        {steps.map((st) => {
           const isActive = currentStep === st.number;
           const isDone = currentStep > st.number || status === 'PENDING' || status === 'APPROVED';
 
@@ -508,7 +527,7 @@ export const KycUploadPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={user?.phone || '+91 98765 43210'}
+                  value={user?.phone || 'Phone number'}
                   disabled
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
                 />
@@ -520,19 +539,7 @@ export const KycUploadPage = () => {
                 </label>
                 <input
                   type="text"
-                  value={user?.email || 'partner@partnexa.com'}
-                  disabled
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-                />
-              </div>
-
-              <div className="form-group">
-                <label style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.4rem', display: 'block' }}>
-                  Operating City
-                </label>
-                <input
-                  type="text"
-                  value={partner?.city || 'Bengaluru, Karnataka'}
+                  value={user?.email || 'Email address'}
                   disabled
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
                 />
@@ -551,7 +558,7 @@ export const KycUploadPage = () => {
           </div>
         )}
 
-        {/* STEP 2: Identity Proof */}
+        {/* STEP 2: Identity Proof (Dynamic Selector) */}
         {currentStep === 2 && (
           <div>
             <div style={{ marginBottom: '1.5rem' }}>
@@ -559,7 +566,7 @@ export const KycUploadPage = () => {
                 Step 2: Identity Proof
               </h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Upload government-issued identity proof (Aadhaar Card, Passport, Voter ID, or Other).
+                Select your Government ID type and upload a clear document image or PDF.
               </p>
             </div>
 
@@ -602,8 +609,8 @@ export const KycUploadPage = () => {
               </div>
             </div>
 
-            {/* Document Upload Card */}
-            {renderUploadBox('AADHAAR_CARD', 'Identity Proof Document', 'image/jpeg,image/png,image/webp,application/pdf')}
+            {/* Document Upload Card dynamically for the selected idDocType */}
+            {renderUploadBox(idDocType, `Identity Proof Document (${idDocType.replace('_', ' ')})`, 'image/jpeg,image/png,image/webp,application/pdf')}
 
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between' }}>
               <button type="button" onClick={() => setCurrentStep(1)} className="btn btn-secondary">
@@ -634,7 +641,7 @@ export const KycUploadPage = () => {
               </label>
               <input
                 type="text"
-                placeholder="e.g. KA-01-20220005432"
+                placeholder="e.g. DL-04-20220005432"
                 value={dlNumber}
                 onChange={(e) => setDlNumber(e.target.value)}
                 disabled={isLocked}
@@ -751,7 +758,7 @@ export const KycUploadPage = () => {
                 Step 6: Review KYC & Submit
               </h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Inspect your uploaded documents before final submission to compliance desk.
+                Inspect your uploaded documents before final submission to the PartNexa compliance desk.
               </p>
             </div>
 
@@ -759,10 +766,33 @@ export const KycUploadPage = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
               {docDefinitions.map((d) => {
                 const uploaded = serverDocs.find(
-                  (s) => s.documentType === d.type || s.objectKey?.toUpperCase().includes(d.type.toUpperCase())
+                  (s) =>
+                    s.documentType === d.type ||
+                    (identityTypes.includes(d.type) && identityTypes.includes(s.documentType)) ||
+                    s.objectKey?.toUpperCase().includes(d.type.toUpperCase())
                 );
-                const local = localFiles[d.type];
-                const hasDoc = Boolean(uploaded || local);
+                const hasDoc = Boolean(uploaded);
+
+                // Language requirement: Do not say "Uploaded & Verified" before Admin verifies it
+                let statusLabel = 'Missing (Required)';
+                let statusColor = 'var(--text-muted)';
+                if (hasDoc) {
+                  if (uploaded.verificationStatus === 'APPROVED') {
+                    statusLabel = 'Approved';
+                    statusColor = '#10b981';
+                  } else if (uploaded.verificationStatus === 'REJECTED') {
+                    statusLabel = 'Rejected';
+                    statusColor = '#ef4444';
+                  } else if (status === 'PENDING') {
+                    statusLabel = 'Pending Review';
+                    statusColor = '#f59e0b';
+                  } else {
+                    statusLabel = 'Uploaded';
+                    statusColor = '#0284c7';
+                  }
+                } else if (!d.required) {
+                  statusLabel = 'Optional';
+                }
 
                 return (
                   <div
@@ -783,8 +813,8 @@ export const KycUploadPage = () => {
                       </span>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{d.label}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {hasDoc ? 'Uploaded & Verified' : d.required ? 'Missing (Required)' : 'Optional'}
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: statusColor }}>
+                          {statusLabel}
                         </div>
                       </div>
                     </div>
@@ -824,6 +854,7 @@ export const KycUploadPage = () => {
                 <div><strong>Rider:</strong> {fullName || user?.firstName}</div>
                 <div><strong>Vehicle Type:</strong> {vehicleType}</div>
                 <div><strong>Vehicle Plate:</strong> {vehicleNum || 'Not specified'}</div>
+                <div><strong>Licence Number:</strong> {dlNumber || 'Not specified'}</div>
                 <div><strong>ID Number:</strong> {maskIdentifier(idNumber) || 'Document attached'}</div>
               </div>
             </div>
@@ -838,11 +869,15 @@ export const KycUploadPage = () => {
                 <button
                   type="button"
                   onClick={handleSubmitForReview}
-                  disabled={submitting || serverDocs.length < 3}
+                  disabled={submitting || !isAllRequiredCompleted}
                   className="btn btn-primary"
-                  style={{ minWidth: '220px', padding: '0.75rem 1.5rem', fontWeight: 800 }}
+                  style={{ minWidth: '240px', padding: '0.75rem 1.5rem', fontWeight: 800 }}
                 >
-                  {submitting ? 'Submitting...' : 'Submit KYC for Admin Review →'}
+                  {submitting
+                    ? 'Submitting...'
+                    : !isAllRequiredCompleted
+                    ? `Complete 5 required documents (${completedRequiredCount}/5)`
+                    : 'Submit KYC for Admin Review →'}
                 </button>
               ) : status === 'PENDING' ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f59e0b', fontWeight: 700 }}>
@@ -856,45 +891,6 @@ export const KycUploadPage = () => {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Admin Fast Simulation Controls (For PRD Specification & Verification Testing) */}
-      <div
-        className="delivery-card"
-        style={{
-          marginTop: '2.5rem',
-          padding: '1.25rem 1.5rem',
-          borderRadius: '12px',
-          background: 'var(--bg-secondary)',
-          border: '1px dashed var(--border-color)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <SlidersHorizontal size={16} strokeWidth={1.75} /> Admin KYC Review Simulation Console
-            </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Test the end-to-end lifecycle: Submit → Admin Review → Approval / Rejection → Resubmission.
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              onClick={() => handleAdminVerify('APPROVED')}
-              className="btn btn-success btn-sm"
-              style={{ fontWeight: 700 }}
-            >
-              Simulate Admin Approval
-            </button>
-            <button
-              onClick={() => handleAdminVerify('REJECTED', 'Driving licence image is unclear.')}
-              className="btn btn-danger btn-sm"
-              style={{ fontWeight: 700 }}
-            >
-              Simulate Admin Rejection
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Lightbox / Preview Modal for Images or Documents */}
@@ -957,18 +953,51 @@ export const KycUploadPage = () => {
   // Render individual upload card helper
   function renderUploadBox(docType, label, acceptTypes) {
     const serverDoc = serverDocs.find(
-      (d) => d.documentType === docType || d.objectKey?.toUpperCase().includes(docType.toUpperCase())
+      (d) =>
+        d.documentType === docType ||
+        (identityTypes.includes(docType) && identityTypes.includes(d.documentType)) ||
+        d.objectKey?.toUpperCase().includes(docType.toUpperCase())
     );
-    const local = localFiles[docType];
-    const isUploading = uploadingDocType === docType;
-    const isPdf = local?.isPdf || serverDoc?.mimeType === 'application/pdf' || serverDoc?.objectKey?.toLowerCase().endsWith('.pdf');
-    const viewUrl = local?.previewUrl || serverDoc?.fileUrl;
+
+    const state = uploadState[docType];
+    const isUploading = uploadingDocType === docType || state?.status === 'UPLOADING';
+    const isFailed = state?.status === 'FAILED';
+    const isPdf = serverDoc?.mimeType === 'application/pdf' || serverDoc?.objectKey?.toLowerCase().endsWith('.pdf');
+    const viewUrl = serverDoc?.fileUrl;
+
+    let badgeText = 'Pending Upload';
+    let badgeBg = 'rgba(148, 163, 184, 0.15)';
+    let badgeColor = 'var(--text-muted)';
+
+    if (serverDoc) {
+      if (serverDoc.verificationStatus === 'APPROVED') {
+        badgeText = 'Approved';
+        badgeBg = 'rgba(16, 185, 129, 0.15)';
+        badgeColor = '#10b981';
+      } else if (serverDoc.verificationStatus === 'REJECTED') {
+        badgeText = 'Rejected';
+        badgeBg = 'rgba(239, 68, 68, 0.15)';
+        badgeColor = '#ef4444';
+      } else if (status === 'PENDING') {
+        badgeText = 'Pending Review';
+        badgeBg = 'rgba(245, 158, 11, 0.15)';
+        badgeColor = '#f59e0b';
+      } else {
+        badgeText = 'Uploaded';
+        badgeBg = 'rgba(2, 132, 199, 0.15)';
+        badgeColor = '#0284c7';
+      }
+    } else if (isFailed) {
+      badgeText = 'Upload Failed';
+      badgeBg = 'rgba(239, 68, 68, 0.15)';
+      badgeColor = '#ef4444';
+    }
 
     return (
       <div
         key={docType}
         style={{
-          border: '1px dashed var(--border-color)',
+          border: `1px dashed ${isFailed ? '#ef4444' : 'var(--border-color)'}`,
           borderRadius: '12px',
           padding: '1.25rem',
           backgroundColor: 'var(--bg-primary)',
@@ -989,15 +1018,23 @@ export const KycUploadPage = () => {
                 fontWeight: 800,
                 padding: '0.15rem 0.5rem',
                 borderRadius: '4px',
-                backgroundColor: serverDoc ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                color: serverDoc ? '#10b981' : 'var(--text-muted)',
+                backgroundColor: badgeBg,
+                color: badgeColor,
               }}
             >
-              {serverDoc ? 'Uploaded' : 'Pending'}
+              {badgeText}
             </span>
           </div>
 
-          {/* Preview Container */}
+          {/* Failure message if upload failed */}
+          {isFailed && (
+            <div style={{ color: '#ef4444', fontSize: '0.78rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <AlertTriangle size={14} />
+              {state?.error || 'Upload failed. Please check format and retry.'}
+            </div>
+          )}
+
+          {/* Preview Container — Only shown if authoritative server document exists */}
           {viewUrl ? (
             <div
               style={{
@@ -1022,7 +1059,7 @@ export const KycUploadPage = () => {
                     PDF Document
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {local?.name || serverDoc?.objectKey?.split('/').pop() || 'document.pdf'}
+                    {serverDoc?.objectKey?.split('/').pop() || 'document.pdf'}
                   </div>
                 </div>
               ) : (
@@ -1093,7 +1130,7 @@ export const KycUploadPage = () => {
                   textAlign: 'center',
                   padding: '0.55rem',
                   borderRadius: '8px',
-                  backgroundColor: viewUrl ? 'var(--bg-tertiary)' : 'var(--color-primary, #0284c7)',
+                  backgroundColor: viewUrl ? 'var(--bg-tertiary)' : isFailed ? '#ef4444' : 'var(--color-primary, #0284c7)',
                   color: viewUrl ? 'var(--text-primary)' : '#fff',
                   border: '1px solid var(--border-color)',
                   fontWeight: 700,
@@ -1101,7 +1138,7 @@ export const KycUploadPage = () => {
                   cursor: isUploading ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isUploading ? 'Uploading...' : viewUrl ? 'Replace File' : 'Upload File'}
+                {isUploading ? 'Uploading...' : isFailed ? 'Retry Upload' : viewUrl ? 'Replace File' : 'Upload File'}
                 <input
                   type="file"
                   accept={acceptTypes}

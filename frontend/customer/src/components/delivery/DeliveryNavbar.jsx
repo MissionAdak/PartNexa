@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { useDeliveryAuth } from '../../contexts/DeliveryAuthContext';
 import NotificationBell from '../notifications/NotificationBell';
 import PartNexaLogo from '../common/PartNexaLogo';
-import { Banknote, Sun, Moon } from 'lucide-react';
+import { Banknote, Sun, Moon, Menu } from 'lucide-react';
 
-export const DeliveryNavbar = () => {
+export const DeliveryNavbar = ({ onToggleSidebar }) => {
   const { user, partner, theme, toggleTheme, toggleDuty, logout } = useDeliveryAuth();
 
   const handleDutyClick = async () => {
@@ -33,7 +33,16 @@ export const DeliveryNavbar = () => {
       }}
     >
       {/* Brand & Portal Badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="delivery-mobile-menu-btn"
+          aria-label="Toggle navigation menu"
+          title="Toggle Navigation Menu"
+        >
+          <Menu size={22} />
+        </button>
         <PartNexaLogo
           variant="horizontal"
           portal="delivery"
@@ -56,7 +65,7 @@ export const DeliveryNavbar = () => {
 
           {/* Cash in Hand Quick Counter */}
           <Link
-            to="/cod"
+            to="/delivery/cod"
             style={{
               display: 'flex',
               alignItems: 'center',

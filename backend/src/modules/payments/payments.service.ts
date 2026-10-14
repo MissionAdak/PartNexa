@@ -154,9 +154,9 @@ export const verifyRazorpayPayment = async (
     throw AppError.badRequest('Cannot verify payment for a cancelled order.');
   }
 
-  const payment = await prisma.payment.findFirst({
+  const payment = order.payment || (await prisma.payment.findFirst({
     where: { orderId: order.id },
-  });
+  }));
 
   if (!payment) {
     throw AppError.notFound('Payment record not found for this order.');
@@ -250,96 +250,99 @@ export const verifyRazorpayPayment = async (
     throw AppError.badRequest('Invalid payment signature. Payment verification failed.');
   }
 
-  // SIGNATURE VALID: Transition order and payment authoritatively
-  const updatedPayment = await prisma.payment.update({
-    where: { id: payment.id },
-    data: {
-      status: PaymentStatus.CAPTURED,
-      razorpayPaymentId,
-      razorpaySignature,
-      updatedAt: new Date(),
-    },
-  });
-
-  const updatedOrder = await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      status: OrderStatus.CONFIRMED,
-      paymentStatus: PaymentStatus.CAPTURED,
-      updatedAt: new Date(),
-    },
-  });
-
-  // Authoritatively clear user's cart on payment success
-  try {
-    const userCart = await prisma.cart.findUnique({ where: { userId } });
-    if (userCart) {
-      await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
+  // SIGNATURE VALID: Execute critical state mutations in a single atomic transaction
+  // Double-spend check inside transaction lock ensures idempotency and consistency
+  const [updatedPayment, updatedOrder] = await prisma.$transaction(async (tx) => {
+    // Atomic concurrency guard
+    const currentPayment = await tx.payment.findUnique({ where: { id: payment.id } });
+    if (currentPayment?.status === PaymentStatus.CAPTURED) {
+      return [currentPayment, order];
     }
-  } catch (cartErr) {
-    console.warn('Cart items clearing warning:', cartErr);
-  }
 
-  // Update DIFMRequest status if applicable
-  if (order.difmRequest) {
-    await prisma.difmRequest.update({
-      where: { id: order.difmRequest.id },
+    const p = await tx.payment.update({
+      where: { id: payment.id },
       data: {
-        status: DIFMStatus.ACCEPTED,
+        status: PaymentStatus.CAPTURED,
+        razorpayPaymentId,
+        razorpaySignature,
         updatedAt: new Date(),
       },
     });
-  }
 
-  // Authoritative Order Lifecycle Propagation:
-  // Propagates order across Delivery (DeliveryAssignment), Workshop (ShopJob, ShopDelivery, CommissionLedger), and Admin
-  try {
-    await propagateOrderConfirmed(order.id);
-  } catch (propErr) {
-    console.warn('Order propagation warning on payment capture:', propErr);
-  }
-
-  // Append tracking entry
-  await prisma.orderTracking.create({
-    data: {
-      orderId: order.id,
-      status: OrderStatus.CONFIRMED,
-      message: `Payment of ₹${Number(order.total).toLocaleString('en-IN')} captured successfully via Razorpay Sandbox (Txn: ${razorpayPaymentId}). Order confirmed and released for dispatch.`,
-    },
-  });
-
-  // Create authoritative notification for customer
-  try {
-    await prisma.notification.create({
+    const o = await tx.order.update({
+      where: { id: order.id },
       data: {
-        userId: order.userId,
-        title: 'Payment Successful',
-        body: `Payment of ₹${Number(order.total).toLocaleString('en-IN')} confirmed for Order #${order.orderNumber}. Your items are being prepared for dispatch.`,
-        channel: 'IN_APP',
-        status: 'DELIVERED',
-        data: { route: `/customer/orders/${order.id}`, orderId: order.id, type: 'ORDER_PAYMENT_CAPTURED' },
+        status: OrderStatus.CONFIRMED,
+        paymentStatus: PaymentStatus.CAPTURED,
+        updatedAt: new Date(),
+      },
+      include: {
+        items: { include: { product: true } },
+        address: true,
+        payment: true,
+        difmRequest: { include: { shop: true } },
+        tracking: { orderBy: { createdAt: 'desc' } },
       },
     });
-  } catch (notifErr) {
-    console.warn('Customer notification warning:', notifErr);
-  }
 
-  const refreshedOrder = await prisma.order.findFirst({
-    where: { id: order.id },
-    include: {
-      items: { include: { product: true } },
-      address: true,
-      payment: true,
-      difmRequest: { include: { shop: true } },
-      tracking: { orderBy: { createdAt: 'desc' } },
-    },
+    if (order.difmRequest) {
+      await tx.difmRequest.update({
+        where: { id: order.difmRequest.id },
+        data: {
+          status: DIFMStatus.ACCEPTED,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    // Authoritatively clear user's cart in the database transaction
+    await tx.cartItem.deleteMany({
+      where: { cart: { userId } },
+    });
+
+    // Append confirmation tracking timeline entry in transaction
+    await tx.orderTracking.create({
+      data: {
+        orderId: order.id,
+        status: OrderStatus.CONFIRMED,
+        message: `Payment of ₹${Number(order.total).toLocaleString('en-IN')} captured successfully via Razorpay Sandbox (Txn: ${razorpayPaymentId}). Order confirmed and released for dispatch.`,
+      },
+    });
+
+    return [p, o];
+  });
+
+  // NON-BLOCKING ASYNCHRONOUS DOWNSTREAM PROPAGATION:
+  // Decouple delivery fleet assignment, workshop job manifest creation, commission ledger,
+  // and multi-recipient in-app notifications. Customers do NOT wait for these background workflows!
+  setImmediate(async () => {
+    try {
+      await propagateOrderConfirmed(order.id);
+    } catch (propErr) {
+      console.warn('Background order propagation warning on payment capture:', propErr);
+    }
+
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: order.userId,
+          title: 'Payment Successful',
+          body: `Payment of ₹${Number(order.total).toLocaleString('en-IN')} confirmed for Order #${order.orderNumber}. Your items are being prepared for dispatch.`,
+          channel: 'IN_APP',
+          status: 'DELIVERED',
+          data: { route: `/customer/orders/${order.id}`, orderId: order.id, type: 'ORDER_PAYMENT_CAPTURED' },
+        },
+      });
+    } catch (notifErr) {
+      console.warn('Background customer notification warning:', notifErr);
+    }
   });
 
   return {
     success: true,
     message: 'Payment verified and captured successfully.',
     alreadyProcessed: false,
-    order: refreshedOrder,
+    order: updatedOrder,
     payment: {
       id: updatedPayment.id,
       orderId: updatedPayment.orderId,

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow7" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow7" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+    <linearGradient id="redLens" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="50%" stop-color="#DC2626" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+    <linearGradient id="amberLens" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow7)" />
+  <ellipse cx="250" cy="425" rx="150" ry="20" fill="#0F172A" opacity="0.14" filter="blur(12px)" />
+
+  <g filter="url(#studioShadow7)">
+    <!-- Aerodynamic Tail Lamp Housing -->
+    <path d="M 80 170 Q 240 130 410 160 Q 430 260 390 340 Q 240 370 90 320 Q 70 240 80 170 Z" fill="#0F172A" stroke="#1E293B" stroke-width="4" />
+
+    <!-- Primary Brake Light Segment (Deep Red Prism) -->
+    <path d="M 95 180 Q 235 145 395 175 L 380 260 Q 235 240 100 250 Z" fill="url(#redLens)" stroke="#7F1D1D" stroke-width="2" />
+    
+      <line x1="110" y1="170" x2="105" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="130" y1="170" x2="125" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="150" y1="170" x2="145" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="170" y1="170" x2="165" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="190" y1="170" x2="185" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="210" y1="170" x2="205" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="230" y1="170" x2="225" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="250" y1="170" x2="245" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="270" y1="170" x2="265" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="290" y1="170" x2="285" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="310" y1="170" x2="305" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="330" y1="170" x2="325" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="350" y1="170" x2="345" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+      <line x1="370" y1="170" x2="365" y2="255" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+    
+
+    <!-- Turn Indicator (Amber Crystalline Section) -->
+    <path d="M 102 260 Q 235 250 378 270 L 370 305 Q 235 295 108 300 Z" fill="url(#amberLens)" stroke="#B45309" stroke-width="2" />
+
+    <!-- Reverse Light (Crystal White Segment) -->
+    <path d="M 110 308 Q 235 302 368 312 L 360 335 Q 235 330 115 322 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" opacity="0.9" />
+
+    <!-- LED Light Bar Accent -->
+    <path d="M 110 190 Q 240 160 380 185" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" />
+  </g>
+</svg>

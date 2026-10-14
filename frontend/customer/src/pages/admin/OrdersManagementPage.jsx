@@ -200,18 +200,18 @@ export default function OrdersManagementPage() {
             No orders found matching the filter criteria.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="admin-table" style={{ width: '100%', minWidth: '820px', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
-                  <th style={{ padding: '1rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>ORDER #</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>CUSTOMER</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>AMOUNT</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>STATUS</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>PAYMENT</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>DELIVERY</th>
-                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>DIFM</th>
-                  <th style={{ padding: '1rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>ACTION</th>
+                  <th style={{ padding: '1rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ORDER #</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>CUSTOMER</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>AMOUNT</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>STATUS</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>PAYMENT</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DELIVERY</th>
+                  <th style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DIFM</th>
+                  <th style={{ padding: '1rem 1.25rem', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ACTION</th>
                 </tr>
               </thead>
               <tbody>

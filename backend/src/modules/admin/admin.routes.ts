@@ -232,7 +232,7 @@ router.get('/delivery-partners/:id', async (req: AuthenticatedRequest, res: Resp
 router.patch('/delivery-partners/:id/kyc', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const id = String(req.params.id);
-    const result = await adminService.verifyDeliveryPartnerKyc(id, req.body);
+    const result = await adminService.verifyDeliveryPartnerKyc(id, req.user!.id, req.body);
     return successResponse(res, result, 'Delivery partner KYC verification completed.');
   } catch (error) {
     next(error);

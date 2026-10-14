@@ -872,20 +872,22 @@ export const getDeliveryPartnerById = async (id: string) => {
   const kyc = user?.kyc;
   const isApproved = user?.status === 'ACTIVE' && kyc?.status === 'APPROVED';
 
-  const docs = (kyc?.documents || []).map((d: any) => {
-    let resolvedType = d.documentType;
-    if (d.documentType === 'OTHER') {
-      const match = d.objectKey?.match(/kyc_([A-Z_]+)_\d+/i);
-      if (match && match[1]) {
-        resolvedType = match[1].toUpperCase();
+  const docs = await Promise.all(
+    (kyc?.documents || []).map(async (d: any) => {
+      let resolvedType = d.documentType;
+      if (d.documentType === 'OTHER') {
+        const match = d.objectKey?.match(/kyc_([A-Z_]+)_\d+/i);
+        if (match && match[1]) {
+          resolvedType = match[1].toUpperCase();
+        }
       }
-    }
-    return {
-      ...d,
-      documentType: resolvedType,
-      fileUrl: createSignedKycUrl(d.objectKey),
-    };
-  });
+      return {
+        ...d,
+        documentType: resolvedType,
+        fileUrl: await createSignedKycUrl(d.objectKey),
+      };
+    })
+  );
 
   return {
     ...partner,
@@ -897,6 +899,7 @@ export const getDeliveryPartnerById = async (id: string) => {
 
 export const verifyDeliveryPartnerKyc = async (
   partnerIdOrUserId: string,
+  adminUserId: string,
   data: { status: 'APPROVED' | 'REJECTED'; rejectionReason?: string }
 ) => {
   const partner = await prisma.deliveryPartner.findFirst({
@@ -908,7 +911,7 @@ export const verifyDeliveryPartnerKyc = async (
     throw AppError.notFound('Delivery partner not found.');
   }
 
-  return deliveryService.adminVerifyKyc(partner.userId, data);
+  return deliveryService.adminVerifyKyc(partner.userId, adminUserId, data);
 };
 
 export const togglePartnerActivation = async (partnerId: string, isActivated: boolean) => {

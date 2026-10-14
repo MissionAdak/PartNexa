@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -80,10 +80,30 @@ const CheckoutPage = () => {
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [isRetryingPayment, setIsRetryingPayment] = useState(false);
   const [isSwitchingToCOD, setIsSwitchingToCOD] = useState(false);
+  const [lastVerifyPayload, setLastVerifyPayload] = useState(null);
+  const [verifyElapsedSeconds, setVerifyElapsedSeconds] = useState(0);
+  const isVerifyingRef = useRef(false);
 
-  // Fetch addresses on mount
+  // Verification Elapsed Timer for user feedback
+  useEffect(() => {
+    let timer;
+    if (isVerifyingPayment) {
+      setVerifyElapsedSeconds(0);
+      timer = setInterval(() => {
+        setVerifyElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setVerifyElapsedSeconds(0);
+    }
+    return () => clearInterval(timer);
+  }, [isVerifyingPayment]);
+
+  // Fetch addresses and trigger warmup ping on mount
   useEffect(() => {
     document.title = 'DIFM Secure Checkout | PartNexa';
+
+    // Proactive Backend Warmup Ping: Wakes up Render container if dormant, avoiding cold start latency at payment time
+    fetch('/api/health').catch(() => {});
 
     if (user) {
       usersService
@@ -315,9 +335,14 @@ const CheckoutPage = () => {
   // Authoritative Backend Verification of Razorpay Sandbox Payment
   // Never trust frontend success callback alone!
   const handlePaymentSuccess = async (result) => {
+    // Duplicate verify request guard
+    if (isVerifyingRef.current) return;
+    isVerifyingRef.current = true;
+
     setIsPaymentModalOpen(false);
     setIsVerifyingPayment(true);
-    const toastId = toast.loading('Verifying payment signature with backend HMAC-SHA256...');
+    setLastVerifyPayload(result);
+    const toastId = toast.loading('Verifying payment signature with server...');
 
     try {
       const verifyRes = await paymentsService.verifyPayment({
@@ -328,14 +353,18 @@ const CheckoutPage = () => {
       });
 
       const verifiedData = verifyRes.data?.data;
-      await clearCart();
+
+      // Cart is cleared authoritatively on backend in the database transaction.
+      // Sync local cart state in background without blocking confirmation view transition:
+      clearCart().catch((e) => console.warn('Non-blocking cart clear sync warning:', e));
+
       setPaymentFailureData(null);
       setPaymentSuccessData(verifiedData);
       setConfirmedOrder(verifiedData.order);
       toast.success('Payment verified & order confirmed!', { id: toastId });
     } catch (err) {
       console.error('Payment verification failed:', err);
-      const errMsg = err.response?.data?.message || 'Backend payment verification failed.';
+      const errMsg = err.response?.data?.message || 'Backend payment verification failed. Please check or retry.';
       toast.error(errMsg, { id: toastId });
 
       setPaymentFailureData({
@@ -344,9 +373,11 @@ const CheckoutPage = () => {
         errorCode: 'SIGNATURE_VERIFICATION_FAILED',
         errorDescription: errMsg,
         amount: activePaymentSession?.amount,
+        canRetryVerification: true,
       });
     } finally {
       setIsVerifyingPayment(false);
+      isVerifyingRef.current = false;
     }
   };
 
@@ -508,8 +539,19 @@ const CheckoutPage = () => {
             </div>
 
             <div className="payment-action-buttons">
+              {paymentFailureData.canRetryVerification && lastVerifyPayload && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => handlePaymentSuccess(lastVerifyPayload)}
+                  id="retry-verify-button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <RefreshCw size={15} strokeWidth={1.75} /> Re-verify Payment with Server
+                </Button>
+              )}
               <Button
-                variant="primary"
+                variant={paymentFailureData.canRetryVerification ? 'outline' : 'primary'}
                 size="md"
                 onClick={() => handleRetryPayment(paymentFailureData.orderId)}
                 loading={isRetryingPayment}
@@ -1344,8 +1386,15 @@ const CheckoutPage = () => {
             <div className="verifying-spinner" />
             <h3 className="verifying-title">Verifying Payment with Server</h3>
             <p className="verifying-sub">
-              Performing HMAC-SHA256 signature verification & double-spend check...
+              {verifyElapsedSeconds > 8
+                ? 'Server is completing verification... Securing payment signature & order confirmation...'
+                : 'Performing cryptographic HMAC-SHA256 signature verification & double-spend check...'}
             </p>
+            {verifyElapsedSeconds > 15 && (
+              <div style={{ marginTop: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                Taking longer than usual due to network. Please do not close or reload.
+              </div>
+            )}
           </div>
         </div>
       )}

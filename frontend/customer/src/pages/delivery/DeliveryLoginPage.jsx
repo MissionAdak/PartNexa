@@ -29,7 +29,7 @@ export const DeliveryLoginPage = () => {
     try {
       setSubmitting(true);
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/delivery');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
     } finally {
@@ -181,7 +181,7 @@ export const DeliveryLoginPage = () => {
           }}
         >
           New delivery partner?{' '}
-          <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
+          <Link to="/delivery/register" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
             Register Vehicle & KYC →
           </Link>
         </div>

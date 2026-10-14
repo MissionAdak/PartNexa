@@ -19,31 +19,40 @@
    Hero Section & Navigation Tabs
    -------------------------------------------------------------------------- */
 .sell-hero {
-  background: linear-gradient(135deg, #064e3b 0%, #0f766e 40%, #0369a1 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 50%, #E0F2FE 100%);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 50px 0 36px 0;
   margin-bottom: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 [data-theme="dark"] .sell-hero {
   background: linear-gradient(135deg, #032a20 0%, #0a4742 45%, #083344 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  color: #FFFFFF;
 }
 
 .sell-hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(10px);
+  background: rgba(13, 148, 136, 0.12);
+  color: #0F766E;
   padding: 6px 16px;
   border-radius: 9999px;
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(13, 148, 136, 0.25);
   letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .sell-hero-badge {
+  background: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .sell-hero-title {
@@ -52,14 +61,23 @@
   line-height: 1.2;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .sell-hero-title {
+  color: #FFFFFF;
 }
 
 .sell-hero-desc {
   font-size: 1.05rem;
-  color: #e2e8f0;
+  color: var(--text-secondary);
   max-width: 680px;
   line-height: 1.6;
   margin-bottom: 28px;
+}
+
+[data-theme="dark"] .sell-hero-desc {
+  color: #E2E8F0;
 }
 
 /* Nav Tabs */

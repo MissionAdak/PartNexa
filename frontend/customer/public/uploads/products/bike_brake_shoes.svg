@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow23" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow23" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+    <linearGradient id="alloyShoe" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="50%" stop-color="#E2E8F0" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow23)" />
+  <ellipse cx="250" cy="425" rx="140" ry="18" fill="#0F172A" opacity="0.14" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow23)">
+    <!-- Top Brake Shoe Arch -->
+    <path d="M 140 220 A 130 130 0 0 1 360 220 L 350 200 A 150 150 0 0 0 150 200 Z" fill="url(#alloyShoe)" stroke="#475569" stroke-width="3" />
+    <!-- Top Friction Lining Layer -->
+    <path d="M 150 200 A 150 150 0 0 1 350 200 L 352 185 A 165 165 0 0 0 148 185 Z" fill="#334155" stroke="#0F172A" stroke-width="2" />
+
+    <!-- Bottom Brake Shoe Arch -->
+    <path d="M 140 270 A 130 130 0 0 0 360 270 L 350 290 A 150 150 0 0 1 150 290 Z" fill="url(#alloyShoe)" stroke="#475569" stroke-width="3" />
+    <!-- Bottom Friction Lining Layer -->
+    <path d="M 150 290 A 150 150 0 0 0 350 290 L 352 305 A 165 165 0 0 1 148 305 Z" fill="#334155" stroke="#0F172A" stroke-width="2" />
+
+    <!-- Return Coil Springs (Left & Right) -->
+    <!-- Left Spring -->
+    <path d="M 145 220 L 145 270" stroke="#0284C7" stroke-width="5" stroke-dasharray="4 3" stroke-linecap="round" />
+    <!-- Right Spring -->
+    <path d="M 355 220 L 355 270" stroke="#0284C7" stroke-width="5" stroke-dasharray="4 3" stroke-linecap="round" />
+
+    <!-- Cam & Pivot End Pads -->
+    <circle cx="140" cy="220" r="10" fill="#E2E8F0" stroke="#334155" stroke-width="2" />
+    <circle cx="360" cy="220" r="10" fill="#E2E8F0" stroke="#334155" stroke-width="2" />
+    <circle cx="140" cy="270" r="10" fill="#E2E8F0" stroke="#334155" stroke-width="2" />
+    <circle cx="360" cy="270" r="10" fill="#E2E8F0" stroke="#334155" stroke-width="2" />
+  </g>
+</svg>

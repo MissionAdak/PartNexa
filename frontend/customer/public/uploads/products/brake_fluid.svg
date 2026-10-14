@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow19" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow19" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow19)" />
+  <ellipse cx="250" cy="430" rx="100" ry="14" fill="#0F172A" opacity="0.14" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow19)">
+    <!-- Compact 500ml Cylindrical Bottle (White HDPE Plastic) -->
+    <path d="M 190 395 C 180 395 180 380 180 360 L 180 200 C 180 180 210 160 230 150 L 230 110 L 270 110 L 270 150 C 290 160 320 180 320 200 L 320 360 C 320 380 320 395 310 395 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="3" />
+
+    <!-- Red Safety Screw Cap -->
+    <rect x="230" y="90" width="40" height="24" rx="4" fill="#DC2626" stroke="#991B1B" stroke-width="2" />
+    <line x1="230" y1="96" x2="270" y2="96" stroke="#7F1D1D" stroke-width="1.5" /><line x1="230" y1="102" x2="270" y2="102" stroke="#7F1D1D" stroke-width="1.5" /><line x1="230" y1="108" x2="270" y2="108" stroke="#7F1D1D" stroke-width="1.5" />
+
+    <!-- DOT 4 Spec Front Label (Yellow & Black) -->
+    <rect x="190" y="210" width="120" height="150" rx="6" fill="#FBBF24" stroke="#D97706" stroke-width="2" />
+    <rect x="200" y="225" width="100" height="20" rx="4" fill="#0F172A" />
+    <circle cx="250" cy="285" r="26" fill="#DC2626" stroke="#FFFFFF" stroke-width="2" />
+    <rect x="205" y="325" width="90" height="10" rx="2" fill="#0F172A" />
+    <rect x="215" y="340" width="70" height="8" rx="2" fill="#78350F" />
+  </g>
+</svg>

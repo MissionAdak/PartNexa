@@ -43,7 +43,7 @@ export const UsedPartsListPage = () => {
           Doorstep Used-Part Inspection & Pickups ({usedPartJobs.length})
         </h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
-          Circular economy pickup flow: Inspect part condition at seller address, assign Grade (A+ to D), trigger automated payout, and drop off at partner shop hub.
+          Circular economy pickup flow: Collect used spare part from seller, complete doorstep chain-of-custody checklist and physical inspection photos, and securely transfer to partner garage for bench inspection.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export const UsedPartsListPage = () => {
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
             When customers submit used spare parts for sale, pickup assignments will appear here.
           </div>
-          <Link to="/jobs/available" className="btn btn-primary btn-sm">
+          <Link to="/delivery/jobs/available" className="btn btn-primary btn-sm">
             Check Available Jobs
           </Link>
         </div>
@@ -81,7 +81,7 @@ export const UsedPartsListPage = () => {
                   <span style={{ fontWeight: 800, color: '#9333EA' }}>
                     Fee: ₹{job.deliveryFee}
                   </span>
-                  <Link to={`/jobs/${job.id}/inspect`} className="btn btn-primary btn-sm" style={{ background: '#9333EA' }}>
+                  <Link to={`/delivery/jobs/${job.id}/inspect`} className="btn btn-primary btn-sm" style={{ background: '#9333EA' }}>
                     {job.verificationResult ? 'View Inspection Audit' : 'Launch Inspection Checklist →'}
                   </Link>
                 </div>

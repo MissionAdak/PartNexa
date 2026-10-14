@@ -300,7 +300,7 @@ export const DeliveryDashboardPage = () => {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Bike size={20} strokeWidth={1.75} style={{ color: 'var(--color-amber)' }} /> Active Trips In Progress ({activeTrips.length})
           </h2>
-          <Link to="/jobs/my" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+          <Link to="/delivery/jobs/my" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)' }}>
             View All Trips →
           </Link>
         </div>
@@ -336,7 +336,7 @@ export const DeliveryDashboardPage = () => {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span className="delivery-badge badge-transit">{trip.status}</span>
-                    <Link to={`/jobs/${trip.id}`} className="btn btn-secondary btn-sm">
+                    <Link to={`/delivery/jobs/${trip.id}`} className="btn btn-secondary btn-sm">
                       View Navigation & Map →
                     </Link>
                   </div>
@@ -425,7 +425,7 @@ export const DeliveryDashboardPage = () => {
                   {/* Used-Part Doorstep Inspection Button */}
                   {trip.type === 'USED_PART_PICKUP' && (
                     <Link
-                      to={`/jobs/${trip.id}/inspect`}
+                      to={`/delivery/jobs/${trip.id}/inspect`}
                       className="btn btn-primary btn-sm"
                       style={{ background: '#9333EA', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
@@ -503,7 +503,7 @@ export const DeliveryDashboardPage = () => {
                   </div>
 
                   <div style={{ fontSize: '0.775rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-                    Distance: ~{job.distanceKm || 5.0} km • {job.paymentMethod === 'CASH_ON_DELIVERY' ? 'COD Required' : 'Prepaid'}
+                    Distance: {job.distanceKm ? `~${job.distanceKm} km` : 'Distance not calculated'} • {job.paymentMethod === 'CASH_ON_DELIVERY' ? 'COD Required' : 'Prepaid'}
                   </div>
                 </div>
 
@@ -514,7 +514,7 @@ export const DeliveryDashboardPage = () => {
                   >
                     Accept & Claim Job
                   </button>
-                  <Link to={`/jobs/${job.id}`} className="btn btn-secondary btn-sm">
+                  <Link to={`/delivery/jobs/${job.id}`} className="btn btn-secondary btn-sm">
                     Details
                   </Link>
                 </div>

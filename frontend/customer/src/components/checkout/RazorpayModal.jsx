@@ -132,6 +132,7 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
   })();
 
   const handleSimulateSuccess = async () => {
+    if (isProcessing) return;
     if (activeTab === 'card' && testCardPreset === 'decline') {
       handleSimulateDecline();
       return;
@@ -144,18 +145,18 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
       const paymentId = `pay_rzp_demo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const signature = await computeSandboxHmac(razorpayOrderId, paymentId);
 
-      // Stage 1 -> Stage 2 (Authorizing Bank) after 500ms
+      // Stage 1 -> Stage 2 (Authorizing Bank) after 150ms
       setTimeout(() => {
         setProcessingStage(2);
-      }, 500);
+      }, 150);
 
-      // Stage 2 -> Stage 3 (Success Celebration Animation + Chime) after 1100ms
+      // Stage 2 -> Stage 3 (Success Celebration Animation + Chime) after 400ms
       setTimeout(() => {
         setCompletedPaymentId(paymentId);
         setAnimState('success');
         playPaymentChime();
 
-        // Complete and handoff to verified state after 1200ms
+        // Complete and handoff to verified state after 250ms
         setTimeout(() => {
           onSuccess({
             orderId,
@@ -164,8 +165,8 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
             razorpaySignature: signature,
           });
           setAnimState('idle');
-        }, 1200);
-      }, 1100);
+        }, 250);
+      }, 400);
     } catch (err) {
       console.error('Payment simulation error:', err);
       setAnimState('idle');
@@ -173,12 +174,13 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
   };
 
   const handleSimulateDecline = () => {
+    if (isProcessing && animState !== 'idle') return;
     setAnimState('processing');
     setProcessingStage(1);
 
     setTimeout(() => {
       setAnimState('declined');
-    }, 1200);
+    }, 300);
   };
 
   const handleConfirmDecline = () => {
@@ -515,6 +517,7 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                   className="rzp-btn rzp-btn-success"
                   onClick={handleSimulateSuccess}
                   id="rzp-simulate-success-btn"
+                  disabled={isProcessing}
                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
                   <CheckCircle2 size={16} strokeWidth={2.0} /> Pay ₹{Number(displayAmount || 0).toLocaleString('en-IN')} (Simulate Success)
@@ -526,6 +529,7 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                     className="rzp-btn rzp-btn-danger"
                     onClick={handleSimulateDecline}
                     id="rzp-simulate-decline-btn"
+                    disabled={isProcessing}
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <XCircle size={16} strokeWidth={2.0} /> Simulate Bank Decline / Failure
@@ -535,6 +539,7 @@ const RazorpayModal = ({ isOpen, paymentData, onSuccess, onFailure, onCancel }) 
                     className="rzp-btn rzp-btn-cancel"
                     onClick={handleCancel}
                     id="rzp-simulate-cancel-btn"
+                    disabled={isProcessing}
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
                     <X size={15} strokeWidth={1.75} /> Cancel Payment

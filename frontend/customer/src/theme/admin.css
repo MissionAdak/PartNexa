@@ -9,11 +9,23 @@
   --bg-glass: rgba(255, 255, 255, 0.85);
   
   --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
   
   --border-color: #E2E8F0;
   --border-light: #F1F5F9;
+  --border-color-strong: #CBD5E1;
+
+  /* Shared token compatibility aliases */
+  --color-bg: #F8FAFC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-elevated: #F1F5F9;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748B;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-primary: #2563EB;
   
   /* Brand Accents */
   --admin-blue: #2563EB;
@@ -57,6 +69,18 @@
   
   --border-color: #1E293B;
   --border-light: #2A364E;
+  --border-color-strong: #2A364E;
+
+  /* Shared token compatibility aliases */
+  --color-bg: #0A0F1D;
+  --color-bg-card: #141D30;
+  --color-bg-elevated: #1E293B;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-border: #1E293B;
+  --color-border-strong: #2A364E;
+  --color-primary: #3B82F6;
   
   --admin-blue: #3B82F6;
   --color-success: #34D399;
@@ -290,12 +314,15 @@ input:focus, select:focus, textarea:focus {
 
 /* Data Tables */
 .table-responsive {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
 }
 
 .admin-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.92rem;

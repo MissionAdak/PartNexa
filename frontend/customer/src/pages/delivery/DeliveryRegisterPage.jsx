@@ -793,7 +793,7 @@ export const DeliveryRegisterPage = () => {
           }}
         >
           Already registered as Delivery Partner?{' '}
-          <Link to="/login" style={{ color: '#10b981', fontWeight: 700, textDecoration: 'none' }}>
+          <Link to="/delivery/login" style={{ color: '#10b981', fontWeight: 700, textDecoration: 'none' }}>
             Sign In here
           </Link>
         </div>

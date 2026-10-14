@@ -34,7 +34,7 @@ export const JobDetailPage = () => {
     } catch (err) {
       if (err.response?.status === 403) {
         toast.error('Forbidden: You do not have permission to access another partner\'s job.');
-        navigate('/jobs/my');
+        navigate('/delivery/jobs/my');
       } else {
         toast.error('Failed to load delivery job details.');
       }
@@ -101,7 +101,7 @@ export const JobDetailPage = () => {
     return (
       <div className="delivery-container" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
         <h2>Job Not Found</h2>
-        <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+        <Link to="/delivery" className="btn btn-primary" style={{ marginTop: '1rem' }}>
           Back to Dashboard
         </Link>
       </div>
@@ -115,7 +115,7 @@ export const JobDetailPage = () => {
     <div className="delivery-container">
       {/* Top Breadcrumb */}
       <div style={{ marginBottom: '1.25rem' }}>
-        <Link to="/dashboard" style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
+        <Link to="/delivery" style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
           ← Back to Dashboard
         </Link>
       </div>
@@ -176,13 +176,13 @@ export const JobDetailPage = () => {
         </div>
       </div>
 
-      {/* Live Navigation & Map Simulator Card */}
+      {/* Live Navigation & Map Card */}
       <div className="delivery-card" style={{ marginBottom: '1.75rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div style={{ fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Compass size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> Live GPS Telemetry & Route Guidance
+            <Compass size={20} strokeWidth={1.75} style={{ color: 'var(--color-primary)' }} /> Live Route Guidance & Navigation
           </div>
-          <span className="delivery-badge badge-online">GPS ACTIVE • 38 KM/H</span>
+          <span className="delivery-badge badge-online">ROUTE GUIDANCE ACTIVE</span>
         </div>
 
         <div className="map-canvas-sim">
@@ -192,15 +192,15 @@ export const JobDetailPage = () => {
                 Current Navigation Route
               </div>
               <div style={{ fontSize: '1.15rem', fontWeight: 800 }}>
-                {job.navigationInfo?.routeSummary || 'Via Indiranagar 100ft Rd to Outer Ring Rd'}
+                {job.navigationInfo?.routeSummary || `To ${job.dropLocation?.name || 'Drop Destination'}`}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#FBBF24' }}>
-                {job.navigationInfo?.etaMinutes || 8} MIN
+                {job.navigationInfo?.etaMinutes ? `${job.navigationInfo.etaMinutes} MIN` : 'EN ROUTE'}
               </div>
               <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                {job.navigationInfo?.currentDistance || '2.4 km remaining'}
+                {job.navigationInfo?.currentDistance || (job.distanceKm ? `~${job.distanceKm} km remaining` : 'In transit')}
               </div>
             </div>
           </div>
@@ -222,10 +222,10 @@ export const JobDetailPage = () => {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                Turn left onto Marathahalli - Sarjapur Outer Ring Road in 350 meters
+                {job.navigationInfo?.nextTurn || `Proceed to destination: ${job.dropLocation?.address || 'Drop location'}`}
               </div>
               <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                Destination {job.dropLocation?.name} will be on the left
+                Destination {job.dropLocation?.name} will be on the route
               </div>
             </div>
           </div>
@@ -324,7 +324,7 @@ export const JobDetailPage = () => {
               <Search size={18} strokeWidth={1.75} /> Used-Part Doorstep Verification
             </div>
             <p style={{ fontSize: '0.825rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-              Verify component condition with the seller at pickup. Complete checklist, condition grading (A+ to D), and trigger automated valuation payout.
+              Doorstep physical intake & chain-of-custody checklist. Note component visual condition, capture photos, and transfer custody for partner garage bench inspection.
             </p>
             {job.verificationResult ? (
               <div style={{ padding: '0.75rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
@@ -333,7 +333,7 @@ export const JobDetailPage = () => {
               </div>
             ) : (
               <Link
-                to={`/jobs/${job.id}/inspect`}
+                to={`/delivery/jobs/${job.id}/inspect`}
                 className="btn btn-primary btn-block"
                 style={{ background: '#9333EA' }}
               >

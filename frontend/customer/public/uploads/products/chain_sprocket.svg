@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow22" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow22" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+    <radialGradient id="goldSprocket" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#A16207" />
+    </radialGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow22)" />
+  <ellipse cx="250" cy="425" rx="160" ry="18" fill="#0F172A" opacity="0.15" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow22)">
+    <!-- Rear Drive Sprocket -->
+    <circle cx="230" cy="245" r="140" fill="url(#goldSprocket)" stroke="#854D0E" stroke-width="3" />
+    <!-- Sprocket Teeth (Perimeter Cutouts) -->
+    <circle cx="370" cy="245" r="6" fill="#F8FAFC" /><circle cx="367.30993925645225" cy="272.312645082258" r="6" fill="#F8FAFC" /><circle cx="359.34313455158014" cy="298.57568053111254" r="6" fill="#F8FAFC" /><circle cx="346.4057457223563" cy="322.7798326227443" r="6" fill="#F8FAFC" /><circle cx="328.99494936611666" cy="343.99494936611666" r="6" fill="#F8FAFC" /><circle cx="307.7798326227443" cy="361.4057457223563" r="6" fill="#F8FAFC" /><circle cx="283.5756805311126" cy="374.34313455158014" r="6" fill="#F8FAFC" /><circle cx="257.312645082258" cy="382.30993925645225" r="6" fill="#F8FAFC" /><circle cx="230" cy="385" r="6" fill="#F8FAFC" /><circle cx="202.68735491774208" cy="382.30993925645225" r="6" fill="#F8FAFC" /><circle cx="176.42431946888743" cy="374.34313455158014" r="6" fill="#F8FAFC" /><circle cx="152.22016737725568" cy="361.4057457223563" r="6" fill="#F8FAFC" /><circle cx="131.00505063388334" cy="343.99494936611666" r="6" fill="#F8FAFC" /><circle cx="113.59425427764366" cy="322.7798326227443" r="6" fill="#F8FAFC" /><circle cx="100.65686544841986" cy="298.5756805311126" r="6" fill="#F8FAFC" /><circle cx="92.69006074354775" cy="272.312645082258" r="6" fill="#F8FAFC" /><circle cx="90" cy="245.00000000000003" r="6" fill="#F8FAFC" /><circle cx="92.69006074354772" cy="217.68735491774208" r="6" fill="#F8FAFC" /><circle cx="100.65686544841984" cy="191.42431946888752" r="6" fill="#F8FAFC" /><circle cx="113.59425427764367" cy="167.22016737725568" r="6" fill="#F8FAFC" /><circle cx="131.00505063388334" cy="146.00505063388334" r="6" fill="#F8FAFC" /><circle cx="152.2201673772556" cy="128.59425427764373" r="6" fill="#F8FAFC" /><circle cx="176.42431946888746" cy="115.65686544841984" r="6" fill="#F8FAFC" /><circle cx="202.687354917742" cy="107.69006074354775" r="6" fill="#F8FAFC" /><circle cx="229.99999999999997" cy="105" r="6" fill="#F8FAFC" /><circle cx="257.312645082258" cy="107.69006074354775" r="6" fill="#F8FAFC" /><circle cx="283.5756805311126" cy="115.65686544841986" r="6" fill="#F8FAFC" /><circle cx="307.77983262274427" cy="128.59425427764364" r="6" fill="#F8FAFC" /><circle cx="328.99494936611666" cy="146.00505063388334" r="6" fill="#F8FAFC" /><circle cx="346.4057457223563" cy="167.22016737725568" r="6" fill="#F8FAFC" /><circle cx="359.3431345515802" cy="191.42431946888746" r="6" fill="#F8FAFC" /><circle cx="367.30993925645225" cy="217.68735491774197" r="6" fill="#F8FAFC" />
+
+    <!-- Weight Reduction Lightning Holes -->
+    <circle cx="310" cy="245" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" /><circle cx="270" cy="314.28203230275506" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" /><circle cx="190" cy="314.2820323027551" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" /><circle cx="150" cy="245" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" /><circle cx="189.99999999999997" cy="175.71796769724492" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" /><circle cx="270" cy="175.71796769724492" r="22" fill="#F8FAFC" stroke="#A16207" stroke-width="2" />
+    <!-- Center Hub -->
+    <circle cx="230" cy="245" r="42" fill="#0F172A" stroke="#713F12" stroke-width="3" />
+    <circle cx="230" cy="245" r="26" fill="#F8FAFC" />
+
+    <!-- Front Countershaft Small Sprocket (Foreground Right) -->
+    <circle cx="345" cy="290" r="55" fill="url(#goldSprocket)" stroke="#854D0E" stroke-width="2.5" />
+    <circle cx="400" cy="290" r="4" fill="#F8FAFC" /><circle cx="394.55923617271503" cy="313.85124965231495" r="4" fill="#F8FAFC" /><circle cx="379.31337781901624" cy="332.98362598303504" r="4" fill="#F8FAFC" /><circle cx="357.2787563806023" cy="343.6118656805172" r="4" fill="#F8FAFC" /><circle cx="332.8148326309293" cy="343.63321448680597" r="4" fill="#F8FAFC" /><circle cx="310.76169498493095" cy="333.04344862688276" r="4" fill="#F8FAFC" /><circle cx="295.4824675728794" cy="313.937710465478" r="4" fill="#F8FAFC" /><circle cx="290.00008376976916" cy="290.0959930601244" r="4" fill="#F8FAFC" /><circle cx="295.3992110477187" cy="266.23528381589097" r="4" fill="#F8FAFC" /><circle cx="310.6116539015362" cy="247.07632759639188" r="4" fill="#F8FAFC" /><circle cx="332.6276920110874" cy="236.40964643681207" r="4" fill="#F8FAFC" /><circle cx="357.091541239406" cy="236.34560008297788" r="4" fill="#F8FAFC" /><circle cx="379.1631279153071" cy="246.89685984707882" r="4" fill="#F8FAFC" /><circle cx="394.4756778425349" cy="265.9759016397763" r="4" fill="#F8FAFC" />
+    <circle cx="345" cy="290" r="20" fill="#0F172A" />
+
+    <!-- Gold Drive Chain Links Loop in Foreground -->
+    <path d="M 120 370 C 230 400, 370 380, 420 330" fill="none" stroke="#CA8A04" stroke-width="12" stroke-linecap="round" />
+    <path d="M 120 370 C 230 400, 370 380, 420 330" fill="none" stroke="#0F172A" stroke-width="2" stroke-dasharray="8 6" />
+  </g>
+</svg>

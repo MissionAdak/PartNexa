@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow14" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow14" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow14)" />
+  <ellipse cx="250" cy="425" rx="140" ry="16" fill="#0F172A" opacity="0.14" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow14)">
+    <!-- Sensor Tip (Perforated Exhaust Probe) -->
+    <path d="M 100 240 L 140 240 L 140 260 L 100 260 Z" fill="#475569" stroke="#334155" stroke-width="2" />
+    <circle cx="112" cy="250" r="2.5" fill="#0F172A" />
+    <circle cx="122" cy="250" r="2.5" fill="#0F172A" />
+    <circle cx="132" cy="250" r="2.5" fill="#0F172A" />
+
+    <!-- Threaded Section (M18x1.5) -->
+    <rect x="140" y="236" width="30" height="28" fill="#94A3B8" stroke="#475569" stroke-width="1.5" />
+    <line x1="145" y1="236" x2="145" y2="264" stroke="#475569" stroke-width="2" /><line x1="150" y1="236" x2="150" y2="264" stroke="#475569" stroke-width="2" /><line x1="155" y1="236" x2="155" y2="264" stroke="#475569" stroke-width="2" /><line x1="160" y1="236" x2="160" y2="264" stroke="#475569" stroke-width="2" /><line x1="165" y1="236" x2="165" y2="264" stroke="#475569" stroke-width="2" />
+
+    <!-- Hex Nut Body (22mm Hex) -->
+    <polygon points="170,230 205,230 220,250 205,270 170,270 155,250" fill="#CBD5E1" stroke="#475569" stroke-width="2.5" />
+
+    <!-- Stainless Barrel Stem -->
+    <rect x="220" y="238" width="80" height="24" rx="4" fill="#94A3B8" stroke="#64748B" stroke-width="2" />
+
+    <!-- Heat-Shrink Wire Boot -->
+    <rect x="300" y="242" width="25" height="16" rx="4" fill="#1E293B" stroke="#0F172A" stroke-width="2" />
+
+    <!-- Braided Wiring Harness -->
+    <path d="M 325 250 C 370 250, 390 190, 410 190 C 430 190, 440 220, 430 250 C 420 280, 400 310, 360 310 L 320 310" fill="none" stroke="#1E293B" stroke-width="10" stroke-linecap="round" />
+    <path d="M 325 250 C 370 250, 390 190, 410 190 C 430 190, 440 220, 430 250 C 420 280, 400 310, 360 310 L 320 310" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="4 4" />
+
+    <!-- 4-Pin Waterproof Connector Plug -->
+    <rect x="270" y="295" width="50" height="30" rx="6" fill="#0284C7" stroke="#0369A1" stroke-width="2" />
+    <rect x="260" y="302" width="10" height="16" rx="2" fill="#38BDF8" />
+  </g>
+</svg>

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow13" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </radialGradient>
+    <filter id="studioShadow13" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+    <linearGradient id="altHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CBD5E1" />
+      <stop offset="50%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow13)" />
+  <ellipse cx="250" cy="425" rx="150" ry="18" fill="#0F172A" opacity="0.15" filter="blur(10px)" />
+
+  <g filter="url(#studioShadow13)">
+    <!-- Alternator Main Housing (Die-cast Aluminum) -->
+    <circle cx="260" cy="245" r="130" fill="url(#altHousing)" stroke="#475569" stroke-width="4" />
+
+    <!-- Stator Cooling Slots with Copper Coils Visible -->
+    
+        <line x1="345" y1="245" x2="375" y2="245" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="345" y1="245" x2="375" y2="245" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="338.52976026345937" y1="277.52809175103266" x2="366.24614623879796" y2="289.00859472198533" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="338.52976026345937" y1="277.52809175103266" x2="366.24614623879796" y2="289.00859472198533" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="320.10407640085657" y1="305.1040764008565" x2="341.31727983645294" y2="326.31727983645294" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="320.10407640085657" y1="305.1040764008565" x2="341.31727983645294" y2="326.31727983645294" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="292.52809175103266" y1="323.52976026345937" x2="304.00859472198533" y2="351.24614623879796" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="292.52809175103266" y1="323.52976026345937" x2="304.00859472198533" y2="351.24614623879796" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="260" y1="330" x2="260" y2="360" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="260" y1="330" x2="260" y2="360" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="227.47190824896737" y1="323.52976026345937" x2="215.99140527801467" y2="351.24614623879796" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="227.47190824896737" y1="323.52976026345937" x2="215.99140527801467" y2="351.24614623879796" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="199.89592359914346" y1="305.10407640085657" x2="178.68272016354706" y2="326.31727983645294" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="199.89592359914346" y1="305.10407640085657" x2="178.68272016354706" y2="326.31727983645294" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="181.47023973654063" y1="277.52809175103266" x2="153.75385376120204" y2="289.00859472198533" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="181.47023973654063" y1="277.52809175103266" x2="153.75385376120204" y2="289.00859472198533" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="175" y1="245" x2="145" y2="245" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="175" y1="245" x2="145" y2="245" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="181.4702397365406" y1="212.47190824896742" x2="153.75385376120198" y2="200.99140527801472" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="181.4702397365406" y1="212.47190824896742" x2="153.75385376120198" y2="200.99140527801472" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="199.89592359914343" y1="184.89592359914346" x2="178.682720163547" y2="163.68272016354706" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="199.89592359914343" y1="184.89592359914346" x2="178.682720163547" y2="163.68272016354706" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="227.4719082489674" y1="166.47023973654063" x2="215.99140527801472" y2="138.753853761202" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="227.4719082489674" y1="166.47023973654063" x2="215.99140527801472" y2="138.753853761202" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="260" y1="160" x2="260" y2="130" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="260" y1="160" x2="260" y2="130" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="292.52809175103266" y1="166.47023973654063" x2="304.00859472198533" y2="138.75385376120204" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="292.52809175103266" y1="166.47023973654063" x2="304.00859472198533" y2="138.75385376120204" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="320.1040764008565" y1="184.89592359914343" x2="341.31727983645294" y2="163.682720163547" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="320.1040764008565" y1="184.89592359914343" x2="341.31727983645294" y2="163.682720163547" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+        <line x1="338.52976026345937" y1="212.4719082489674" x2="366.246146238798" y2="200.9914052780147" stroke="#B45309" stroke-width="8" stroke-linecap="round" />
+        <line x1="338.52976026345937" y1="212.4719082489674" x2="366.246146238798" y2="200.9914052780147" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" />
+      
+
+    <!-- Front Pulley for Serpentine Belt -->
+    <circle cx="160" cy="245" r="42" fill="#0F172A" stroke="#334155" stroke-width="4" />
+    <!-- Multi-V Grooves -->
+    <circle cx="160" cy="245" r="34" fill="none" stroke="#64748B" stroke-width="3" />
+    <circle cx="160" cy="245" r="26" fill="none" stroke="#64748B" stroke-width="3" />
+    <circle cx="160" cy="245" r="18" fill="none" stroke="#64748B" stroke-width="3" />
+    <circle cx="160" cy="245" r="10" fill="#E2E8F0" />
+
+    <!-- Mounting Lugs -->
+    <path d="M 230 115 L 290 115 L 290 85 L 230 85 Z" fill="url(#altHousing)" stroke="#475569" stroke-width="3" />
+    <circle cx="260" cy="100" r="8" fill="#0F172A" />
+
+    <path d="M 230 375 L 290 375 L 290 405 L 230 405 Z" fill="url(#altHousing)" stroke="#475569" stroke-width="3" />
+    <circle cx="260" cy="390" r="8" fill="#0F172A" />
+
+    <!-- Rear Black Plastic Regulator Cover -->
+    <circle cx="340" cy="245" r="45" fill="#1E293B" stroke="#0F172A" stroke-width="3" />
+    <rect x="360" y="235" width="20" height="20" rx="3" fill="#B45309" stroke="#F59E0B" stroke-width="1.5" />
+  </g>
+</svg>

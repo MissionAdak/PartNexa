@@ -288,8 +288,8 @@ export default function ReturnsManagementPage() {
             overflow: 'hidden',
           }}
         >
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+          <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
                   <th style={thStyle}>Return & Order</th>
@@ -471,7 +471,7 @@ export default function ReturnsManagementPage() {
       {/* 1. Review Modal (Approve or Reject) */}
       {reviewModalData && (
         <div className="modal-backdrop" onClick={() => !submittingAction && setReviewModalData(null)}>
-          <div className="return-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className="return-modal modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="modal-header">
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
                 {reviewModalData.action === 'APPROVE' ? 'Approve Return Request' : 'Reject Return Request'}
@@ -553,7 +553,7 @@ export default function ReturnsManagementPage() {
       {/* 2. Inspection Modal */}
       {inspectModalData && (
         <div className="modal-backdrop" onClick={() => !submittingAction && setInspectModalData(null)}>
-          <div className="return-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+          <div className="return-modal modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Record Quality Inspection</h3>
               <button
@@ -672,7 +672,7 @@ export default function ReturnsManagementPage() {
       {/* 3. Refund Confirmation Modal */}
       {refundConfirmData && (
         <div className="modal-backdrop" onClick={() => !submittingAction && setRefundConfirmData(null)}>
-          <div className="return-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className="return-modal modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="modal-header">
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Confirm & Execute Refund</h3>
               <button
