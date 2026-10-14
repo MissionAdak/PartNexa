@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Car, Bike, Plus, ArrowRight, Sun, Moon, Search, User, Package, Bell, Award, HelpCircle, LogOut, ShoppingCart, ChevronDown } from 'lucide-react';
+import {
+  Car,
+  Bike,
+  Plus,
+  ArrowRight,
+  Sun,
+  Moon,
+  Search,
+  ShoppingCart,
+  ChevronDown,
+  Warehouse,
+  Check,
+  RotateCcw,
+  Sparkles,
+  User,
+  Package,
+  HelpCircle,
+  LogOut,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import { useVehicles } from '../../contexts/VehicleContext';
@@ -11,16 +29,15 @@ import PartNexaLogo from '../common/PartNexaLogo';
 import './Navbar.css';
 
 /**
- * Canonical Customer Navigation Configuration
- * Ensures active states are derived directly from current URL path
- * without requiring client-side click flags or route redirects.
+ * Canonical Customer Desktop Navigation Configuration
+ * Center links: Browse Parts, DIFM Services, Subscriptions, Sell Used Part
+ * (My Vehicles is moved into the Select Vehicle dropdown/modal as "View My Garage")
  */
 const NAV_ITEMS = [
   {
     name: 'Browse Parts',
     path: '/customer/products',
     id: 'nav-browse-parts',
-    isPrimary: true,
     isActive: (pathname) =>
       pathname.startsWith('/customer/products') ||
       pathname.startsWith('/products'),
@@ -29,7 +46,6 @@ const NAV_ITEMS = [
     name: 'DIFM Services',
     path: '/customer/services',
     id: 'nav-services',
-    isPrimary: true,
     isActive: (pathname) =>
       pathname.startsWith('/customer/services') ||
       pathname.startsWith('/services'),
@@ -38,7 +54,6 @@ const NAV_ITEMS = [
     name: 'Subscriptions',
     path: '/customer/subscriptions',
     id: 'nav-subscriptions',
-    isPrimary: false,
     isActive: (pathname) =>
       pathname.startsWith('/customer/subscriptions') ||
       pathname.startsWith('/customer/my-subscriptions') ||
@@ -49,65 +64,217 @@ const NAV_ITEMS = [
     name: 'Sell Used Part',
     path: '/customer/sell-used-parts',
     id: 'nav-sell-used-parts',
-    isPrimary: false,
     isActive: (pathname) =>
       pathname.startsWith('/customer/sell-used-parts') ||
       pathname.startsWith('/sell-used-parts'),
   },
-  {
-    name: 'My Vehicles',
-    path: '/customer/vehicles',
-    id: 'nav-vehicles',
-    isPrimary: false,
-    isActive: (pathname) =>
-      pathname.startsWith('/customer/vehicles') ||
-      pathname.startsWith('/customer/garage') ||
-      pathname.startsWith('/customer/onboarding/vehicle') ||
-      pathname === '/vehicles' ||
-      pathname === '/garage' ||
-      pathname === '/onboarding/vehicle',
-  },
 ];
 
-const SearchBar = () => {
+/**
+ * Compact, Expandable Search Bar
+ * Width ~180px on wide desktop, shrinking to ~130px on compact desktop,
+ * expands smoothly on focus without pushing actions off screen.
+ */
+const CompactSearchBar = () => {
   const [query, setQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (query.trim()) {
-      // Directly navigate to canonical customer products search
       navigate(`/customer/products?search=${encodeURIComponent(query.trim())}`);
       setQuery('');
     }
   };
 
   return (
-    <form className="navbar-search" onSubmit={handleSearch} role="search">
-      <svg
-        className="search-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        aria-hidden="true"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-      </svg>
+    <form
+      className={`navbar-search ${isFocused ? 'focused' : ''}`}
+      onSubmit={handleSearch}
+      role="search"
+    >
+      <Search className="search-icon" size={15} strokeWidth={2} aria-hidden="true" />
       <input
         type="search"
         id="navbar-search-input"
-        className="form-input navbar-search-input"
-        placeholder="Search 10,000+ spare parts, OEM numbers..."
+        className="navbar-search-input"
+        placeholder="Search parts, OEM..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         aria-label="Search spare parts"
       />
     </form>
   );
 };
 
+/**
+ * Vehicle Selector Dropdown
+ * Displays active vehicle with compact label ("Nexon" / "Tata Nexon" / "Select Vehicle")
+ * Dropdown contains:
+ * - Current Vehicle summary (make, model, variant, year, active fitment)
+ * - Switch Vehicle (opens modal)
+ * - View My Garage (navigates to /customer/vehicles)
+ * - Add Vehicle (opens modal in wizard mode)
+ */
+const VehicleSelectorDropdown = ({ onOpenModal, onAddVehicleModal }) => {
+  const { vehicles, activeVehicle, primaryVehicle } = useVehicles();
+  const displayVehicle = activeVehicle || primaryVehicle;
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isTwoWheeler =
+    displayVehicle?.variant?.model?.make?.type === 'BIKE' ||
+    displayVehicle?.variant?.model?.make?.type === 'SCOOTER';
+
+  // Compact vehicle name for pill (truncate so it never blows up navbar width)
+  const shortName = displayVehicle
+    ? displayVehicle.nickname ||
+      displayVehicle.variant?.model?.name ||
+      `${displayVehicle.variant?.model?.make?.name || ''} ${displayVehicle.variant?.model?.name || ''}`.trim() ||
+      'Vehicle'
+    : 'Select Vehicle';
+
+  return (
+    <div className="vehicle-dropdown-wrapper" ref={dropdownRef}>
+      <button
+        type="button"
+        className={`vehicle-pill ${displayVehicle ? 'has-vehicle' : 'no-vehicle'} ${open ? 'dropdown-active' : ''}`}
+        id="navbar-vehicle-selector-btn"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label="Vehicle selector menu"
+        title={displayVehicle ? `Active Vehicle: ${shortName} (Click to manage)` : 'Select your vehicle'}
+      >
+        <span className="vehicle-pill-icon" aria-hidden="true">
+          {isTwoWheeler ? <Bike size={15} strokeWidth={2} /> : <Car size={15} strokeWidth={2} />}
+        </span>
+        <span className="vehicle-pill-label">{shortName}</span>
+        <ChevronDown size={13} strokeWidth={2.2} className={`vehicle-chevron ${open ? 'rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="vehicle-dropdown-menu" role="menu" id="vehicle-dropdown-popover">
+          {/* 1. Current Vehicle Section */}
+          <div className="vdm-section vdm-current-vehicle">
+            <div className="vdm-section-header">
+              <span className="vdm-section-title">Current Vehicle</span>
+              {displayVehicle && <span className="vdm-fitment-badge">Guaranteed Fitment</span>}
+            </div>
+
+            {displayVehicle ? (
+              <div className="vdm-vehicle-card">
+                <div className="vdm-card-icon">
+                  {isTwoWheeler ? <Bike size={18} strokeWidth={2} /> : <Car size={18} strokeWidth={2} />}
+                </div>
+                <div className="vdm-card-text">
+                  <div className="vdm-card-title">
+                    {displayVehicle.nickname ||
+                      `${displayVehicle.variant?.model?.make?.name || ''} ${displayVehicle.variant?.model?.name || ''}`}
+                  </div>
+                  <div className="vdm-card-meta">
+                    {displayVehicle.variant?.year ? `${displayVehicle.variant.year} · ` : ''}
+                    {displayVehicle.variant?.name || 'Standard'}
+                    {displayVehicle.variant?.fuelType ? ` (${displayVehicle.variant.fuelType})` : ''}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="vdm-empty-card">
+                <p className="vdm-empty-desc">No vehicle active. Select a vehicle to check compatibility across all parts.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="vdm-divider" />
+
+          {/* 2. Actions: Switch Vehicle, View My Garage, Add Vehicle */}
+          <div className="vdm-actions-group">
+            {/* Switch Vehicle */}
+            <button
+              type="button"
+              className="vdm-action-item"
+              id="vdm-switch-vehicle-btn"
+              onClick={() => {
+                setOpen(false);
+                onOpenModal();
+              }}
+              role="menuitem"
+            >
+              <div className="vdm-action-icon-box action-switch">
+                <RotateCcw size={15} strokeWidth={2} />
+              </div>
+              <div className="vdm-action-text">
+                <span className="vdm-action-heading">Switch Vehicle</span>
+                <span className="vdm-action-sub">Change active vehicle or choose model</span>
+              </div>
+            </button>
+
+            {/* View My Garage -> Navigates to /customer/vehicles */}
+            <button
+              type="button"
+              className="vdm-action-item"
+              id="vdm-view-garage-btn"
+              onClick={() => {
+                setOpen(false);
+                navigate('/customer/vehicles');
+              }}
+              role="menuitem"
+            >
+              <div className="vdm-action-icon-box action-garage">
+                <Warehouse size={15} strokeWidth={2} />
+              </div>
+              <div className="vdm-action-text">
+                <span className="vdm-action-heading">View My Garage</span>
+                <span className="vdm-action-sub">Manage saved vehicles & service history</span>
+              </div>
+            </button>
+
+            {/* Add Vehicle */}
+            <button
+              type="button"
+              className="vdm-action-item"
+              id="vdm-add-vehicle-btn"
+              onClick={() => {
+                setOpen(false);
+                onAddVehicleModal();
+              }}
+              role="menuitem"
+            >
+              <div className="vdm-action-icon-box action-add">
+                <Plus size={15} strokeWidth={2.2} />
+              </div>
+              <div className="vdm-action-text">
+                <span className="vdm-action-heading">Add Vehicle</span>
+                <span className="vdm-action-sub">Add another car, bike, or scooter</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Compact User Menu
+ * Displays avatar + first name + chevron (no unnecessary role text).
+ */
 const UserMenu = ({ user, onLogout }) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -136,9 +303,7 @@ const UserMenu = ({ user, onLogout }) => {
           {user.firstName ? user.firstName[0].toUpperCase() : 'U'}
         </div>
         <span className="user-name-label">{user.firstName}</span>
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <ChevronDown size={13} strokeWidth={2.2} className={`user-chevron ${open ? 'rotated' : ''}`} />
       </button>
 
       {open && (
@@ -147,61 +312,32 @@ const UserMenu = ({ user, onLogout }) => {
             <div className="user-menu-name">
               {user.firstName} {user.lastName}
             </div>
-            <div className="user-menu-email">
-              {user.email}
-            </div>
+            <div className="user-menu-email">{user.email}</div>
           </div>
           <Link to="/customer/profile" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            My Profile
+            <User size={15} strokeWidth={1.8} />
+            <span>My Profile</span>
           </Link>
           <Link to="/customer/orders" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            My Orders
-          </Link>
-          <Link to="/customer/notifications" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem" id="nav-notifications-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            Notifications
-          </Link>
-          <Link to="/customer/my-subscriptions" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem" id="nav-my-subscriptions-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            My Subscriptions
+            <Package size={15} strokeWidth={1.8} />
+            <span>My Orders</span>
           </Link>
           <Link to="/customer/vehicles" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-            My Vehicles
+            <Warehouse size={15} strokeWidth={1.8} />
+            <span>My Garage</span>
+          </Link>
+          <Link to="/customer/my-subscriptions" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem">
+            <Sparkles size={15} strokeWidth={1.8} />
+            <span>My Subscriptions</span>
           </Link>
           <Link to="/customer/support" className="dropdown-item" onClick={() => setOpen(false)} role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            Help & Support
+            <HelpCircle size={15} strokeWidth={1.8} />
+            <span>Help & Support</span>
           </Link>
           <div className="dropdown-divider" />
           <button className="dropdown-item danger" onClick={onLogout} role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Logout
+            <LogOut size={15} strokeWidth={1.8} />
+            <span>Logout</span>
           </button>
         </div>
       )}
@@ -209,19 +345,19 @@ const UserMenu = ({ user, onLogout }) => {
   );
 };
 
-const Navbar = () => {
+export default function Navbar() {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
-  const { activeVehicle, primaryVehicle } = useVehicles();
-  const displayVehicle = activeVehicle || primaryVehicle;
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [vehicleSelectorOpen, setVehicleSelectorOpen] = useState(false);
 
-  // Theme state: support light & dark across all unified portals
-  const [theme, setTheme] = useState(() => localStorage.getItem('partnexa_theme') || localStorage.getItem('partsphere_theme') || 'light');
+  // Theme state: support light & dark across portals
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem('partnexa_theme') || localStorage.getItem('partsphere_theme') || 'light'
+  );
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -265,23 +401,20 @@ const Navbar = () => {
   return (
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`} role="navigation" aria-label="Main navigation">
       <div className="navbar-inner">
-        {/* Brand Logo - Navigates directly to Canonical Customer Home */}
-        <PartNexaLogo
-          id="navbar-logo"
-          variant="horizontal"
-          portal="customer"
-          size="md"
-          linkTo="/customer"
-          ariaLabel="PartNexa Customer Home"
-        />
-
-        {/* Global Search (Desktop / Tablet Wide) */}
-        <div className="navbar-search-wrapper">
-          <SearchBar />
+        {/* LEFT: PartNexa Brand Logo */}
+        <div className="navbar-left">
+          <PartNexaLogo
+            id="navbar-logo"
+            variant="horizontal"
+            portal="customer"
+            size="md"
+            linkTo="/customer"
+            ariaLabel="PartNexa Customer Home"
+          />
         </div>
 
-        {/* Canonical Desktop Links with Clean Active Indicator */}
-        <div className="navbar-links" role="menubar">
+        {/* CENTER: Clean Canonical Navigation Links (Desktop) */}
+        <div className="navbar-center" role="menubar">
           {NAV_ITEMS.map((item) => {
             const active = item.isActive(location.pathname);
             return (
@@ -289,7 +422,7 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 id={item.id}
-                className={`nav-link ${item.isPrimary ? 'nav-link-primary' : 'nav-link-secondary'} ${active ? 'active' : ''}`}
+                className={`nav-link ${active ? 'active' : ''}`}
                 aria-current={active ? 'page' : undefined}
                 role="menuitem"
               >
@@ -299,112 +432,50 @@ const Navbar = () => {
           })}
         </div>
 
-        {/* Header Actions (Active Vehicle Pill, Theme Toggle, Cart, Auth) */}
-        <div className="navbar-actions">
-          {/* Prominent Active Vehicle Indicator */}
-          {displayVehicle ? (
-            <div className="navbar-vehicle-indicator">
-              <button
-                type="button"
-                className="vehicle-pill"
-                id="navbar-primary-vehicle-pill"
-                onClick={() => setVehicleSelectorOpen(true)}
-                title="Active Vehicle for Fitment (Click to switch)"
-                aria-label="Active vehicle selector"
-              >
-                <span className="vehicle-pill-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  {displayVehicle.variant?.model?.make?.type === 'BIKE' ||
-                  displayVehicle.variant?.model?.make?.type === 'SCOOTER' ? (
-                    <Bike size={18} strokeWidth={1.75} />
-                  ) : (
-                    <Car size={18} strokeWidth={1.75} />
-                  )}
-                </span>
-                <div className="vehicle-pill-info">
-                  <span className="vehicle-pill-name">
-                    {displayVehicle.nickname ||
-                      `${displayVehicle.variant?.model?.make?.name || ''} ${
-                        displayVehicle.variant?.model?.name || ''
-                      }`}
-                  </span>
-                  <span className="vehicle-pill-sub">
-                    {displayVehicle.variant?.year ? `${displayVehicle.variant.year} · ` : ''}
-                    {displayVehicle.variant?.name || 'Active'}
-                  </span>
-                </div>
-                <span className="vehicle-pill-badge">Active</span>
-              </button>
-            </div>
-          ) : (
-            <div className="navbar-vehicle-indicator">
-              <button
-                type="button"
-                className="vehicle-pill vehicle-pill-select"
-                id="navbar-add-vehicle-pill"
-                onClick={() => setVehicleSelectorOpen(true)}
-                title="Select your vehicle for guaranteed fitment"
-                aria-label="Select Vehicle"
-              >
-                <span className="vehicle-pill-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <Car size={18} strokeWidth={1.75} />
-                </span>
-                <div className="vehicle-pill-info">
-                  <span className="vehicle-pill-name">Select Vehicle</span>
-                </div>
-                <span className="vehicle-pill-badge-add" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Plus size={14} strokeWidth={2.2} />
-                </span>
-              </button>
-            </div>
-          )}
+        {/* RIGHT: Search, Select Vehicle, Theme, Cart, Bell, Profile/Login */}
+        <div className="navbar-right">
+          {/* Compact Search Field */}
+          <div className="navbar-search-wrapper">
+            <CompactSearchBar />
+          </div>
 
-          {/* Theme Switcher */}
+          {/* Select Vehicle Dropdown */}
+          <VehicleSelectorDropdown
+            onOpenModal={() => setVehicleSelectorOpen(true)}
+            onAddVehicleModal={() => setVehicleSelectorOpen(true)}
+          />
+
+          {/* Theme Switcher Button */}
           <button
             id="theme-toggle-btn"
-            className="theme-toggle-btn"
+            className="icon-action-btn theme-toggle-btn"
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
             {theme === 'dark' ? (
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
+              <Sun size={17} strokeWidth={2} />
             ) : (
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
+              <Moon size={17} strokeWidth={2} />
             )}
           </button>
 
-          {/* Cart Button */}
+          {/* Shopping Cart Button */}
           <Link
             to="/customer/cart"
-            className={`navbar-cart-btn ${isCartActive ? 'active' : ''}`}
+            className={`icon-action-btn navbar-cart-btn ${isCartActive ? 'active' : ''}`}
             id="navbar-cart-btn"
             aria-label={`Shopping Cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
             aria-current={isCartActive ? 'page' : undefined}
           >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
+            <ShoppingCart size={17} strokeWidth={2} />
             {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
           </Link>
 
           {/* Real Notification Bell */}
           <NotificationBell role="customer" />
 
-          {/* User Auth Controls */}
+          {/* User Auth Controls: Profile if logged in, Login + Register if unauthenticated */}
           {user ? (
             <UserMenu user={user} onLogout={handleLogout} />
           ) : (
@@ -418,7 +489,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Mobile Hamburger Toggle */}
+          {/* Mobile Drawer Hamburger (Hidden on desktop >= 900px) */}
           <button
             className={`hamburger ${mobileOpen ? 'open' : ''}`}
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -433,11 +504,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile / Tablet Drawer */}
+      {/* Mobile Drawer (Only active when mobileOpen on screens < 900px) */}
       {mobileOpen && (
         <div className="mobile-menu animate-fade-in" id="mobile-menu-drawer">
           <div className="mobile-search-section">
-            <SearchBar />
+            <CompactSearchBar />
           </div>
 
           <div className="mobile-links" role="menu">
@@ -452,12 +523,27 @@ const Navbar = () => {
                   role="menuitem"
                 >
                   <span>{item.name}</span>
-                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <ArrowRight size={16} strokeWidth={1.75} />
+                  <span className="mobile-link-arrow" aria-hidden="true">
+                    <ArrowRight size={15} strokeWidth={1.8} />
                   </span>
                 </Link>
               );
             })}
+
+            {/* Garage Link in Mobile Drawer */}
+            <Link
+              to="/customer/vehicles"
+              className={`mobile-link ${
+                location.pathname.startsWith('/customer/vehicles') ? 'active' : ''
+              }`}
+              aria-current={location.pathname.startsWith('/customer/vehicles') ? 'page' : undefined}
+              role="menuitem"
+            >
+              <span>My Garage</span>
+              <span className="mobile-link-arrow" aria-hidden="true">
+                <ArrowRight size={15} strokeWidth={1.8} />
+              </span>
+            </Link>
 
             <div className="mobile-menu-divider" />
 
@@ -466,20 +552,14 @@ const Navbar = () => {
                 <Link
                   to="/customer/orders"
                   className={`mobile-link ${
-                    location.pathname.startsWith('/customer/orders') || location.pathname === '/orders'
-                      ? 'active'
-                      : ''
+                    location.pathname.startsWith('/customer/orders') ? 'active' : ''
                   }`}
-                  aria-current={
-                    location.pathname.startsWith('/customer/orders') || location.pathname === '/orders'
-                      ? 'page'
-                      : undefined
-                  }
+                  aria-current={location.pathname.startsWith('/customer/orders') ? 'page' : undefined}
                   role="menuitem"
                 >
                   <span>My Orders</span>
-                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <ArrowRight size={16} strokeWidth={1.75} />
+                  <span className="mobile-link-arrow" aria-hidden="true">
+                    <ArrowRight size={15} strokeWidth={1.8} />
                   </span>
                 </Link>
                 <Link
@@ -487,33 +567,25 @@ const Navbar = () => {
                   className={`mobile-link ${
                     location.pathname === '/customer/my-subscriptions' ? 'active' : ''
                   }`}
-                  aria-current={
-                    location.pathname === '/customer/my-subscriptions' ? 'page' : undefined
-                  }
+                  aria-current={location.pathname === '/customer/my-subscriptions' ? 'page' : undefined}
                   role="menuitem"
                 >
                   <span>My Subscriptions</span>
-                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <ArrowRight size={16} strokeWidth={1.75} />
+                  <span className="mobile-link-arrow" aria-hidden="true">
+                    <ArrowRight size={15} strokeWidth={1.8} />
                   </span>
                 </Link>
                 <Link
                   to="/customer/profile"
                   className={`mobile-link ${
-                    location.pathname.startsWith('/customer/profile') || location.pathname === '/profile'
-                      ? 'active'
-                      : ''
+                    location.pathname.startsWith('/customer/profile') ? 'active' : ''
                   }`}
-                  aria-current={
-                    location.pathname.startsWith('/customer/profile') || location.pathname === '/profile'
-                      ? 'page'
-                      : undefined
-                  }
+                  aria-current={location.pathname.startsWith('/customer/profile') ? 'page' : undefined}
                   role="menuitem"
                 >
                   <span>Profile Settings</span>
-                  <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <ArrowRight size={16} strokeWidth={1.75} />
+                  <span className="mobile-link-arrow" aria-hidden="true">
+                    <ArrowRight size={15} strokeWidth={1.8} />
                   </span>
                 </Link>
               </>
@@ -531,20 +603,14 @@ const Navbar = () => {
             <Link
               to="/customer/support"
               className={`mobile-link ${
-                location.pathname.startsWith('/customer/support') || location.pathname === '/support'
-                  ? 'active'
-                  : ''
+                location.pathname.startsWith('/customer/support') ? 'active' : ''
               }`}
-              aria-current={
-                location.pathname.startsWith('/customer/support') || location.pathname === '/support'
-                  ? 'page'
-                  : undefined
-              }
+              aria-current={location.pathname.startsWith('/customer/support') ? 'page' : undefined}
               role="menuitem"
             >
               <span>Customer Support</span>
-              <span className="mobile-link-arrow" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <ArrowRight size={16} strokeWidth={1.75} />
+              <span className="mobile-link-arrow" aria-hidden="true">
+                <ArrowRight size={15} strokeWidth={1.8} />
               </span>
             </Link>
           </div>
@@ -559,6 +625,4 @@ const Navbar = () => {
       />
     </nav>
   );
-};
-
-export default Navbar;
+}
